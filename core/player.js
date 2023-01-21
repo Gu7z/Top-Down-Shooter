@@ -7,7 +7,7 @@ export default class Player {
     this.app = app;
     this.key = {};
     this.points = 0;
-    this.lifes = 0;
+    this.lifes = 1;
 
     const playerWidth = 32;
     const middleWidth = app.screen.width / 2;
