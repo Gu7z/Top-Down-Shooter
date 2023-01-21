@@ -1,0 +1,17 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "snowpack dev --polyfill-node",
+    "build": "snowpack build --polyfill-node"
+  },
+  "devDependencies": {
+    "snowpack": "^3.8.8"
+  },
+  "dependencies": {
+    "pixi.js": "^7.1.0",
+    "victor": "^1.1.0"
+  }
+}
