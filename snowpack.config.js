@@ -9,7 +9,8 @@ module.exports = {
     target: "es2018",
   },
   mount: {
-    /* ... */
+    public: "/",
+    src: "/dist",
   },
   plugins: [
     /* ... */

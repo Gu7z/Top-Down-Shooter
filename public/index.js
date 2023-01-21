@@ -1,9 +1,9 @@
 import * as PIXI from "pixi.js";
-import Buff from "./core/buff";
-import Player from "./core/player";
-import Spawner from "./core/spanwer";
-import bulletHit from "./utils/bullet_hit";
-import Score from "./core/score";
+import Buff from "../src/buff";
+import Player from "../src/player";
+import Spawner from "../src/spanwer";
+import bulletHit from "../src/utils/bullet_hit";
+import Score from "../src/score";
 
 const canvas = document.getElementById("mycanvas");
 const app = new PIXI.Application({

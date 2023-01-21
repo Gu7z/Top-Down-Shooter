@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import generateRandom from "../utils/generate_random";
+import generateRandom from "./utils/generate_random";
 
 export default class Buff {
   constructor({ app }) {
