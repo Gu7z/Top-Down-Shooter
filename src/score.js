@@ -28,17 +28,33 @@ export default class Score {
     this.textPaused.visible = false;
 
     this.app.stage.addChild(this.textPaused);
+
+    this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
+    this.alreadyPlayedDeathSound = false;
   }
 
   set showPaused(paused) {
     this.textPaused.visible = paused;
   }
 
+  endgameCheck() {
+    if (this.player.lifes < 1) {
+      this.textEnd.visible = true;
+
+      if (!this.alreadyPlayedDeathSound) {
+        this.alreadyPlayedDeathSound = true;
+        this.deathSound.play();
+      }
+    } else {
+      this.alreadyPlayedDeathSound = false;
+    }
+  }
+
   update() {
     this.textPoints.text = `Pontos: ${this.player.points}`;
     this.textLifes.text = `Vidas: ${this.player.lifes}`;
 
-    if (this.player.lifes < 1) this.textEnd.visible = true;
+    this.endgameCheck();
 
     this.app.stage.addChild(this.textPoints);
     this.app.stage.addChild(this.textLifes);
