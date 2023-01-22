@@ -12,6 +12,7 @@ const app = new PIXI.Application({
 });
 
 let paused = false;
+let muted = false;
 const mousePosition = { x: 0, y: 0 };
 const player = new Player({ app, mousePosition });
 const score = new Score({ app, player });
@@ -57,18 +58,32 @@ app.renderer.view.onpointerup = function (e) {
 };
 
 window.addEventListener("keydown", (e) => {
-  if (e.key !== " ") return;
+  const ignoredKeys = [" ", "m"];
+  if (!ignoredKeys.includes(e.key)) return;
 
-  score.showPaused = !paused;
-  app.render();
+  switch (e.key) {
+    case " ":
+      score.showPaused = !paused;
+      app.render();
 
-  if (paused) {
-    app.start();
-  } else {
-    app.stop();
+      if (paused) {
+        app.start();
+      } else {
+        app.stop();
+      }
+
+      paused = !paused;
+      break;
+
+    case "m":
+      console.log(muted);
+      PIXI.sound.volumeAll = muted ? 1 : 0;
+      muted = !muted;
+      break;
+
+    default:
+      break;
   }
-
-  paused = !paused;
 });
 
 export { app, player };
