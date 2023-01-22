@@ -1,9 +1,10 @@
+import Controls from "./controls";
 import Game from "./game";
 
 export default class Menu {
   constructor({ app }) {
-    this.middleWidth = app.screen.width / 2;
-    this.middleHeight = app.screen.height / 6;
+    this.x = app.screen.width / 2;
+    this.y = app.screen.height / 6;
     this.app = app;
     this.menuContainer = new PIXI.Container();
 
@@ -11,6 +12,7 @@ export default class Menu {
     this.drawMenuOptions();
 
     this.app.stage.addChild(this.menuContainer);
+    // this.showControls();
   }
 
   drawWelcomeText() {
@@ -18,7 +20,7 @@ export default class Menu {
       fill: 0xffffff,
       fontSize: 50,
     });
-    this.welcomeText.position.set(this.middleWidth, this.middleHeight);
+    this.welcomeText.position.set(this.x, this.y);
     this.welcomeText.anchor.set(0.5);
     this.menuContainer.addChild(this.welcomeText);
   }
@@ -29,11 +31,11 @@ export default class Menu {
     button.anchor.set(0.5);
     button.interactive = true;
     button.cursor = "pointer";
-
     button.position.set(x, y);
     button.width = width;
     button.height = height;
     button.on("click", func);
+
     const buttonText = new PIXI.Text(text, {
       fill: 0x000000,
       fontSize: 50,
@@ -46,42 +48,35 @@ export default class Menu {
   }
 
   drawMenuOptions() {
-    this.drawMenuButton(
-      "Jogar",
-      this.middleWidth,
-      this.middleHeight + 150,
-      150,
-      60,
-      () => this.play()
+    this.drawMenuButton("Jogar", this.x, this.y + 150, 150, 60, () =>
+      this.play()
     );
 
-    this.drawMenuButton(
-      "Score",
-      this.middleWidth,
-      this.middleHeight + 250,
-      160,
-      60,
-      () => this.showControls()
+    this.drawMenuButton("Score", this.x, this.y + 250, 160, 60, () =>
+      this.showScore()
     );
 
-    this.drawMenuButton(
-      "Controles",
-      this.middleWidth,
-      this.middleHeight + 350,
-      220,
-      60,
-      () => this.showScore()
+    this.drawMenuButton("Controles", this.x, this.y + 350, 220, 60, () =>
+      this.showControls()
     );
   }
 
-  play() {
+  hide() {
     this.app.stage.removeChild(this.menuContainer);
+  }
 
+  show() {
+    this.app.stage.addChild(this.menuContainer);
+  }
+
+  play() {
     new Game({ app: this.app });
   }
 
   showControls() {
     this.app.stage.removeChild(this.menuContainer);
+
+    new Controls({ app: this.app, menu: this });
   }
 
   showScore() {}
