@@ -10,9 +10,11 @@ export default class Shooting {
     this.bulletRadius = 5;
     this.fireVelocity = 1;
     this.shooting = false;
+    this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
   }
 
   fire() {
+    this.sound.play();
     let angle = this.player.rotation;
 
     const bullet = new PIXI.Graphics();
