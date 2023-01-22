@@ -1,4 +1,3 @@
-import Victor from "victor";
 import Shooting from "./shooting";
 
 export default class Player {
@@ -8,18 +7,24 @@ export default class Player {
     this.points = 0;
     this.lifes = 1;
     this.velocity = 2;
+    this.size = 20;
 
-    const playerWidth = 32;
     const middleWidth = app.screen.width / 2;
     const middleHeight = app.screen.height / 2;
 
-    this.player = new PIXI.Sprite(PIXI.Texture.WHITE);
+    const playerTexture = PIXI.Texture.from("./images/spaceship.png");
+    playerTexture.rotate = 6;
+    this.player = new PIXI.Sprite(playerTexture);
+    this.player.scale.x *= this.size / 100;
+    this.player.scale.y *= this.size / 100;
     this.player.anchor.set(0.5);
     this.player.position.set(middleWidth, middleHeight);
-    this.player.width = this.player.height = playerWidth;
-    this.player.tint = 0xea985d;
 
-    this.shooting = new Shooting({ app, player: this.player });
+    this.shooting = new Shooting({
+      app,
+      player: this.player,
+      playerSize: this.size,
+    });
 
     this.setMousePosition(middleWidth, 0);
     this.app.stage.addChild(this.player);
@@ -46,9 +51,9 @@ export default class Player {
     const playerXBoundarie = this.player.x + this.player.width;
     const { width, height } = this.app.screen;
     const boundaries = {
-      leftAndTop: 60,
-      right: width,
-      bottom: height,
+      leftAndTop: this.size * 4.5,
+      right: width + this.size * 2.5,
+      bottom: height + this.size * 2.5,
     };
 
     switch (key) {

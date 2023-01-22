@@ -1,9 +1,10 @@
 import Victor from "victor";
 
 export default class Shooting {
-  constructor({ app, player }) {
+  constructor({ app, player, playerSize }) {
     this.app = app;
     this.player = player;
+    this.playerSize = playerSize;
     this.bulletSpeed = 3;
     this.bullets = [];
     this.bulletRadius = 5;
@@ -12,17 +13,27 @@ export default class Shooting {
   }
 
   fire() {
+    let angle = this.player.rotation;
+
     const bullet = new PIXI.Graphics();
-    bullet.position.set(this.player.position.x, this.player.position.y);
     bullet.beginFill(0x0000ff, 1);
     bullet.drawCircle(0, 0, this.bulletRadius);
     bullet.endFill();
+    console.log(this.player);
+    const moveFromCenterToTip = new Victor(
+      Math.cos(angle),
+      Math.sin(angle)
+    ).multiplyScalar(this.playerSize);
+    bullet.position.set(
+      this.player.position.x + moveFromCenterToTip.x,
+      this.player.position.y + moveFromCenterToTip.y
+    );
 
-    let angle = this.player.rotation;
     bullet.velocity = new Victor(
       Math.cos(angle),
       Math.sin(angle)
     ).multiplyScalar(this.bulletSpeed);
+
     this.bullets.push(bullet);
     this.app.stage.addChild(bullet);
   }
