@@ -1,4 +1,3 @@
-import * as PIXI from "pixi.js";
 import Buff from "../src/buff";
 import Player from "../src/player";
 import Spawner from "../src/spanwer";

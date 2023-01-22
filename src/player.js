@@ -1,4 +1,3 @@
-import * as PIXI from "pixi.js";
 import Victor from "victor";
 import Shooting from "./shooting";
 

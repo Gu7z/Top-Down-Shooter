@@ -1,5 +1,3 @@
-import * as PIXI from "pixi.js";
-
 export default class Score {
   constructor({ app, player }) {
     this.app = app;
