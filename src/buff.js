@@ -5,7 +5,7 @@ export default class Buff {
     this.app = app;
     this.width = 50;
     this.height = 50;
-    this.buffDuration = 3000;
+    this.buffDuration = 5000;
 
     this.createBuff({ app });
   }
