@@ -16,7 +16,7 @@ export default class Shooting {
     let angle = this.player.rotation;
 
     const bullet = new PIXI.Graphics();
-    bullet.beginFill(0x0000ff, 1);
+    bullet.beginFill(0x00ff00, 1);
     bullet.drawCircle(0, 0, this.bulletRadius);
     bullet.endFill();
     console.log(this.player);
