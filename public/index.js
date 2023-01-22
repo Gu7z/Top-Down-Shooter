@@ -76,7 +76,6 @@ window.addEventListener("keydown", (e) => {
       break;
 
     case "m":
-      console.log(muted);
       PIXI.sound.volumeAll = muted ? 1 : 0;
       muted = !muted;
       break;
