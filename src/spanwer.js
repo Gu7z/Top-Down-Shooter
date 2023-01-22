@@ -24,7 +24,6 @@ export default class Spawner {
   spawnTime(player) {
     clearInterval(this.interval);
     this.spawnInterval = Math.max(this.spawnInterval - 100, 0);
-    console.log(this.spawnInterval);
     this.interval = setInterval(() => this.spawn(player), this.spawnInterval);
   }
 
