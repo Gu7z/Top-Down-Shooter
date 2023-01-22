@@ -42,6 +42,7 @@ app.renderer.view.onmousemove = function (e) {
 };
 
 app.renderer.view.onpointerdown = function (e) {
+  if (paused) return;
   if (player.lifes < 1) return;
 
   player.shooting.shoot = true;
@@ -49,6 +50,8 @@ app.renderer.view.onpointerdown = function (e) {
 };
 
 app.renderer.view.onpointerup = function (e) {
+  if (paused) return;
+
   player.shooting.shoot = false;
   player.shooting.update();
 };
