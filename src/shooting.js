@@ -19,7 +19,6 @@ export default class Shooting {
     bullet.beginFill(0x00ff00, 1);
     bullet.drawCircle(0, 0, this.bulletRadius);
     bullet.endFill();
-    console.log(this.player);
     const moveFromCenterToTip = new Victor(
       Math.cos(angle),
       Math.sin(angle)
