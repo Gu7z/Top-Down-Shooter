@@ -10,6 +10,9 @@ const bulletHit = (bullets, enemies, bulletRadius, player) => {
         enemy.kill();
 
         player.points += 1;
+        if (player.points % 10 === 0) {
+          PIXI.sound.Sound.from("sound/reward.mp3").play();
+        }
       }
     });
   });
