@@ -7,6 +7,7 @@ export default class Player {
     this.key = {};
     this.points = 0;
     this.lifes = 1;
+    this.velocity = 2;
 
     const playerWidth = 32;
     const middleWidth = app.screen.width / 2;
@@ -17,7 +18,6 @@ export default class Player {
     this.player.position.set(middleWidth, middleHeight);
     this.player.width = this.player.height = playerWidth;
     this.player.tint = 0xea985d;
-    this.velocity = 2;
 
     this.shooting = new Shooting({ app, player: this.player });
 

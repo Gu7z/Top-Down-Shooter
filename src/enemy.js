@@ -1,12 +1,13 @@
 import Victor from "victor";
 
 export default class Enemy {
-  constructor({ app, enemyRadius }) {
+  constructor({ app, enemyRadius, speed, color }) {
     this.app = app;
-    this.speed = 1;
+    this.speed = speed;
+    this.enemyRadius = enemyRadius;
 
     this.enemy = new PIXI.Graphics();
-    this.enemy.beginFill(0xff0000, 1);
+    this.enemy.beginFill(color, 1);
     this.enemy.drawCircle(0, 0, enemyRadius);
     this.enemy.endFill();
 

@@ -33,7 +33,6 @@ app.ticker.add(() => {
     player.shooting.bullets,
     enemySpawner.spawns,
     player.shooting.bulletRadius,
-    enemySpawner.enemyRadius,
     player
   );
 });

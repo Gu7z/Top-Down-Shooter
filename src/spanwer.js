@@ -6,7 +6,6 @@ export default class Spawner {
     this.player = player;
 
     this.initialInterval = this.spawnInterval = 3000;
-    this.enemyRadius = 16;
     this.spawns = [];
     this.startingSpawns = 2;
 
@@ -27,13 +26,32 @@ export default class Spawner {
     this.interval = setInterval(() => this.spawn(player), this.spawnInterval);
   }
 
+  enemyType() {
+    const type = Math.floor(Math.random() * 4) + 1;
+
+    switch (type) {
+      case 1:
+        return { speed: 0.5, color: 0x0302fc, enemyRadius: 18 };
+      case 2:
+        return { speed: 1, color: 0x63009e, enemyRadius: 17 };
+      case 3:
+        return { speed: 1.5, color: 0xa1015d, enemyRadius: 16 };
+      case 4:
+        return { speed: 2, color: 0xfe0002, enemyRadius: 15 };
+
+      default:
+        break;
+    }
+  }
+
   spawn(player) {
     if (this.spawns.length >= this.spawnLimit()) return;
     if (player.lifes < 1) return;
     this.spawnTime(player);
 
     const { app, enemyRadius } = this;
-    let spawn = new Enemy({ app, enemyRadius });
+    const enemyProperties = this.enemyType();
+    let spawn = new Enemy({ app, enemyRadius, ...enemyProperties });
     this.spawns.push(spawn);
   }
 
