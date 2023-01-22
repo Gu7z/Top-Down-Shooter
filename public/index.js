@@ -11,6 +11,7 @@ const app = new PIXI.Application({
   height: window.innerHeight,
 });
 
+let paused = false;
 const mousePosition = { x: 0, y: 0 };
 const player = new Player({ app, mousePosition });
 const score = new Score({ app, player });
@@ -52,5 +53,20 @@ app.renderer.view.onpointerup = function (e) {
   player.shooting.shoot = false;
   player.shooting.update();
 };
+
+window.addEventListener("keydown", (e) => {
+  if (e.key !== " ") return;
+
+  score.showPaused = !paused;
+  app.render();
+
+  if (paused) {
+    app.start();
+  } else {
+    app.stop();
+  }
+
+  paused = !paused;
+});
 
 export { app, player };
