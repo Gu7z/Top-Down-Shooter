@@ -5,10 +5,10 @@ export default class Spawner {
     this.app = app;
     this.player = player;
 
-    this.initialInterval = this.spawnInterval = 4000;
+    this.initialInterval = this.spawnInterval = 3000;
     this.enemyRadius = 16;
     this.spawns = [];
-    this.startingSpawns = 1;
+    this.startingSpawns = 2;
 
     this.interval = setInterval(() => this.spawn(player), this.initialInterval);
   }
