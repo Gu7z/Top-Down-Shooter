@@ -5,7 +5,7 @@ import bulletHit from "../src/utils/bullet_hit";
 import Score from "./hud";
 
 export default class Game {
-  constructor({ app }) {
+  constructor({ app, username }) {
     let paused = false;
     let muted = false;
     const mousePosition = { x: 0, y: 0 };
@@ -13,6 +13,8 @@ export default class Game {
     const score = new Score({ app, player });
     const buff = new Buff({ app });
     const enemySpawner = new Spawner({ app, player });
+
+    this.username = username;
 
     app.ticker.add(() => {
       score.update();
