@@ -57,10 +57,10 @@ export default class Shooting {
   }
 
   update() {
-    this.bullets.forEach((b, index) => {
+    this.bullets.forEach((bullet, index) => {
       const isInsideScreen =
-        Math.abs(b.position.x) < this.app.screen.width &&
-        Math.abs(b.position.y) < this.app.screen.height;
+        Math.abs(bullet.position.x) < this.app.screen.width &&
+        Math.abs(bullet.position.y) < this.app.screen.height;
 
       if (!isInsideScreen) {
         this.bullets[index].destroy();
@@ -68,7 +68,10 @@ export default class Shooting {
         return;
       }
 
-      b.position.set(b.position.x + b.velocity.x, b.position.y + b.velocity.y);
+      bullet.position.set(
+        bullet.position.x + bullet.velocity.x,
+        bullet.position.y + bullet.velocity.y
+      );
     });
   }
 }
