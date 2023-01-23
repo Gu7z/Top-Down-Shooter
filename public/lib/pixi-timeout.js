@@ -1,3 +1,5 @@
+// Based on https://github.com/brenwell/pixi-timeout
+
 function timeout(pixi) {
   function setTimeout(secs, cb) {
     var progress = 0;
