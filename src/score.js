@@ -25,6 +25,7 @@ export default class Score {
     back.interactive = true;
     back.cursor = "pointer";
     back.on("click", () => {
+      document.body.removeChild(document.getElementById("scoreboard"));
       this.app.stage.removeChild(this.scoreContainer);
       this.menu.show();
     });
@@ -40,35 +41,76 @@ export default class Score {
     this.scoreContainer.addChild(backText);
   }
 
-  drawScoreLine(text, x, y) {
-    const buttonText = new PIXI.Text(text, {
-      fill: 0xffffff,
-      fontSize: 50,
-    });
-    buttonText.position.set(x, y);
-
-    this.scoreContainer.addChild(buttonText);
-  }
-
   async getScore() {
     const { SNOWPACK_PUBLIC_API_URL } = __SNOWPACK_ENV__;
     const response = await fetch(SNOWPACK_PUBLIC_API_URL);
     const data = await response.json();
 
-    console.log(data);
     return data;
+  }
+
+  drawTable() {
+    const table = document.createElement("table");
+    table.id = "scoreboard";
+    table.style.position = "absolute";
+    table.style.top = "25%";
+    table.style.left = "50%";
+    table.style.transform = "translate(-50%, -50%)";
+    table.style.backgroundColor = "white";
+    table.style.fontSize = "50px";
+
+    return table;
+  }
+
+  drawTableHead() {
+    const headtr = document.createElement("tr");
+    const rankth = document.createElement("th");
+    const nameth = document.createElement("th");
+    const pointsth = document.createElement("th");
+
+    rankth.innerText = "Rank";
+    nameth.innerText = "Nome";
+    pointsth.innerText = "Pontos";
+
+    headtr.appendChild(rankth);
+    headtr.appendChild(nameth);
+    headtr.appendChild(pointsth);
+
+    return headtr;
+  }
+
+  drawTableLine(index, name, points) {
+    const line = document.createElement("tr");
+    const ranktd = document.createElement("td");
+    const nametd = document.createElement("td");
+    const pointstd = document.createElement("td");
+
+    ranktd.style.textAlign = "center";
+    ranktd.innerText = index;
+
+    nametd.style.textAlign = "center";
+    nametd.innerText = name;
+
+    pointstd.style.textAlign = "center";
+    pointstd.innerText = points;
+
+    line.appendChild(ranktd);
+    line.appendChild(nametd);
+    line.appendChild(pointstd);
+
+    return line;
   }
 
   async showScore() {
     const score = await this.getScore();
-    let initialY = 0;
-    score.map((line) => {
-      this.drawScoreLine(
-        line,
-        this.app.screen.width / 4,
-        this.app.screen.height / 6 + initialY
-      );
-      initialY += 100;
+
+    const table = this.drawTable();
+    table.appendChild(this.drawTableHead());
+
+    score.map(([name, points], index) => {
+      table.appendChild(this.drawTableLine(index + 1, name, points));
     });
+
+    document.body.appendChild(table);
   }
 }
