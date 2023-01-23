@@ -1,4 +1,4 @@
-export default class Score {
+export default class Hud {
   constructor({ app, player }) {
     this.app = app;
     this.player = player;

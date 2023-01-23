@@ -2,7 +2,7 @@ import Buff from "../src/buff";
 import Player from "../src/player";
 import Spawner from "../src/spanwer";
 import bulletHit from "../src/utils/bullet_hit";
-import Score from "../src/score";
+import Score from "./hud";
 
 export default class Game {
   constructor({ app }) {
