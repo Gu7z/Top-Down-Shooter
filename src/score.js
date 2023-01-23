@@ -60,7 +60,6 @@ export default class Score {
     document.body.appendChild(loading);
 
     const url = getUrl();
-    console.log(url);
     const response = await fetch(url);
     const data = await response.json();
 
@@ -75,7 +74,7 @@ export default class Score {
     table.style.position = "absolute";
     table.style.top = "40%";
     table.style.left = "50%";
-    table.style.transform = "translate(-50%, -50%)";
+    table.style.transform = "translate(-50%, -30%)";
     table.style.backgroundColor = "white";
     table.style.fontSize = "50px";
 
