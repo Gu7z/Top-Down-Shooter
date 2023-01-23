@@ -1,3 +1,5 @@
+import.meta.hot; // For snowpack env
+
 export default class Hud {
   constructor({ app, player }) {
     this.app = app;
@@ -30,23 +32,40 @@ export default class Hud {
     this.app.stage.addChild(this.textPaused);
 
     this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
-    this.alreadyPlayedDeathSound = false;
+    this.dead = false;
   }
 
   set showPaused(paused) {
     this.textPaused.visible = paused;
   }
 
+  async sendScore() {
+    const { SNOWPACK_PUBLIC_API_URL } = __SNOWPACK_ENV__;
+    await fetch(SNOWPACK_PUBLIC_API_URL, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: this.player.username,
+        points: this.player.points,
+      }),
+    });
+  }
+
   endgameCheck() {
     if (this.player.lifes < 1) {
       this.textEnd.visible = true;
 
-      if (!this.alreadyPlayedDeathSound) {
-        this.alreadyPlayedDeathSound = true;
+      if (!this.dead) {
+        this.dead = true;
         this.deathSound.play();
+
+        this.sendScore();
       }
     } else {
-      this.alreadyPlayedDeathSound = false;
+      this.dead = false;
     }
   }
 

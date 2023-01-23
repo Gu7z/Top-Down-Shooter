@@ -1,13 +1,14 @@
 import Shooting from "./shooting";
 
 export default class Player {
-  constructor({ app }) {
+  constructor({ app, username }) {
     this.app = app;
     this.key = {};
     this.points = 0;
     this.lifes = 1;
     this.velocity = 2;
     this.size = 20;
+    this.username = username;
 
     const middleWidth = app.screen.width / 2;
     const middleHeight = app.screen.height / 2;

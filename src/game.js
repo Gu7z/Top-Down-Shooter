@@ -9,12 +9,10 @@ export default class Game {
     let paused = false;
     let muted = false;
     const mousePosition = { x: 0, y: 0 };
-    const player = new Player({ app, mousePosition });
+    const player = new Player({ app, mousePosition, username });
     const score = new Score({ app, player });
     const buff = new Buff({ app });
     const enemySpawner = new Spawner({ app, player });
-
-    this.username = username;
 
     app.ticker.add(() => {
       score.update();
