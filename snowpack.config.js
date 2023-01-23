@@ -12,9 +12,7 @@ module.exports = {
     public: "/",
     src: "/dist",
   },
-  plugins: [
-    /* ... */
-  ],
+  plugins: ["@snowpack/plugin-dotenv"],
   packageOptions: {
     /* ... */
   },
