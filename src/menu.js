@@ -70,11 +70,12 @@ export default class Menu {
   }
 
   play() {
+    this.hide();
     new Game({ app: this.app });
   }
 
   showControls() {
-    this.app.stage.removeChild(this.menuContainer);
+    this.hide();
 
     new Controls({ app: this.app, menu: this });
   }
