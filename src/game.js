@@ -61,6 +61,8 @@ export default class Game {
       switch (e.key) {
         case " ":
           score.showPaused = !paused;
+          player.shooting.shoot = false;
+          player.shooting.update();
           app.render();
 
           if (paused) {
