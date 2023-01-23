@@ -54,7 +54,7 @@ export default class Score {
     const table = document.createElement("table");
     table.id = "scoreboard";
     table.style.position = "absolute";
-    table.style.top = "25%";
+    table.style.top = "40%";
     table.style.left = "50%";
     table.style.transform = "translate(-50%, -50%)";
     table.style.backgroundColor = "white";
