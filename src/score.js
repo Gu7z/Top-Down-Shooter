@@ -108,7 +108,7 @@ export default class Score {
     const table = this.drawTable();
     table.appendChild(this.drawTableHead());
 
-    score.map(([name, points], index) => {
+    score.map(({ name, points }, index) => {
       table.appendChild(this.drawTableLine(index + 1, name, points));
     });
 
