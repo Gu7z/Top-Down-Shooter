@@ -1,4 +1,4 @@
-import.meta.hot; // For snowpack env
+import getUrl from "./utils/get_url";
 
 export default class Hud {
   constructor({ app, player }) {
@@ -40,8 +40,9 @@ export default class Hud {
   }
 
   async sendScore() {
-    const { SNOWPACK_PUBLIC_API_URL } = __SNOWPACK_ENV__;
-    await fetch(SNOWPACK_PUBLIC_API_URL, {
+    const url = getUrl();
+
+    await fetch(url, {
       method: "POST",
       headers: {
         Accept: "application/json",

@@ -1,4 +1,4 @@
-import.meta.hot; // For snowpack env
+import getUrl from "./utils/get_url";
 
 export default class Score {
   constructor({ app, menu }) {
@@ -42,8 +42,9 @@ export default class Score {
   }
 
   async getScore() {
-    const { SNOWPACK_PUBLIC_API_URL } = __SNOWPACK_ENV__;
-    const response = await fetch(SNOWPACK_PUBLIC_API_URL);
+    const url = getUrl();
+    console.log(url);
+    const response = await fetch(url);
     const data = await response.json();
 
     return data;
