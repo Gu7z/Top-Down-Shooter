@@ -1,5 +1,6 @@
 import Controls from "./controls";
 import Game from "./game";
+import Score from "./score";
 
 export default class Menu {
   constructor({ app }) {
@@ -12,7 +13,6 @@ export default class Menu {
     this.drawMenuOptions();
 
     this.app.stage.addChild(this.menuContainer);
-    // this.showControls();
   }
 
   drawWelcomeText() {
@@ -76,9 +76,11 @@ export default class Menu {
 
   showControls() {
     this.hide();
-
     new Controls({ app: this.app, menu: this });
   }
 
-  showScore() {}
+  showScore() {
+    this.hide();
+    new Score({ app: this.app, menu: this });
+  }
 }
