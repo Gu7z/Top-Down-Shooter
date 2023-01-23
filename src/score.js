@@ -6,8 +6,10 @@ export default class Score {
     this.menu = menu;
     this.scoreContainer = new PIXI.Container();
 
+    this.backButton();
+    this.app.stage.addChild(this.scoreContainer);
+
     this.showScore().then(() => {
-      this.backButton();
       this.app.stage.addChild(this.scoreContainer);
     });
   }
@@ -41,11 +43,28 @@ export default class Score {
     this.scoreContainer.addChild(backText);
   }
 
+  drawLoading() {
+    const loading = document.createElement("h1");
+    loading.innerText = "Carregando ScoreBoard....";
+    loading.style.color = "white";
+    loading.style.position = "absolute";
+    loading.style.top = "40%";
+    loading.style.left = "50%";
+    loading.style.transform = "translate(-50%, -50%)";
+
+    return loading;
+  }
+
   async getScore() {
+    const loading = this.drawLoading();
+    document.body.appendChild(loading);
+
     const url = getUrl();
     console.log(url);
     const response = await fetch(url);
     const data = await response.json();
+
+    document.body.removeChild(loading);
 
     return data;
   }
