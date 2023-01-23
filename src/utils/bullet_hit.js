@@ -1,5 +1,5 @@
 const bulletHit = (bullets, enemies, bulletRadius, player) => {
-  bullets.forEach((bullet) => {
+  bullets.forEach((bullet, bulletIndex) => {
     enemies.forEach((enemy, index) => {
       let distanceX = enemy.enemy.position.x - bullet.position.x;
       let distancey = enemy.enemy.position.y - bullet.position.y;
@@ -8,6 +8,8 @@ const bulletHit = (bullets, enemies, bulletRadius, player) => {
       if (distance < bulletRadius + enemy.enemyRadius) {
         enemies.splice(index, 1);
         enemy.kill();
+
+        bullet.emit("destroy", { index: bulletIndex });
 
         player.points += 1;
         if (player.points % 10 === 0) {

@@ -29,7 +29,10 @@ export default class Shooting {
       this.player.position.x + moveFromCenterToTip.x,
       this.player.position.y + moveFromCenterToTip.y
     );
-
+    bullet.on("destroy", ({ index }) => {
+      this.bullets[index].destroy();
+      this.bullets.splice(index, 1);
+    });
     bullet.velocity = new Victor(
       Math.cos(angle),
       Math.sin(angle)
