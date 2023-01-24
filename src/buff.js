@@ -5,7 +5,7 @@ export default class Buff {
     this.app = app;
     this.width = 50;
     this.height = 50;
-    this.buffDuration = 5000;
+    this.buffDuration = 5;
 
     this.createBuff({ app });
   }
@@ -36,7 +36,7 @@ export default class Buff {
   get(player) {
     player.shooting.setFireVelocity = 3;
     player.velocity = 3;
-    setTimeout(() => {
+    this.app.setTimeout(() => {
       player.shooting.setFireVelocity = 1;
       player.velocity = 2;
     }, this.buffDuration);
@@ -57,13 +57,12 @@ export default class Buff {
       this.destroy();
       this.get(player);
 
-      // Cria um novo buff a cada 10 segundos
-      const timer = setInterval(() => {
+      const timer = this.app.setInterval(() => {
         this.createBuff({
           app: this.app,
         });
-        clearInterval(timer);
-      }, 10000);
+        timer.clear();
+      }, 10);
     }
   }
 

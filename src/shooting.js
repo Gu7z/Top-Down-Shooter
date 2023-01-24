@@ -53,9 +53,14 @@ export default class Shooting {
     this.shooting = shooting;
     if (shooting) {
       this.fire();
-      this.interval = setInterval(() => this.fire(), 300 / this.fireVelocity);
+      this.interval = this.app.setInterval(
+        () => this.fire(),
+        0.3 / this.fireVelocity
+      );
     } else {
-      clearInterval(this.interval);
+      if (this.interval) {
+        this.interval.clear();
+      }
     }
   }
 

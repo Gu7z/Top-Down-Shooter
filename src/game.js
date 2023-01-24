@@ -23,6 +23,7 @@ export default class Game {
 
       player.update();
       buff.update(player);
+      enemySpawner.update(player);
       enemySpawner.spawns.forEach((enemy) =>
         enemy.update(player, enemySpawner)
       );
