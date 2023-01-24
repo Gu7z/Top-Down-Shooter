@@ -102,6 +102,5 @@ export default class Player {
   update() {
     this.lookTo();
     this.movePlayer();
-    this.shooting.update();
   }
 }

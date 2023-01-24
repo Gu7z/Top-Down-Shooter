@@ -1,7 +1,6 @@
 import Buff from "../src/buff";
 import Player from "../src/player";
 import Spawner from "../src/spanwer";
-import bulletHit from "../src/utils/bullet_hit";
 import Score from "./hud";
 
 export default class Game {
@@ -24,16 +23,10 @@ export default class Game {
       player.update();
       buff.update(player);
       enemySpawner.update(player);
-      enemySpawner.spawns.forEach((enemy) =>
-        enemy.update(player, enemySpawner)
-      );
-
-      bulletHit(
-        player.shooting.bullets,
-        enemySpawner.spawns,
-        player.shooting.bulletRadius,
-        player
-      );
+      enemySpawner.spawns.forEach((enemy) => {
+        enemy.update(player, enemySpawner);
+      });
+      player.shooting.update(enemySpawner.spawns);
     });
 
     app.renderer.view.onmousemove = function (e) {

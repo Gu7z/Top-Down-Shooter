@@ -30,8 +30,8 @@ export default class Shooting {
       this.player.position.y + moveFromCenterToTip.y
     );
     bullet.on("destroy", ({ index }) => {
-      this.bullets[index].destroy();
       this.bullets.splice(index, 1);
+      bullet.destroy();
     });
     bullet.velocity = new Victor(
       Math.cos(angle),
@@ -64,8 +64,34 @@ export default class Shooting {
     }
   }
 
-  update() {
+  hittingEnemy(enemies, bullet) {
+    if (!enemies) return;
+    enemies.forEach((enemy, index) => {
+      if (bullet.destroyed) return;
+      let distanceX = enemy.enemy.position.x - bullet.position.x;
+      let distancey = enemy.enemy.position.y - bullet.position.y;
+      let distance = Math.sqrt(distanceX * distanceX + distancey * distancey);
+      if (distance < this.bulletRadius + enemy.enemyRadius) {
+        enemies.splice(index, 1);
+        enemy.kill();
+
+        this.app.stage.removeChild(bullet);
+        this.bullets.splice(index, 1);
+        bullet.destroy();
+
+        this.player.points += 1;
+        if (this.player.points % 10 === 0) {
+          PIXI.sound.Sound.from("sound/reward.mp3").play();
+        }
+
+        return;
+      }
+    });
+  }
+
+  update(enemies) {
     this.bullets.forEach((bullet, index) => {
+      if (bullet.destroyed) return;
       const isInsideScreen =
         Math.abs(bullet.position.x) < this.app.screen.width &&
         Math.abs(bullet.position.y) < this.app.screen.height;
@@ -80,6 +106,8 @@ export default class Shooting {
         bullet.position.x + bullet.velocity.x,
         bullet.position.y + bullet.velocity.y
       );
+
+      this.hittingEnemy(enemies, bullet);
     });
   }
 }
