@@ -16,12 +16,12 @@ export default class Score {
 
   backButton() {
     const x = this.app.screen.width / 2;
-    const y = this.app.screen.height / 10;
+    const y = this.app.screen.height;
     const back = new PIXI.Sprite(PIXI.Texture.WHITE);
 
     back.tint = 0xffffff;
     back.anchor.set(0.5);
-    back.position.set(x, y);
+    back.position.set(x, y - 100);
     back.width = 160;
     back.height = 40;
     back.interactive = true;
@@ -36,7 +36,7 @@ export default class Score {
       fill: 0x000000,
       fontSize: 30,
     });
-    backText.position.set(x, y);
+    backText.position.set(x, y - 100);
     backText.anchor.set(0.5);
 
     this.scoreContainer.addChild(back);

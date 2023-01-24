@@ -15,7 +15,7 @@ export default class Controls {
     const back = new PIXI.Sprite(PIXI.Texture.WHITE);
     back.tint = 0xffffff;
     back.anchor.set(0.5);
-    back.position.set(x, this.app.screen.height / 10);
+    back.position.set(x, this.app.screen.height - 50);
     back.width = 160;
     back.height = 40;
     back.interactive = true;
@@ -27,7 +27,7 @@ export default class Controls {
 
     this.controlsContainer.addChild(square);
     this.controlsContainer.addChild(back);
-    this.addText("Voltar", x, this.app.screen.height / 10);
+    this.addText("Voltar", x, this.app.screen.height - 50);
     this.addText("W - Move para cima", x, y - 150);
     this.addText("S - Move para baixo", x, y - 100);
     this.addText("D - Move para direita", x, y - 50);
