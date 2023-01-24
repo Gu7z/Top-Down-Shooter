@@ -8,6 +8,8 @@ export default class Spawner {
     this.spawns = [];
     this.spawnLimit = 1;
 
+    this.spawnerContainer = new PIXI.Container();
+
     this.app.setInterval(() => {
       this.spawnLimit += 1;
     }, 3);
@@ -42,7 +44,12 @@ export default class Spawner {
 
     const { app, enemyRadius } = this;
     const enemyProperties = this.enemyType();
-    let spawn = new Enemy({ app, enemyRadius, ...enemyProperties });
+    let spawn = new Enemy({
+      app,
+      enemyRadius,
+      ...enemyProperties,
+      container: this.spawnerContainer,
+    });
     this.spawns.push(spawn);
   }
 }
