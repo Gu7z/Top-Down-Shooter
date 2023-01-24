@@ -3,8 +3,8 @@ import generateRandom from "./utils/generate_random";
 export default class Buff {
   constructor({ app }) {
     this.app = app;
-    this.width = 50;
-    this.height = 50;
+    this.width = 100;
+    this.height = 100;
     this.buffDuration = 5;
 
     this.createBuff({
@@ -22,14 +22,12 @@ export default class Buff {
       this.app.screen.height - this.height
     );
 
-    this.buff = new PIXI.Sprite(PIXI.Texture.WHITE);
+    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+    const buffTexture = PIXI.Texture.from("./images/speed_buff.png");
+    this.buff = new PIXI.Sprite(buffTexture);
     this.buff.position.set(randomX, randomY);
-    this.buff.tint = 0xffaa00;
     this.buff.width = this.width;
     this.buff.height = this.height;
-
-    this.text = new PIXI.Text("Buff", { fill: 0xffffff });
-    this.text.position.set(randomX, randomY);
 
     const timer = this.app.setInterval(() => {
       if (!this.buff.destroyed) {
@@ -47,7 +45,6 @@ export default class Buff {
     }, 10);
 
     app.stage.addChild(this.buff);
-    app.stage.addChild(this.text);
   }
 
   get(player) {
@@ -80,6 +77,5 @@ export default class Buff {
 
   destroy() {
     this.buff.destroy();
-    this.text.destroy();
   }
 }
