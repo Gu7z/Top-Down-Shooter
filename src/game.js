@@ -47,7 +47,7 @@ export default class Game {
 
     app.renderer.view.onpointerdown = function (e) {
       const ms = endCounter();
-      if (ms < 100) return;
+      if (ms < player.shooting.bulletSpeed * 100) return;
       if (paused) return;
       if (player.lifes < 1) return;
 

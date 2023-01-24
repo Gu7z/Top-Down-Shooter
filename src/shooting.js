@@ -10,6 +10,7 @@ export default class Shooting {
     this.bulletRadius = 5;
     this.fireVelocity = 1;
     this.shooting = false;
+    this.shootInterval = 0.3;
     this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
   }
 
@@ -55,7 +56,7 @@ export default class Shooting {
       this.fire();
       this.interval = this.app.setInterval(
         () => this.fire(),
-        0.3 / this.fireVelocity
+        this.shootInterval / this.fireVelocity
       );
     } else {
       if (this.interval) {
