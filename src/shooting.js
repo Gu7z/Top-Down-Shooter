@@ -1,7 +1,7 @@
 import Victor from "victor";
 
 export default class Shooting {
-  constructor({ app, player, playerSize }) {
+  constructor({ app, player, playerSize, keys }) {
     this.app = app;
     this.player = player;
     this.playerSize = playerSize;
@@ -9,10 +9,30 @@ export default class Shooting {
     this.bullets = [];
     this.bulletRadius = 5;
     this.fireVelocity = 1;
+    this.keys = keys;
     this.shooting = false;
     this.shootInterval = 0.3;
     this.shootingContainer = new PIXI.Container();
     this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
+
+    window.addEventListener("pointerdown", () => {
+      this.shooting = true;
+    });
+
+    window.addEventListener("pointerup", () => {
+      this.shooting = false;
+    });
+
+    this.shoot();
+  }
+  shoot() {
+    const time = this.app.setInterval(() => {
+      if (this.keys[" "] || this.shooting) {
+        this.fire();
+      }
+      time.clear();
+      this.shoot();
+    }, this.shootInterval / this.fireVelocity);
   }
 
   fire() {
@@ -43,27 +63,10 @@ export default class Shooting {
 
   set setFireVelocity(velocity) {
     const wasShooting = this.shooting;
-    this.shoot = false;
     this.fireVelocity = velocity;
-    this.shoot = wasShooting;
   }
 
-  set shoot(shooting) {
-    this.shooting = shooting;
-    if (shooting) {
-      this.fire();
-      this.interval = this.app.setInterval(
-        () => this.fire(),
-        this.shootInterval / this.fireVelocity
-      );
-    } else {
-      if (this.interval) {
-        this.interval.clear();
-      }
-    }
-  }
-
-  update(enemies) {
+  update() {
     this.bullets.forEach((bullet, index) => {
       const isInsideScreen =
         Math.abs(bullet.position.x) < this.app.screen.width &&
