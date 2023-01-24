@@ -33,7 +33,21 @@ export default class Game {
       player.setMousePosition(e.clientX, e.clientY);
     };
 
+    var startTime, endTime;
+    function startCounter() {
+      startTime = new Date();
+    }
+    function endCounter() {
+      endTime = new Date();
+      var timeDiff = endTime - startTime; //in ms
+
+      var ms = Math.round(timeDiff);
+      return ms;
+    }
+
     app.renderer.view.onpointerdown = function (e) {
+      const ms = endCounter();
+      if (ms < 100) return;
       if (paused) return;
       if (player.lifes < 1) return;
 
@@ -42,6 +56,7 @@ export default class Game {
     };
 
     app.renderer.view.onpointerup = function (e) {
+      startCounter();
       if (paused) return;
 
       player.shooting.shoot = false;
