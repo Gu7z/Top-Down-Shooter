@@ -76,8 +76,8 @@ export default class Shooting {
         enemies.splice(index, 1);
         enemy.kill();
 
-        this.app.stage.removeChild(bullet);
         this.bullets.splice(index, 1);
+        this.app.stage.removeChild(bullet);
         bullet.destroy();
 
         this.player.points += 1;
