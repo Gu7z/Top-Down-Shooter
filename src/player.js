@@ -9,6 +9,7 @@ export default class Player {
     this.velocity = 2;
     this.size = 20;
     this.username = username;
+    this.playerContainer = new PIXI.Container();
 
     const middleWidth = app.screen.width / 2;
     const middleHeight = app.screen.height / 2;
@@ -28,7 +29,8 @@ export default class Player {
     });
 
     this.setMousePosition(middleWidth, 0);
-    this.app.stage.addChild(this.player);
+    this.playerContainer.addChild(this.player);
+    this.app.stage.addChild(this.playerContainer);
 
     window.addEventListener("keydown", this.keydown);
     window.addEventListener("keyup", this.keyup);

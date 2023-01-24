@@ -1,7 +1,7 @@
 import Victor from "victor";
 
 export default class Enemy {
-  constructor({ app, enemyRadius, speed, color }) {
+  constructor({ app, enemyRadius, speed, color, container }) {
     this.app = app;
     this.speed = speed;
     this.enemyRadius = enemyRadius;
@@ -13,7 +13,8 @@ export default class Enemy {
 
     this.resetPosition();
 
-    app.stage.addChild(this.enemy);
+    container.addChild(this.enemy);
+    app.stage.addChild(container);
   }
 
   resetPosition() {

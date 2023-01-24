@@ -6,6 +6,7 @@ export default class Buff {
     this.width = 100;
     this.height = 100;
     this.buffDuration = 5;
+    this.buffContainer = new PIXI.Container();
 
     this.createBuff({
       app: this.app,
@@ -44,7 +45,8 @@ export default class Buff {
       newtimer.clear();
     }, 10);
 
-    app.stage.addChild(this.buff);
+    this.buffContainer.addChild(this.buff);
+    app.stage.addChild(this.buffContainer);
   }
 
   get(player) {

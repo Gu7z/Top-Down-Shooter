@@ -1,7 +1,7 @@
 import Buff from "../src/buff";
 import Player from "../src/player";
 import Spawner from "../src/spanwer";
-import Score from "./hud";
+import Hud from "./hud";
 import bulletHit from "./utils/bullet_hit";
 
 export default class Game {
@@ -10,15 +10,17 @@ export default class Game {
     let muted = false;
     const mousePosition = { x: 0, y: 0 };
     const player = new Player({ app, mousePosition, username });
-    const score = new Score({ app, player });
+    const hud = new Hud({ app, player });
     const buff = new Buff({ app });
     const enemySpawner = new Spawner({ app, player });
 
-    app.ticker.add(() => {
-      score.update();
-      if (player.lifes < 1) {
-        app.stage.removeChildren();
-        score.update();
+    this.ticker = app.ticker.add(() => {
+      hud.update();
+      if (hud.dead) {
+        app.stage.removeChild(player.playerContainer);
+        app.stage.removeChild(player.shooting.shootingContainer);
+        app.stage.removeChild(buff.buffContainer);
+        app.stage.removeChild(enemySpawner.spawnerContainer);
       }
 
       player.update();
@@ -77,7 +79,7 @@ export default class Game {
 
       switch (e.key) {
         case " ":
-          score.showPaused = !paused;
+          hud.showPaused = !paused;
           player.shooting.shoot = false;
           player.shooting.update();
           app.render();
