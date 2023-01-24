@@ -8,6 +8,7 @@ export default class Player {
     this.lifes = 1;
     this.velocity = 2;
     this.size = 20;
+    this.keys = {};
     this.username = username;
     this.playerContainer = new PIXI.Container();
 
@@ -26,6 +27,7 @@ export default class Player {
       app,
       player: this.player,
       playerSize: this.size,
+      keys: this.keys,
     });
 
     this.setMousePosition(middleWidth, 0);
@@ -42,11 +44,11 @@ export default class Player {
   };
 
   keydown = (e) => {
-    this.key[e.key] = true;
+    this.keys[e.key] = true;
   };
 
   keyup = (e) => {
-    this.key[e.key] = false;
+    this.keys[e.key] = false;
   };
 
   outOfBounds(key) {
@@ -74,19 +76,19 @@ export default class Player {
   }
 
   movePlayer = () => {
-    if (this.key["w"]) {
+    if (this.keys["w"]) {
       if (this.outOfBounds("w")) return;
       this.player.y -= this.velocity;
     }
-    if (this.key["a"]) {
+    if (this.keys["a"]) {
       if (this.outOfBounds("a")) return;
       this.player.x -= this.velocity;
     }
-    if (this.key["s"]) {
+    if (this.keys["s"]) {
       if (this.outOfBounds("s")) return;
       this.player.y += this.velocity;
     }
-    if (this.key["d"]) {
+    if (this.keys["d"]) {
       if (this.outOfBounds("d")) return;
       this.player.x += this.velocity;
     }
