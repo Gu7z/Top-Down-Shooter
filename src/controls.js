@@ -28,12 +28,22 @@ export default class Controls {
     this.controlsContainer.addChild(square);
     this.controlsContainer.addChild(back);
     this.addText("Voltar", x, this.app.screen.height - 50);
-    this.addText("W - Move para cima", x, y - 150);
-    this.addText("S - Move para baixo", x, y - 100);
-    this.addText("D - Move para direita", x, y - 50);
-    this.addText("A - Move para esquerda", x, y);
-    this.addText("Espaço - Pause", x, y + 50);
-    this.addText("M - Mutar/Desmutar", x, y + 100);
+
+    const texts = [
+      "Mouse1/Espaço - Atirar",
+      "W - Mover para cima",
+      "S - Mover para baixo",
+      "D - Mover para direita",
+      "A - Mover para esquerda",
+      "M - Mutar/Desmutar",
+      "Esc - Pausar",
+    ];
+
+    let pos = { x, y: y - 150 };
+    texts.forEach((text) => {
+      this.addText(text, pos.x, pos.y);
+      pos.y += 50;
+    });
 
     this.app.stage.addChild(this.controlsContainer);
   }
