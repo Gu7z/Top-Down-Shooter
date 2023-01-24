@@ -5,25 +5,12 @@ export default class Spawner {
     this.app = app;
     this.player = player;
 
-    this.initialInterval = this.spawnInterval = 3000;
     this.spawns = [];
-    this.startingSpawns = 2;
+    this.spawnLimit = 1;
 
-    this.interval = setInterval(() => this.spawn(player), this.initialInterval);
-  }
-
-  spawnLimit() {
-    const pointsToIncreaseEnemies = 20;
-    const maxSpawnsMultiplier =
-      Math.floor(this.player.points / pointsToIncreaseEnemies) || 1;
-
-    return this.startingSpawns + maxSpawnsMultiplier;
-  }
-
-  spawnTime(player) {
-    clearInterval(this.interval);
-    this.spawnInterval = Math.max(this.spawnInterval - 100, 0);
-    this.interval = setInterval(() => this.spawn(player), this.spawnInterval);
+    this.app.setInterval(() => {
+      this.spawnLimit += 1;
+    }, 3);
   }
 
   enemyType() {
@@ -44,19 +31,18 @@ export default class Spawner {
     }
   }
 
-  spawn(player) {
-    if (this.spawns.length >= this.spawnLimit()) return;
+  reset() {
+    this.spawns.forEach((spawn) => spawn.kill());
+    this.spawns = [];
+  }
+
+  update(player) {
+    if (this.spawns.length >= this.spawnLimit) return;
     if (player.lifes < 1) return;
-    this.spawnTime(player);
 
     const { app, enemyRadius } = this;
     const enemyProperties = this.enemyType();
     let spawn = new Enemy({ app, enemyRadius, ...enemyProperties });
     this.spawns.push(spawn);
-  }
-
-  reset() {
-    this.spawns.forEach((spawn) => spawn.kill());
-    this.spawns = [];
   }
 }
