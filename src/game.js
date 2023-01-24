@@ -11,8 +11,8 @@ export default class Game {
     const mousePosition = { x: 0, y: 0 };
     const player = new Player({ app, mousePosition, username });
     const hud = new Hud({ app, player });
-    const buff = new Buff({ app, hud });
     const enemySpawner = new Spawner({ app, player });
+    const buff = new Buff({ app, hud });
 
     this.ticker = app.ticker.add(() => {
       hud.update();
@@ -43,44 +43,13 @@ export default class Game {
       player.setMousePosition(e.clientX, e.clientY);
     };
 
-    var startTime, endTime;
-    function startCounter() {
-      startTime = new Date();
-    }
-    function endCounter() {
-      endTime = new Date();
-      var timeDiff = endTime - startTime; //in ms
-
-      var ms = Math.round(timeDiff);
-      return ms;
-    }
-
-    app.renderer.view.onpointerdown = function (e) {
-      const ms = endCounter();
-      if (ms < 100) return;
-      if (paused) return;
-      if (player.lifes < 1) return;
-
-      player.shooting.shoot = true;
-      player.shooting.update();
-    };
-
-    app.renderer.view.onpointerup = function (e) {
-      startCounter();
-      if (paused) return;
-
-      player.shooting.shoot = false;
-      player.shooting.update();
-    };
-
     window.addEventListener("keydown", (e) => {
-      const ignoredKeys = [" ", "m"];
-      if (!ignoredKeys.includes(e.key)) return;
+      const usedKeys = ["Escape", "m"];
+      if (!usedKeys.includes(e.key)) return;
 
       switch (e.key) {
-        case " ":
+        case "Escape":
           hud.showPaused = !paused;
-          player.shooting.shoot = false;
           player.shooting.update();
           app.render();
 
