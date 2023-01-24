@@ -17,6 +17,7 @@ export default class Game {
     this.ticker = app.ticker.add(() => {
       hud.update();
       if (hud.dead) {
+        player.shooting.interval.clear();
         app.stage.removeChild(player.playerContainer);
         app.stage.removeChild(player.shooting.shootingContainer);
         app.stage.removeChild(buff.buffContainer);

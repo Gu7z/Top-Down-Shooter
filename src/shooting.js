@@ -14,6 +14,7 @@ export default class Shooting {
     this.shootInterval = 0.3;
     this.shootingContainer = new PIXI.Container();
     this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
+    this.interval = undefined;
 
     window.addEventListener("pointerdown", () => {
       this.shooting = true;
@@ -25,12 +26,13 @@ export default class Shooting {
 
     this.shoot();
   }
+
   shoot() {
-    const time = this.app.setInterval(() => {
+    this.interval = this.app.setInterval(() => {
       if (this.keys[" "] || this.shooting) {
         this.fire();
       }
-      time.clear();
+      this.interval.clear();
       this.shoot();
     }, this.shootInterval / this.fireVelocity);
   }
