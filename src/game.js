@@ -11,7 +11,7 @@ export default class Game {
     const mousePosition = { x: 0, y: 0 };
     const player = new Player({ app, mousePosition, username });
     const hud = new Hud({ app, player });
-    const buff = new Buff({ app });
+    const buff = new Buff({ app, hud });
     const enemySpawner = new Spawner({ app, player });
 
     this.ticker = app.ticker.add(() => {

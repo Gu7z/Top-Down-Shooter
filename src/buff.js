@@ -1,8 +1,9 @@
 import generateRandom from "./utils/generate_random";
 
 export default class Buff {
-  constructor({ app }) {
+  constructor({ app, hud }) {
     this.app = app;
+    this.hud = hud;
     this.width = 100;
     this.height = 100;
     this.buffDuration = 5;
@@ -39,9 +40,11 @@ export default class Buff {
     }, 5);
 
     const newtimer = this.app.setInterval(() => {
-      this.createBuff({
-        app: this.app,
-      });
+      if (!this.hud.dead) {
+        this.createBuff({
+          app: this.app,
+        });
+      }
       newtimer.clear();
     }, 10);
 

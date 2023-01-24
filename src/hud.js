@@ -7,6 +7,8 @@ export default class Hud {
     this.player = player;
     this.menu = menu;
     this.hudContainer = new PIXI.Container();
+    this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
+    this.dead = false;
 
     const textColor = {
       fill: 0xffffff,
@@ -39,9 +41,6 @@ export default class Hud {
     this.hudContainer.addChild(this.textEnd);
 
     this.app.stage.addChild(this.hudContainer);
-
-    this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
-    this.dead = false;
   }
 
   set showPaused(paused) {
