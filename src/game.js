@@ -2,6 +2,7 @@ import Buff from "../src/buff";
 import Player from "../src/player";
 import Spawner from "../src/spanwer";
 import Score from "./hud";
+import bulletHit from "./utils/bullet_hit";
 
 export default class Game {
   constructor({ app, username }) {
@@ -27,6 +28,13 @@ export default class Game {
         enemy.update(player, enemySpawner);
       });
       player.shooting.update(enemySpawner.spawns);
+
+      bulletHit(
+        player.shooting.bullets,
+        enemySpawner.spawns,
+        player.shooting.bulletRadius,
+        player
+      );
     });
 
     app.renderer.view.onmousemove = function (e) {
@@ -47,7 +55,7 @@ export default class Game {
 
     app.renderer.view.onpointerdown = function (e) {
       const ms = endCounter();
-      if (ms < player.shooting.bulletSpeed * 100) return;
+      if (ms < 100) return;
       if (paused) return;
       if (player.lifes < 1) return;
 
