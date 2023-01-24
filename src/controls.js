@@ -30,7 +30,7 @@ export default class Controls {
     this.addText("Voltar", x, this.app.screen.height - 50);
 
     const texts = [
-      "Mouse1/Espaço - Atirar",
+      "Mouse1/Espaço - Pressione para Atirar",
       "W - Mover para cima",
       "S - Mover para baixo",
       "D - Mover para direita",
