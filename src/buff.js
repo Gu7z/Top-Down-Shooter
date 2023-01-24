@@ -7,7 +7,9 @@ export default class Buff {
     this.height = 50;
     this.buffDuration = 5;
 
-    this.createBuff({ app });
+    this.createBuff({
+      app: this.app,
+    });
   }
 
   createBuff({ app }) {
@@ -28,6 +30,21 @@ export default class Buff {
 
     this.text = new PIXI.Text("Buff", { fill: 0xffffff });
     this.text.position.set(randomX, randomY);
+
+    const timer = this.app.setInterval(() => {
+      if (!this.buff.destroyed) {
+        this.destroy();
+      }
+
+      timer.clear();
+    }, 5);
+
+    const newtimer = this.app.setInterval(() => {
+      this.createBuff({
+        app: this.app,
+      });
+      newtimer.clear();
+    }, 10);
 
     app.stage.addChild(this.buff);
     app.stage.addChild(this.text);
@@ -58,13 +75,6 @@ export default class Buff {
     if (isColliding && this.buff.visible) {
       this.destroy();
       this.get(player);
-
-      const timer = this.app.setInterval(() => {
-        this.createBuff({
-          app: this.app,
-        });
-        timer.clear();
-      }, 10);
     }
   }
 
