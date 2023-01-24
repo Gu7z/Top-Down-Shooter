@@ -79,19 +79,6 @@ function interval(pixi) {
 
   pixi.setInterval = setInterval;
   pixi.clearInterval = clearInterval;
-  // app.setInterval = (cb, time) => {
-  //   const timer = app.setTimeout(() => {
-  //     cb();
-  //     timer.clear();
-  //     app.setInterval(cb, time);
-  //   }, time);
-
-  //   return timer;
-  // };
-
-  // app.clearInterval = (interval) => {
-  //   interval.clear();
-  // };
 }
 
 export { interval, timeout };
