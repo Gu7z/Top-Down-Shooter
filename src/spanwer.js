@@ -34,7 +34,7 @@ export default class Spawner {
   });
 
   enemyType() {
-    const pointsToBoss = 5;
+    const pointsToBoss = 50;
     const shouldSpawnBoss = this.player.points % pointsToBoss === 0;
     const playerHasPoints = this.player.points > 0;
     const ammoutToSpawn = Math.floor(this.player.points / pointsToBoss);
