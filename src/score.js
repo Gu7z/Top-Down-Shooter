@@ -48,8 +48,8 @@ export default class Score {
     loading.innerText = "Carregando ScoreBoard....";
     loading.style.color = "white";
     loading.style.position = "absolute";
-    loading.style.top = "40%";
-    loading.style.left = "50%";
+    loading.style.top = "5%";
+    loading.style.left = "40%";
     loading.style.transform = "translate(-50%, -50%)";
 
     return loading;
@@ -71,12 +71,12 @@ export default class Score {
   drawTable() {
     const table = document.createElement("table");
     table.id = "scoreboard";
+    table.style.fontSize = "30px";
     table.style.position = "absolute";
-    table.style.top = "40%";
-    table.style.left = "50%";
-    table.style.transform = "translate(-50%, -30%)";
+    table.style.top = "0";
+    table.style.left = "320px";
+    table.style.width = "640px";
     table.style.backgroundColor = "white";
-    table.style.fontSize = "50px";
 
     return table;
   }
