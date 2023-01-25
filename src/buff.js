@@ -46,7 +46,7 @@ export default class Buff {
         });
       }
       newtimer.clear();
-    }, 10);
+    }, 20);
 
     this.buffContainer.addChild(this.buff);
     app.stage.addChild(this.buffContainer);
