@@ -16,14 +16,7 @@ export default class Shooting {
     this.shootingContainer = new PIXI.Container();
     this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
     this.interval = undefined;
-
-    window.addEventListener("pointerdown", () => {
-      this.shooting = true;
-    });
-
-    window.addEventListener("pointerup", () => {
-      this.shooting = false;
-    });
+    this.shooting = false;
 
     this.shoot();
   }
@@ -78,8 +71,9 @@ export default class Shooting {
     this.fireVelocity = velocity;
   }
 
-  update(enemySpawner, player) {
+  update(shooting, enemySpawner, player) {
     if (!enemySpawner || !player) return;
+    this.shooting = shooting;
     this.bullets.forEach((bullet) => {
       if (bullet.destroyed || !bullet) return;
 

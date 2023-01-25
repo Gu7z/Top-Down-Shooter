@@ -1,14 +1,12 @@
 import Shooting from "./shooting";
 
 export default class Player {
-  constructor({ app, username }) {
+  constructor({ app, username, keys }) {
     this.app = app;
-    this.key = {};
     this.points = 0;
     this.lifes = 1;
     this.velocity = 2;
     this.size = 20;
-    this.keys = {};
     this.username = username;
     this.playerContainer = new PIXI.Container();
 
@@ -27,28 +25,17 @@ export default class Player {
       app,
       player: this.player,
       playerSize: this.size,
-      keys: this.keys,
+      keys,
     });
 
     this.setMousePosition(middleWidth, 0);
     this.playerContainer.addChild(this.player);
     this.app.stage.addChild(this.playerContainer);
-
-    window.addEventListener("keydown", this.keydown);
-    window.addEventListener("keyup", this.keyup);
   }
 
   setMousePosition = (x, y) => {
     this.mouseX = x;
     this.mouseY = y;
-  };
-
-  keydown = (e) => {
-    this.keys[e.key] = true;
-  };
-
-  keyup = (e) => {
-    this.keys[e.key] = false;
   };
 
   outOfBounds(key) {
@@ -75,20 +62,20 @@ export default class Player {
     }
   }
 
-  movePlayer = () => {
-    if (this.keys["w"]) {
+  movePlayer = (keys) => {
+    if (keys["w"]) {
       if (this.outOfBounds("w")) return;
       this.player.y -= this.velocity;
     }
-    if (this.keys["a"]) {
+    if (keys["a"]) {
       if (this.outOfBounds("a")) return;
       this.player.x -= this.velocity;
     }
-    if (this.keys["s"]) {
+    if (keys["s"]) {
       if (this.outOfBounds("s")) return;
       this.player.y += this.velocity;
     }
-    if (this.keys["d"]) {
+    if (keys["d"]) {
       if (this.outOfBounds("d")) return;
       this.player.x += this.velocity;
     }
@@ -103,8 +90,8 @@ export default class Player {
     this.player.rotation = angle;
   };
 
-  update() {
+  update(keys) {
     this.lookTo();
-    this.movePlayer();
+    this.movePlayer(keys);
   }
 }

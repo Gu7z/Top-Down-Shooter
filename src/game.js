@@ -8,8 +8,10 @@ export default class Game {
   constructor({ app, username }) {
     let paused = false;
     let muted = false;
+    let shooting = false;
+    const keys = {};
     const mousePosition = { x: 0, y: 0 };
-    const player = new Player({ app, mousePosition, username });
+    const player = new Player({ app, mousePosition, username, keys });
     const hud = new Hud({ app, player });
     const enemySpawner = new Spawner({ app, player });
     const buff = new Buff({ app, hud });
@@ -24,22 +26,38 @@ export default class Game {
         app.stage.removeChild(enemySpawner.spawnerContainer);
       }
 
-      player.update();
+      player.update(keys);
       buff.update(player);
       enemySpawner.update(player);
       enemySpawner.spawns.forEach((enemy) => {
         enemy.update(player, enemySpawner);
       });
-      player.shooting.update(enemySpawner, player);
+      player.shooting.update(shooting, enemySpawner, player);
     });
 
     app.renderer.view.onmousemove = function (e) {
       player.setMousePosition(e.clientX, e.clientY);
     };
 
+    window.addEventListener("pointerdown", () => {
+      shooting = true;
+    });
+
+    window.addEventListener("pointerup", () => {
+      shooting = false;
+    });
+
+    window.addEventListener("keydown", (e) => {
+      keys[e.key] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      keys[e.key] = false;
+    });
+
     window.addEventListener("keydown", (e) => {
       const usedKeys = ["Escape", "m"];
       if (!usedKeys.includes(e.key)) return;
+      console.log(e.key);
 
       switch (e.key) {
         case "Escape":
