@@ -6,7 +6,7 @@ export default class Buff {
     this.hud = hud;
     this.width = 40;
     this.height = 40;
-    this.buffDuration = 5;
+    this.buffDuration = 4;
     this.buffContainer = new PIXI.Container();
 
     this.createBuff({
@@ -53,13 +53,13 @@ export default class Buff {
   }
 
   get(player) {
-    player.shooting.setFireVelocity = 3;
-    player.shooting.bulletSpeed = 6;
-    player.velocity = 3;
+    player.shooting.setFireVelocity = 2;
+    // player.shooting.bulletSpeed = 5;
+    // player.velocity = 3;
     this.app.setTimeout(() => {
       player.shooting.setFireVelocity = 1;
-      player.shooting.bulletSpeed = 4;
-      player.velocity = 2;
+      // player.shooting.bulletSpeed = 4;
+      // player.velocity = 2;
     }, this.buffDuration);
   }
 
