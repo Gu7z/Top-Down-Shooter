@@ -54,11 +54,11 @@ export default class Buff {
 
   get(player) {
     player.shooting.setFireVelocity = 3;
-    player.shooting.bulletSpeed = 5;
+    player.shooting.bulletSpeed = 6;
     player.velocity = 3;
     this.app.setTimeout(() => {
       player.shooting.setFireVelocity = 1;
-      player.shooting.bulletSpeed = 3;
+      player.shooting.bulletSpeed = 4;
       player.velocity = 2;
     }, this.buffDuration);
   }

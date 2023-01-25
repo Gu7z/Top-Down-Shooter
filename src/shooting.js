@@ -5,7 +5,7 @@ export default class Shooting {
     this.app = app;
     this.player = player;
     this.playerSize = playerSize;
-    this.bulletSpeed = 3;
+    this.bulletSpeed = 4;
     this.bullets = [];
     this.bulletRadius = 5;
     this.fireVelocity = 1;
