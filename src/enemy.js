@@ -8,20 +8,30 @@ export default class Enemy {
     this.value = value;
     this.enemyRadius = enemyRadius;
 
+    const textColor = [0xffffff, 0xffc0cb].includes(color)
+      ? 0x000000
+      : 0xffffff;
     this.enemy = new PIXI.Graphics();
     this.enemy.beginFill(color, 1);
     this.enemy.drawCircle(0, 0, enemyRadius);
     this.enemy.endFill();
+    this.enemyLifeText = new PIXI.Text(this.life, {
+      fill: textColor,
+    });
+    this.enemyLifeText.position.set(0, 0);
+    this.enemyLifeText.anchor.set(0.5);
 
     this.resetPosition();
 
     container.addChild(this.enemy);
+    container.addChild(this.enemyLifeText);
     app.stage.addChild(container);
   }
 
   resetPosition() {
     const randomPosition = this.randomPosition();
     this.enemy.position.set(randomPosition.x, randomPosition.y);
+    this.enemyLifeText.position.set(randomPosition.x, randomPosition.y);
   }
 
   randomPosition() {
@@ -79,10 +89,13 @@ export default class Enemy {
     const distance = playerPosition.subtract(enemyPosition);
     const velocity = distance.normalize().multiplyScalar(this.speed);
 
-    this.enemy.position.set(
-      this.enemy.position.x + velocity.x,
-      this.enemy.position.y + velocity.y
-    );
+    const newX = this.enemy.position.x + velocity.x;
+    const newY = this.enemy.position.y + velocity.y;
+
+    this.enemy.position.set(newX, newY);
+    this.enemyLifeText.position.set(newX, newY);
+
+    this.enemyLifeText.text = this.life;
   }
 
   kill(enemies, indexEnemy, player) {
@@ -92,6 +105,7 @@ export default class Enemy {
       if (enemies) {
         player.points += this.value;
         this.enemy.visible = false;
+        this.enemyLifeText.visible = false;
         enemies.splice(indexEnemy, 1);
       }
     }
