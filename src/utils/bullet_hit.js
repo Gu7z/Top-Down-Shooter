@@ -6,13 +6,11 @@ const bulletHit = (bullets, enemies, bulletRadius, player) => {
       let distance = Math.sqrt(distanceX * distanceX + distancey * distancey);
 
       if (distance < bulletRadius + enemy.enemyRadius) {
-        enemy.enemy.visible = false;
-        enemies.splice(indexEnemy, 1);
+        enemy.kill(enemies, indexEnemy, player);
 
         bullet.visible = false;
         bullets.splice(indexBullet, 1);
 
-        player.points += 1;
         if (player.points % 10 === 0) {
           PIXI.sound.Sound.from("sound/reward.mp3").play();
         }

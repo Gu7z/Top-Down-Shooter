@@ -83,8 +83,16 @@ export default class Enemy {
     );
   }
 
-  kill() {
-    this.enemy.destroy();
+  kill(enemies, indexEnemy, player) {
+    if (this.life > 1) {
+      this.life -= 1;
+    } else {
+      if (enemies) {
+        player.points += this.value;
+        this.enemy.visible = false;
+        enemies.splice(indexEnemy, 1);
+      }
+    }
   }
 
   update(player, spanwer) {
