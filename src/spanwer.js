@@ -7,6 +7,8 @@ export default class Spawner {
 
     this.spawns = [];
     this.spawnLimit = 1;
+    this.bossRadius = 25;
+    this.alreadySpawnedBosses = new Set();
 
     this.spawnerContainer = new PIXI.Container();
 
@@ -32,12 +34,21 @@ export default class Spawner {
   });
 
   enemyType() {
-    if (this.player.points % 50 === 0 && this.player.points > 0) {
-      const ammoutToSpawn = Math.floor(this.player.points / 50);
+    const pointsToBoss = 5;
+    const shouldSpawnBoss = this.player.points % pointsToBoss === 0;
+    const playerHasPoints = this.player.points > 0;
+    const ammoutToSpawn = Math.floor(this.player.points / pointsToBoss);
+    const bossAlreadySpawned = this.alreadySpawnedBosses.has(
+      this.player.points
+    );
+
+    if (shouldSpawnBoss && playerHasPoints && !bossAlreadySpawned) {
+      this.alreadySpawnedBosses.add(this.player.points);
+
       return this.enemyClass(
         1,
         0xffc0cb,
-        25,
+        this.bossRadius,
         10 * ammoutToSpawn,
         10,
         ammoutToSpawn
