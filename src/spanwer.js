@@ -34,7 +34,14 @@ export default class Spawner {
   enemyType() {
     if (this.player.points % 50 === 0 && this.player.points > 0) {
       const ammoutToSpawn = Math.floor(this.player.points / 50);
-      return this.enemyClass(1, 0xffc0cb, 25, 10, 10, ammoutToSpawn);
+      return this.enemyClass(
+        1,
+        0xffc0cb,
+        25,
+        10 * ammoutToSpawn,
+        10,
+        ammoutToSpawn
+      );
     }
 
     const type = Math.floor(Math.random() * 13) + 1;
