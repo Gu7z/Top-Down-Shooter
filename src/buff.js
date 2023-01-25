@@ -37,7 +37,7 @@ export default class Buff {
       }
 
       timer.clear();
-    }, 5);
+    }, 7);
 
     const newtimer = this.app.setInterval(() => {
       if (!this.hud.dead) {

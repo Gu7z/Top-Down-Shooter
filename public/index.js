@@ -4,8 +4,8 @@ import { timeout, interval } from "./lib/pixi-timeout.js";
 const canvas = document.getElementById("mycanvas");
 const app = new PIXI.Application({
   view: canvas,
-  width: window.innerWidth,
-  height: window.innerHeight,
+  width: 1280,
+  height: 720,
 });
 timeout(app);
 interval(app);

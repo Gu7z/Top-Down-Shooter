@@ -4,6 +4,10 @@
   overflow: hidden;
 }
 
+body {
+  background-color: #444444;
+}
+
 #scoreboard {
   font-family: Arial, Helvetica, sans-serif;
   border-collapse: collapse;
