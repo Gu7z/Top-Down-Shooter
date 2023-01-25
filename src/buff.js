@@ -4,8 +4,8 @@ export default class Buff {
   constructor({ app, hud }) {
     this.app = app;
     this.hud = hud;
-    this.width = 100;
-    this.height = 100;
+    this.width = 40;
+    this.height = 40;
     this.buffDuration = 5;
     this.buffContainer = new PIXI.Container();
 
