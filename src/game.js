@@ -30,14 +30,7 @@ export default class Game {
       enemySpawner.spawns.forEach((enemy) => {
         enemy.update(player, enemySpawner);
       });
-      player.shooting.update(enemySpawner.spawns);
-
-      bulletHit(
-        player.shooting.bullets,
-        enemySpawner.spawns,
-        player.shooting.bulletRadius,
-        player
-      );
+      player.shooting.update(enemySpawner, player);
     });
 
     app.renderer.view.onmousemove = function (e) {

@@ -1,4 +1,5 @@
 import Victor from "victor";
+import bulletHit from "./utils/bullet_hit";
 
 export default class Shooting {
   constructor({ app, player, playerSize, keys }) {
@@ -41,6 +42,16 @@ export default class Shooting {
     this.sound.play();
     let angle = this.player.rotation;
 
+    this.bullets = this.bullets.filter((bullet) => {
+      if (bullet.destroyed) return;
+
+      return (
+        Math.abs(bullet.position.x) <
+          this.app.screen.width + this.bulletRadius &&
+        Math.abs(bullet.position.y) < this.app.screen.height + this.bulletRadius
+      );
+    });
+
     const bullet = new PIXI.Graphics();
     bullet.beginFill(0x00ff00, 1);
     bullet.drawCircle(0, 0, this.bulletRadius);
@@ -64,26 +75,20 @@ export default class Shooting {
   }
 
   set setFireVelocity(velocity) {
-    const wasShooting = this.shooting;
     this.fireVelocity = velocity;
   }
 
-  update() {
-    this.bullets.forEach((bullet, index) => {
-      const isInsideScreen =
-        Math.abs(bullet.position.x) < this.app.screen.width &&
-        Math.abs(bullet.position.y) < this.app.screen.height;
-
-      if (!isInsideScreen) {
-        this.bullets[index].destroy();
-        this.bullets.splice(index, 1);
-        return;
-      }
+  update(enemySpawner, player) {
+    if (!enemySpawner || !player) return;
+    this.bullets.forEach((bullet) => {
+      if (bullet.destroyed || !bullet) return;
 
       bullet.position.set(
         bullet.position.x + bullet.velocity.x,
         bullet.position.y + bullet.velocity.y
       );
+
+      bulletHit(bullet, enemySpawner.spawns, this.bulletRadius, player);
     });
   }
 }

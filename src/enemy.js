@@ -29,6 +29,10 @@ export default class Enemy {
   }
 
   resetPosition() {
+    // const randomPosition = {
+    //   x: this.app.screen.width / 2,
+    //   y: this.app.screen.height / 2,
+    // };
     const randomPosition = this.randomPosition();
     this.enemy.position.set(randomPosition.x, randomPosition.y);
     this.enemyLifeText.position.set(randomPosition.x, randomPosition.y);
