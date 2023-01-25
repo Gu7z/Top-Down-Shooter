@@ -25,6 +25,17 @@ export default class Hud {
 
     const middleWidth = app.screen.width / 2;
     const middleHeight = app.screen.height / 6;
+
+    this.instructionsText = new PIXI.Text(
+      `Segure Mouse1 ou espaço para atirar. Use WASD para se mover`,
+      textColor
+    );
+    this.instructionsText.position.set(middleWidth, 10);
+    this.instructionsText.anchor.set(0.5);
+    this.app.setTimeout(() => {
+      this.instructionsText.visible = false;
+    }, 10);
+
     this.textEnd = new PIXI.Text("Game Over", textColor);
     this.textEnd.visible = false;
     this.textEnd.position.set(middleWidth, middleHeight);
@@ -35,6 +46,7 @@ export default class Hud {
     this.textPaused.anchor.set(0.5);
     this.textPaused.visible = false;
 
+    this.hudContainer.addChild(this.instructionsText);
     this.hudContainer.addChild(this.textPaused);
     this.hudContainer.addChild(this.textPoints);
     this.hudContainer.addChild(this.textLifes);
