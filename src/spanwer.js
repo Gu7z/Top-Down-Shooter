@@ -15,17 +15,26 @@ export default class Spawner {
     }, 5);
   }
 
-  enemyClass = (speed, color, enemyRadius, life, value = 1) => ({
+  enemyClass = (
+    speed,
+    color,
+    enemyRadius,
+    life,
+    value = 1,
+    ammoutToSpawn = 1
+  ) => ({
     speed,
     color,
     enemyRadius,
     life,
     value,
+    ammoutToSpawn,
   });
 
   enemyType() {
     if (this.player.points % 50 === 0 && this.player.points > 0) {
-      return this.enemyClass(1, 0xffc0cb, 25, 10, 10);
+      const ammoutToSpawn = Math.floor(this.player.points / 50);
+      return this.enemyClass(1, 0xffc0cb, 25, 10, 10, ammoutToSpawn);
     }
 
     const type = Math.floor(Math.random() * 13) + 1;
@@ -65,11 +74,14 @@ export default class Spawner {
 
     const { app } = this;
     const enemyProperties = this.enemyType();
-    let spawn = new Enemy({
-      app,
-      ...enemyProperties,
-      container: this.spawnerContainer,
-    });
-    this.spawns.push(spawn);
+    for (let index = 0; index < enemyProperties.ammoutToSpawn; index++) {
+      let spawn = new Enemy({
+        app,
+        ...enemyProperties,
+        container: this.spawnerContainer,
+      });
+
+      this.spawns.push(spawn);
+    }
   }
 }
