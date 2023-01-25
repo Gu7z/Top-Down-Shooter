@@ -15,28 +15,40 @@ export default class Spawner {
     }, 5);
   }
 
+  enemyClass = (speed, color, enemyRadius, life, value = 1) => ({
+    speed,
+    color,
+    enemyRadius,
+    life,
+    value,
+  });
+
   enemyType() {
+    if (this.player.points % 50 === 0 && this.player.points > 0) {
+      return this.enemyClass(1, 0xffc0cb, 25, 10, 10);
+    }
+
     const type = Math.floor(Math.random() * 13) + 1;
 
     switch (type) {
       case 1:
       case 2:
       case 3:
-        return { speed: 0.5, color: 0x0302fc, enemyRadius: 18 };
+        return this.enemyClass(0.5, 0x0302fc, 18, 4);
       case 4:
       case 5:
       case 6:
-        return { speed: 1, color: 0x63009e, enemyRadius: 17 };
+        return this.enemyClass(1, 0x63009e, 17, 3);
       case 7:
       case 8:
       case 9:
-        return { speed: 1.5, color: 0xa1015d, enemyRadius: 16 };
+        return this.enemyClass(1.5, 0xa1015d, 16, 2);
       case 10:
       case 11:
       case 12:
-        return { speed: 2, color: 0xfe0002, enemyRadius: 15 };
+        return this.enemyClass(2, 0xfe0002, 15, 1);
       case 13:
-        return { speed: 2.5, color: 0xffffff, enemyRadius: 14 };
+        return this.enemyClass(2.5, 0xffffff, 14, 1);
       default:
         break;
     }
@@ -51,11 +63,10 @@ export default class Spawner {
     if (this.spawns.length >= this.spawnLimit) return;
     if (player.lifes < 1) return;
 
-    const { app, enemyRadius } = this;
+    const { app } = this;
     const enemyProperties = this.enemyType();
     let spawn = new Enemy({
       app,
-      enemyRadius,
       ...enemyProperties,
       container: this.spawnerContainer,
     });
