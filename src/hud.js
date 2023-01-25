@@ -1,5 +1,6 @@
 import Menu from "./menu";
 import getUrl from "./utils/get_url";
+import sendScore from "./utils/send_score";
 
 export default class Hud {
   constructor({ app, player, menu }) {
@@ -59,39 +60,27 @@ export default class Hud {
     this.textPaused.visible = paused;
   }
 
-  async sendScore() {
-    const url = getUrl();
-
-    await fetch(url, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: this.player.username,
-        points: this.player.points,
-      }),
-    });
-  }
-
-  endgameCheck() {
+  endgameCheck(clear) {
     if (this.player.lifes < 1) {
       this.textEnd.visible = true;
 
       if (!this.dead) {
         this.dead = true;
         this.deathSound.play();
+        this.backButton(clear);
+        this.app.stop();
 
-        this.backButton();
-        this.sendScore();
+        sendScore({
+          name: this.player.username,
+          points: this.player.points,
+        });
       }
     } else {
       this.dead = false;
     }
   }
 
-  backButton() {
+  backButton(clear) {
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height;
     const back = new PIXI.Sprite(PIXI.Texture.WHITE);
@@ -104,9 +93,9 @@ export default class Hud {
     back.interactive = true;
     back.cursor = "pointer";
     back.on("click", () => {
-      console.log("teste");
-
+      clear();
       this.app.stage.removeChildren();
+      this.app.start();
       new Menu({ app: this.app });
     });
 
@@ -121,10 +110,10 @@ export default class Hud {
     this.hudContainer.addChild(backText);
   }
 
-  update(ticker) {
+  update(clear) {
     this.textPoints.text = `Pontos: ${this.player.points}`;
     this.textLifes.text = `Vidas: ${this.player.lifes}`;
 
-    this.endgameCheck();
+    this.endgameCheck(clear);
   }
 }
