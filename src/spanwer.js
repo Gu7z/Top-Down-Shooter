@@ -33,6 +33,12 @@ export default class Spawner {
     ammoutToSpawn,
   });
 
+  calculateSpeed(speed, bossAmmoutToSpawn) {
+    if (bossAmmoutToSpawn < 1) return speed;
+
+    return Math.min(speed * bossAmmoutToSpawn, 1.75);
+  }
+
   enemyType() {
     const pointsToBoss = 50;
     const shouldSpawnBoss = this.player.points % pointsToBoss === 0;
@@ -57,19 +63,23 @@ export default class Spawner {
 
     const type = Math.floor(Math.random() * 13) + 1;
 
+    let speed;
     switch (type) {
       case 1:
       case 2:
       case 3:
-        return this.enemyClass(0.5, 0x0302fc, 18, 4);
+        speed = this.calculateSpeed(0.5, ammoutToSpawn);
+        return this.enemyClass(speed, 0x0302fc, 18, 4);
       case 4:
       case 5:
       case 6:
-        return this.enemyClass(1, 0x63009e, 17, 3);
+        speed = this.calculateSpeed(1, ammoutToSpawn);
+        return this.enemyClass(speed, 0x63009e, 17, 3);
       case 7:
       case 8:
       case 9:
-        return this.enemyClass(1.5, 0xa1015d, 16, 2);
+        speed = this.calculateSpeed(1.5, ammoutToSpawn);
+        return this.enemyClass(speed, 0xa1015d, 16, 2);
       case 10:
       case 11:
       case 12:
