@@ -1,0 +1,3 @@
+class Bullets {
+  constructor(scene) {}
+}

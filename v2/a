@@ -1,0 +1,56 @@
+Make a game with HTML, JS and Phaser.js
+Return me 3 code block: index.html, style.css, script.js
+
+Sections:
+
+- Player
+- Bullets
+- Enemies
+- Bosses
+
+Player:
+
+- The game should have a player
+- Use the following spaceship image for the player character: https://i.imgur.com/6MPtGzj.png
+- The top of the image should point towards the mouse cursor.
+- The player's movement should be controlled using the WASD keys.
+
+Bullets:
+
+- The game should have bullets
+- The bullets should move in the direction of the mouse pointer.
+- The bullets should fire automatically
+- Bullets should be able to hit one enemy at a time.
+- The bullet will remove 1 hp
+- The bullet should be fired from the top of the player's image
+
+Enemies:
+
+- The game should have enemies
+- Use the following spaceship image for the player character: https://i.imgur.com/6MPtGzj.png
+- Implement four different enemy types with varying sizes, colors, points, velocity, and health.
+- Each enemy should have a health bar over its head
+- Enemies should spawn offscreen and go towards the player
+- If the enemy touches the player, the game is over
+- Enemies and bullets should be represented as circles drawn using Phaser.js, with different colors for each.
+- Enemy spawn delay should increase as the player get more points
+
+Bosses:
+
+- Use the following spaceship image for the player character: https://i.imgur.com/6MPtGzj.png
+- Spawn a boss every 500 score.
+- Spawn 1 more boss every 500 score.
+- All other enemies should be removed from the screen when the boss spawns.
+- The boss should shoot at the player.
+- The boss should have a lot of life.
+- The boss should move randomly on the screen.
+- While the boss is on the screen, no enemy should be spawned.
+- The boss velocity should be the same as the player.
+- Every 500 points, the boss amount increases by 1.
+- The game ends, and the player wins if they kill 4 bosses at the same time (2k points).
+
+Other features:
+
+- Include a menu with a start button and the name of the game. When the player dies, return to the menu.
+- Display the player's score in the top left corner of the screen.
+- All places that uses player.rotation should sum with Math.PI / 2 to rotate the main image. You can create a constant for that
