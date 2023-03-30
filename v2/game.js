@@ -20,6 +20,7 @@ const game = new Phaser.Game(config);
 
 let player, bullets, enemies, bosses, ui;
 let ROTATION_OFFSET = Math.PI / 2;
+let gameStarted = false;
 
 function preload() {
   this.load.image("player", "https://i.imgur.com/bFWTpaL.png");
@@ -28,10 +29,15 @@ function preload() {
 }
 
 function create() {
+  const pointer = this.input.activePointer;
+
   player = new Player(this);
-  ui = new UI(this, player.healthPoints);
+  ui = new UI(this, player.getData("health"));
+  enemies = new Enemies(this);
+  bullets = new Bullet(this, player, pointer, enemies.enemies);
 }
 
 function update() {
   player.update(this);
+  ui.updateHealth(player.getData("health"));
 }

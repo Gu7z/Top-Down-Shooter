@@ -35,6 +35,7 @@ class UI {
     });
     this.startButton.setInteractive();
     this.startButton.on("pointerdown", () => {
+      gameStarted = true;
       player.visible = true;
       this.playerHealth.visible = true;
       this.scoreText.visible = true;
@@ -44,11 +45,11 @@ class UI {
   }
 
   updateScore(score) {
-    this.scoretext.settext("Score: " + score);
+    this.scoretext.setText("Score: " + score);
   }
 
   updateHealth(health) {
-    this.playerHealth.settext(`Health: ${health}`);
+    this.playerHealth.setText(`Health: ${health}`);
   }
 
   hide() {
