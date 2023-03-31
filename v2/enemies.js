@@ -23,10 +23,9 @@ class Enemies {
   spawnEnemies() {
     if (!gameStarted) return;
     if (!this.shouldSpawn) return;
+    if (this.enemies.children.entries.length) return;
 
     this.generateEnemyType();
-
-    this.shouldSpawn = false;
   }
 
   generateEnemyType() {
@@ -44,10 +43,39 @@ class Enemies {
     enemy.x = Phaser.Math.Between(0, this.scene.physics.world.bounds.width);
     enemy.y = Phaser.Math.Between(0, this.scene.physics.world.bounds.height);
 
+    enemy.healthBar = new HealthBar(
+      this.scene,
+      enemy.getData("health"),
+      this.x,
+      this.y,
+      40
+    );
+
     this.shoot(enemy);
   }
 
   shoot(enemy) {
-    new Bullet(this.scene, enemy, player, player, 500);
+    enemy.bullets = new Bullet(this.scene, enemy, player, player, 500);
+  }
+
+  damage(enemy, damageTaken, addScore) {
+    const newEnemyHealth = enemy.getData("health") - damageTaken;
+    enemy.setData("health", newEnemyHealth);
+
+    const dead = newEnemyHealth <= 0;
+    if (!dead) return;
+
+    enemy.destroy();
+    enemy.healthBar.destroy();
+    this.scene.time.removeEvent(enemy.bullets.event);
+
+    addScore();
+  }
+
+  update() {
+    this.enemies.children.iterate(function (enemy) {
+      enemy.healthBar.updateHealth(enemy.getData("health"));
+      enemy.healthBar.updateLocation(enemy.x, enemy.y);
+    });
   }
 }

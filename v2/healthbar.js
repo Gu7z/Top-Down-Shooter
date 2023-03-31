@@ -41,7 +41,7 @@ class HealthBar extends Phaser.GameObjects.Graphics {
   }
 
   updateLocation(x, y) {
-    this.x = x;
+    this.x = x + 15;
     this.y = y - 42;
   }
 

@@ -12,7 +12,7 @@ class Bullet {
       runChildUpdate: true,
     });
 
-    scene.time.addEvent({
+    this.event = scene.time.addEvent({
       delay: 250,
       callback: () => this.fireBullet(),
       callbackScope: scene,
@@ -41,6 +41,12 @@ class Bullet {
       bullet.rotation = this.shooter.rotation;
       this.scene.physics.moveTo(bullet, this.target.x, this.target.y, 300);
     }
+  }
+
+  destroyBullet(bullet) {
+    bullet.setActive(false);
+    bullet.setVisible(false);
+    bullet.body.reset(0, 0);
   }
 
   enemyCollision(bullet, enemy) {

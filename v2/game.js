@@ -35,9 +35,25 @@ function create() {
   ui = new UI(this, player.getData("health"));
   enemies = new Enemies(this);
   bullets = new Bullet(this, player, pointer, enemies.enemies);
+
+  this.physics.add.collider(
+    bullets.bullets,
+    enemies.enemies,
+    (bullet, enemy) => {
+      const bulletDamage = bullets.bulletDamage;
+      const enemyValue = enemy.getData("points");
+      const addScore = () => ui.updateScore(enemyValue);
+
+      bullets.destroyBullet(bullet);
+      enemies.damage(enemy, bulletDamage, addScore);
+    },
+    null,
+    this
+  );
 }
 
 function update() {
   player.update(this);
   ui.updateHealth(player.getData("health"));
+  enemies.update();
 }

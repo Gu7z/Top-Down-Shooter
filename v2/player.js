@@ -13,13 +13,6 @@ class Player extends Phaser.Physics.Arcade.Sprite {
     this.speed = 200;
 
     this.setData("health", 3);
-    // this.healthBar = new HealthBar(
-    //   scene,
-    //   this.healthPoints,
-    //   this.x,
-    //   this.y,
-    //   40
-    // );
   }
 
   playerMovement() {
