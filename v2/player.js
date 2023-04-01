@@ -50,6 +50,5 @@ class Player extends Phaser.Physics.Arcade.Sprite {
   update(scene) {
     this.playerMovement();
     this.lookForPointer(scene);
-    //this.healthBar.update(this.x, this.y, this.healthPoints, this.visible);
   }
 }

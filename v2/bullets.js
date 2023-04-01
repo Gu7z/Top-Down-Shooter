@@ -1,5 +1,5 @@
 class Bullet {
-  constructor(scene, shooter, target, enemies, bulletInterval = 150) {
+  constructor(scene, shooter, target, enemies, bulletInterval = 250) {
     this.bulletInterval = bulletInterval;
     this.bulletDamage = 1;
 
@@ -13,7 +13,7 @@ class Bullet {
     });
 
     this.event = scene.time.addEvent({
-      delay: 250,
+      delay: this.bulletInterval,
       callback: () => this.fireBullet(),
       callbackScope: scene,
       loop: true,
@@ -45,14 +45,7 @@ class Bullet {
 
   destroyBullet(bullet) {
     bullet.setActive(false);
-    bullet.setVisible(false);
+    //bullet.setVisible(false);
     bullet.body.reset(0, 0);
-  }
-
-  enemyCollision(bullet, enemy) {
-    bullet.setActive(false);
-    bullet.setVisible(false);
-    bullet.body.reset(0, 0);
-    //enemy.setData("health", enemy.getData("health") - bullet.bulletDamage);
   }
 }

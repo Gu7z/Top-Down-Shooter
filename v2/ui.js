@@ -52,6 +52,29 @@ class UI {
 
   updateHealth(health) {
     this.playerHealth.setText(`Health: ${health}`);
+    if (health > 0) return;
+
+    this.gameOver();
+  }
+
+  gameOver() {
+    gameStarted = false;
+    this.gameOverText.visible = true;
+    this.menuText.visible = true;
+    this.startButton.visible = true;
+
+    player.setVelocity(0, 0);
+
+    console.log(enemies);
+    enemies.enemies.children.iterate((enemy) => {
+      enemy.setVelocity(0, 0);
+      enemy.bullets.bullets.children.iterate((bullet) => {
+        bullet.setVelocity(0, 0);
+      });
+      bullets.bullets.children.iterate((bullet) => {
+        bullet.setVelocity(0, 0);
+      });
+    });
   }
 
   hide() {

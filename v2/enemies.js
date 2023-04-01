@@ -56,6 +56,19 @@ class Enemies {
 
   shoot(enemy) {
     enemy.bullets = new Bullet(this.scene, enemy, player, player, 500);
+
+    this.scene.physics.add.collider(
+      enemy.bullets.bullets,
+      player,
+      (bullet) => {
+        enemy.bullets.destroyBullet(bullet);
+
+        const playerHealth = player.getData("health");
+        player.setData("health", playerHealth - 1);
+      },
+      null,
+      this
+    );
   }
 
   damage(enemy, damageTaken, addScore) {
