@@ -53,6 +53,8 @@ function create() {
 }
 
 function update() {
+  if (!gameStarted) return;
+
   player.update(this);
   ui.updateHealth(player.getData("health"));
   enemies.update();
