@@ -45,7 +45,7 @@ class Bullet {
 
   destroyBullet(bullet) {
     bullet.setActive(false);
-    //bullet.setVisible(false);
+    bullet.setVisible(false);
     bullet.body.reset(0, 0);
   }
 }
