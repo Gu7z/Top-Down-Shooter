@@ -60,7 +60,7 @@ class Enemies {
     this.scene.physics.add.collider(
       enemy.bullets.bullets,
       player,
-      (bullet) => {
+      (_p, bullet) => {
         enemy.bullets.destroyBullet(bullet);
 
         const playerHealth = player.getData("health");
