@@ -1,18 +1,536 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Space Shooter</title>
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="utf-8" />
+    <title>My Three.js App</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+      #gameOverContainer {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        display: none;
+      }
+      #pointCounter {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-size: 20px;
+      }
+      #healthBar {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 200px;
+        height: 10px;
+        background-color: red;
+      }
+      #healthBarFill {
+        height: 100%;
+        background-color: green;
+      }
+      .enemy {
+        position: relative;
+        display: inline-block;
+        text-align: center;
+        font-size: 14px;
+        color: white;
+      }
+      .enemy .healthText {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .buff {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: yellow;
+      }
+    </style>
   </head>
   <body>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.54.0/dist/phaser-arcade-physics.min.js"></script>
-    <script src="healthbar.js"></script>
-    <script src="game.js"></script>
-    <script src="ui.js"></script>
-    <script src="player.js"></script>
-    <script src="bullets.js"></script>
-    <script src="enemies.js"></script>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script>
+      // Create a scene
+      const scene = new THREE.Scene();
+
+      // Create a camera
+      const camera = new THREE.OrthographicCamera(
+        -window.innerWidth / 2,
+        window.innerWidth / 2,
+        window.innerHeight / 2,
+        -window.innerHeight / 2,
+        0.1,
+        1000
+      );
+      camera.position.z = 5;
+
+      // Create a renderer
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Create a player (square)
+      const playerGeometry = new THREE.BoxGeometry(30, 30, 1); // Adjust the size as needed
+      const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+      const player = new THREE.Mesh(playerGeometry, playerMaterial);
+      scene.add(player);
+
+      // Player variables
+      let playerLives = 3;
+      const maxPlayerLives = 3;
+      let playerMoveSpeed = 5;
+      let playerShootInterval = 200; // milliseconds
+
+      // Create bullets (circles)
+      const bulletGeometry = new THREE.CircleGeometry(5, 32);
+      const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Green color
+      const bullets = [];
+
+      // Point counter
+      let points = 0;
+      const pointCounter = document.createElement("div");
+      pointCounter.id = "pointCounter";
+      document.body.appendChild(pointCounter);
+
+      // Create enemy classes
+      class Enemy {
+        constructor(geometry, material, speed, health, pointValue) {
+          this.container = new THREE.Object3D(); // Container for the enemy mesh
+          this.mesh = new THREE.Mesh(geometry, material);
+          this.speed = speed;
+          this.health = health;
+          this.pointValue = pointValue;
+          this.mesh.healthText = this.createHealthText();
+          this.updateHealthText();
+          this.container.add(this.mesh); // Add the mesh to the container
+          scene.add(this.container);
+        }
+
+        createHealthText() {
+          const healthText = document.createElement("div");
+          healthText.className = "healthText";
+          this.mesh.add(healthText);
+          return healthText;
+        }
+
+        updateHealthText() {
+          this.mesh.healthText.innerText = this.health;
+        }
+
+        takeDamage() {
+          this.health--;
+          this.updateHealthText();
+        }
+
+        destroy() {
+          scene.remove(this.container);
+        }
+      }
+
+      // Enemy variables
+      const enemyClasses = [
+        {
+          geometry: new THREE.CircleGeometry(15, 32),
+          material: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
+          speed: 6,
+          health: 1,
+          pointValue: 10,
+        },
+        {
+          geometry: playerGeometry.clone(),
+          material: new THREE.MeshBasicMaterial({ color: 0x00ff00 }),
+          speed: 4,
+          health: 2,
+          pointValue: 20,
+        },
+        {
+          geometry: new THREE.RingGeometry(15, 25, 32),
+          material: new THREE.MeshBasicMaterial({ color: 0xff00ff }),
+          speed: 3,
+          health: 3,
+          pointValue: 30,
+        },
+      ];
+      const enemies = [];
+
+      // Keyboard state
+      const keyboardState = {};
+
+      // Mouse state
+      let isMouseDown = false;
+      const mouse = new THREE.Vector2();
+
+      // Shooting variables
+      let canShoot = true;
+      let shootingInterval;
+      let buffActive = false;
+
+      // Game state
+      let gameOver = false;
+
+      // Enemy spawn variables
+      let spawnInterval;
+      let enemySpawnLimit = 5;
+      let currentEnemyCount = 0;
+
+      // Health bar
+      const healthBar = document.createElement("div");
+      healthBar.id = "healthBar";
+
+      const healthBarFill = document.createElement("div");
+      healthBarFill.id = "healthBarFill";
+
+      healthBar.appendChild(healthBarFill);
+      document.body.appendChild(healthBar);
+
+      // Game Over text and restart button
+      const gameOverContainer = document.createElement("div");
+      gameOverContainer.id = "gameOverContainer";
+
+      const gameOverText = document.createElement("h1");
+      gameOverText.innerText = "Game Over";
+      gameOverText.style.color = "white";
+      gameOverContainer.appendChild(gameOverText);
+
+      const restartButton = document.createElement("button");
+      restartButton.innerText = "Restart Game";
+      gameOverContainer.appendChild(restartButton);
+
+      document.body.appendChild(gameOverContainer);
+
+      // Buff variables
+      let buff;
+      let buffActiveTime = 5000; // milliseconds
+      let buffInterval;
+
+      // Event listeners for keyboard and mouse
+      document.addEventListener("keydown", (event) => {
+        keyboardState[event.code] = true;
+      });
+
+      document.addEventListener("keyup", (event) => {
+        keyboardState[event.code] = false;
+      });
+
+      document.addEventListener("mousedown", () => {
+        if (canShoot && !gameOver) {
+          isMouseDown = true;
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        isMouseDown = false;
+      });
+
+      document.addEventListener("mousemove", (event) => {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      });
+
+      // Shoot a bullet
+      function shootBullet() {
+        const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
+        bullet.position.copy(player.position);
+
+        const bulletDirection = new THREE.Vector3();
+        camera.updateProjectionMatrix();
+        bulletDirection.set(mouse.x, mouse.y, 0);
+        bulletDirection.unproject(camera);
+        bulletDirection.sub(player.position).normalize();
+        bullet.direction = bulletDirection;
+
+        bullets.push(bullet);
+        scene.add(bullet);
+      }
+
+      // Spawn an enemy
+      function spawnEnemy() {
+        if (currentEnemyCount < enemySpawnLimit && !gameOver) {
+          const enemyClass =
+            enemyClasses[Math.floor(Math.random() * enemyClasses.length)];
+          const enemy = new Enemy(
+            enemyClass.geometry,
+            enemyClass.material,
+            enemyClass.speed,
+            enemyClass.health,
+            enemyClass.pointValue
+          );
+          const spawnX =
+            Math.random() < 0.5
+              ? -window.innerWidth / 2 - 50
+              : window.innerWidth / 2 + 50;
+          const spawnY =
+            Math.random() * window.innerHeight - window.innerHeight / 2;
+          enemy.container.position.set(spawnX, spawnY, 0); // Set position on the container
+          enemies.push(enemy);
+          currentEnemyCount++;
+        }
+      }
+
+      // Move the enemies towards the player
+      function moveEnemies() {
+        enemies.forEach((enemy) => {
+          const enemyDirection = new THREE.Vector3();
+          enemyDirection
+            .subVectors(player.position, enemy.container.position)
+            .normalize();
+          enemy.container.position.x += enemyDirection.x * enemy.speed;
+          enemy.container.position.y += enemyDirection.y * enemy.speed;
+
+          if (enemy.container.position.distanceTo(player.position) < 25) {
+            // Player touched an enemy
+            if (!gameOver) {
+              playerLives--;
+              updateHealthBar();
+              if (playerLives === 0) {
+                gameOver = true;
+                clearInterval(spawnInterval);
+                console.log("Game Over!");
+                showGameOverScreen();
+              }
+            }
+            enemy.destroy();
+            enemies.splice(enemies.indexOf(enemy), 1);
+            currentEnemyCount--;
+          }
+        });
+      }
+
+      // Check bullet collision with enemies
+      function checkBulletCollision() {
+        bullets.forEach((bullet) => {
+          enemies.forEach((enemy) => {
+            if (bullet.position.distanceTo(enemy.container.position) < 15) {
+              // Bullet hit enemy
+              enemy.takeDamage();
+              scene.remove(bullet);
+              bullets.splice(bullets.indexOf(bullet), 1);
+
+              if (enemy.health <= 0) {
+                // Enemy defeated
+                points += enemy.pointValue;
+                updatePointCounter();
+                enemy.destroy();
+                enemies.splice(enemies.indexOf(enemy), 1);
+                currentEnemyCount--;
+              }
+            }
+          });
+        });
+      }
+
+      // Check player collision with buff
+      function checkBuffCollision() {
+        if (buff && player.position.distanceTo(buff.position) < 20) {
+          // Player collided with buff
+          activateBuff();
+          scene.remove(buff);
+          buff = undefined;
+          clearInterval(buffInterval);
+        }
+      }
+
+      // Activate the buff power-up
+      function activateBuff() {
+        playerMoveSpeed *= 2;
+        playerShootInterval /= 2;
+
+        setTimeout(() => {
+          playerMoveSpeed /= 2;
+          playerShootInterval *= 2;
+        }, buffActiveTime);
+      }
+
+      // Animation loop
+      function animate() {
+        if (!gameOver) {
+          requestAnimationFrame(animate);
+        }
+
+        // Player movement
+        if (!gameOver) {
+          if (
+            keyboardState["KeyW"] &&
+            player.position.y < window.innerHeight / 2
+          )
+            player.position.y += playerMoveSpeed;
+          if (
+            keyboardState["KeyA"] &&
+            player.position.x > -window.innerWidth / 2
+          )
+            player.position.x -= playerMoveSpeed;
+          if (
+            keyboardState["KeyS"] &&
+            player.position.y > -window.innerHeight / 2
+          )
+            player.position.y -= playerMoveSpeed;
+          if (
+            keyboardState["KeyD"] &&
+            player.position.x < window.innerWidth / 2
+          )
+            player.position.x += playerMoveSpeed;
+        }
+
+        // Continuous shooting while mouse is pressed
+        if (isMouseDown && canShoot && !gameOver) {
+          shootBullet();
+          canShoot = false;
+          setTimeout(() => {
+            canShoot = true;
+          }, playerShootInterval);
+        }
+
+        // Move and remove bullets
+        bullets.forEach((bullet) => {
+          bullet.position.x += bullet.direction.x * 15;
+          bullet.position.y += bullet.direction.y * 15;
+
+          // Remove bullets outside the screen
+          if (
+            bullet.position.x < -window.innerWidth / 2 ||
+            bullet.position.x > window.innerWidth / 2 ||
+            bullet.position.y < -window.innerHeight / 2 ||
+            bullet.position.y > window.innerHeight / 2
+          ) {
+            scene.remove(bullet);
+            bullets.splice(bullets.indexOf(bullet), 1);
+          }
+        });
+
+        // Spawn enemies
+        if (!gameOver) {
+          spawnEnemy();
+        }
+
+        // Move enemies towards the player
+        moveEnemies();
+
+        // Check bullet collision with enemies
+        checkBulletCollision();
+
+        // Check buff collision with player
+        checkBuffCollision();
+
+        // Render the scene with the camera
+        renderer.render(scene, camera);
+      }
+
+      // Update the camera's orthographic parameters based on window dimensions
+      function updateCamera() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+
+        camera.left = -halfWidth;
+        camera.right = halfWidth;
+        camera.top = halfHeight;
+        camera.bottom = -halfHeight;
+
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+
+      // Start the animation loop
+      animate();
+
+      // Start spawning enemies
+      spawnInterval = setInterval(spawnEnemy, 2000); // Spawn every 2 seconds
+
+      // Show game over screen
+      function showGameOverScreen() {
+        const gameContainer = document.getElementById("gameOverContainer");
+        gameContainer.style.display = "block";
+
+        // Add restart button event listener
+        restartButton.addEventListener("click", restartGame);
+      }
+
+      // Restart the game
+      function restartGame() {
+        const gameContainer = document.getElementById("gameOverContainer");
+        gameContainer.style.display = "none";
+
+        // Reset game variables
+        gameOver = false;
+        playerLives = maxPlayerLives;
+        points = 0;
+        currentEnemyCount = 0;
+        bullets.forEach((bullet) => {
+          scene.remove(bullet);
+        });
+        bullets.length = 0;
+        enemies.forEach((enemy) => {
+          enemy.destroy();
+        });
+        enemies.length = 0;
+
+        // Start the animation loop and enemy spawning
+        animate();
+        spawnInterval = setInterval(spawnEnemy, 2000);
+
+        updateHealthBar();
+        updatePointCounter();
+      }
+
+      // Update health bar
+      function updateHealthBar() {
+        const fillPercentage = (playerLives / maxPlayerLives) * 100;
+        healthBarFill.style.width = fillPercentage + "%";
+      }
+
+      // Update point counter
+      function updatePointCounter() {
+        pointCounter.innerText = "Points: " + points;
+      }
+
+      // Initial updates
+      updateHealthBar();
+      updatePointCounter();
+
+      // Event listener for window resize
+      window.addEventListener("resize", () => {
+        updateCamera();
+      });
+
+      // Buff spawning
+      function spawnBuff() {
+        if (!gameOver && !buff) {
+          const buffGeometry = new THREE.CircleGeometry(10, 32);
+          const buffMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 }); // Yellow color
+          buff = new THREE.Mesh(buffGeometry, buffMaterial);
+          buff.position.x =
+            Math.random() * window.innerWidth - window.innerWidth / 2;
+          buff.position.y =
+            Math.random() * window.innerHeight - window.innerHeight / 2;
+          scene.add(buff);
+
+          buffInterval = setTimeout(() => {
+            scene.remove(buff);
+            buff = undefined;
+          }, 5000); // Remove buff after 5 seconds
+        }
+      }
+
+      // Start buff spawning
+      setInterval(spawnBuff, 10000); // Spawn buff every 10 seconds
+
+      // Disable zooming using CSS properties
+      document.body.style.touchAction = "none";
+      document.body.style.overflow = "hidden";
+    </script>
   </body>
 </html>
