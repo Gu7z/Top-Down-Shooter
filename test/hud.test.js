@@ -11,3 +11,16 @@ const hud = new Hud({ app, player });
 test('hud container initialized', () => {
   assert.ok(hud.hudContainer);
 });
+
+test('showPaused toggles visibility', () => {
+  hud.showPaused = true;
+  assert.strictEqual(hud.textPaused.visible, true);
+});
+
+test('endgameCheck adds back button', () => {
+  player.lifes = 0;
+  hud.endgameCheck(() => {});
+  const back = hud.hudContainer.children.find(c => c.eventHandlers);
+  back.eventHandlers.click();
+  assert.ok(back);
+});

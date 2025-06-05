@@ -17,3 +17,12 @@ test('fire creates a bullet', () => {
   shooting.fire();
   assert.strictEqual(shooting.bullets.length, 1);
 });
+
+test('update moves bullets', () => {
+  const enemySpawner = { spawns: [], update() {} };
+  shooting.fire();
+  const bullet = shooting.bullets[0];
+  const startX = bullet.position.x;
+  shooting.update(true, enemySpawner, { player: {} });
+  assert.notStrictEqual(bullet.position.x, startX);
+});

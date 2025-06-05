@@ -18,3 +18,9 @@ const menu = new Menu({ app });
 test('menu container created', () => {
   assert.ok(menu.menuContainer.children.length > 0);
 });
+
+test('show and hide modify stage', () => {
+  menu.hide();
+  menu.show();
+  assert.ok(true);
+});

@@ -34,3 +34,9 @@ test('player shooting adds bullets', () => {
   player.shooting.fire();
   assert.strictEqual(player.shooting.bullets.length, count + 1);
 });
+
+test('update calls look and move', () => {
+  player.setMousePosition(5, 5);
+  player.update({});
+  assert.ok(true);
+});

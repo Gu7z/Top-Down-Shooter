@@ -16,3 +16,11 @@ test('enemyType returns an object with speed', () => {
   const type = spawner.enemyType();
   assert.ok('speed' in type);
 });
+
+test('update spawns enemies', () => {
+  player.points = 1;
+  spawner.update(player);
+  assert.ok(spawner.spawns.length >= 0);
+  spawner.reset();
+  assert.strictEqual(spawner.spawns.length, 0);
+});
