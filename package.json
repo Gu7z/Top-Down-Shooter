@@ -6,7 +6,7 @@
   "scripts": {
     "start": "snowpack dev --polyfill-node",
     "build": "snowpack build --polyfill-node",
-    "test": "c8 --reporter=text --reporter=lcov node --test --experimental-specifier-resolution=node"
+    "test": "c8 --reporter=text --reporter=lcov --exclude=src node --test --experimental-specifier-resolution=node"
   },
   "devDependencies": {
     "@snowpack/plugin-dotenv": "^2.2.0",

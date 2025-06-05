@@ -7,6 +7,9 @@ setupPixiMock();
 const app = createAppMock();
 const player = { points: 0, lifes: 1, username: 'u' };
 const hud = new Hud({ app, player });
+global.localStorage = { getItem(){}, setItem(){} };
+global.fetch = async () => ({ json: async () => ({}) });
+global.__SNOWPACK_ENV__ = { SNOWPACK_PUBLIC_API_URL_PROD:'', SNOWPACK_PUBLIC_API_URL_DEV:'', MODE:'production' };
 
 test('hud container initialized', () => {
   assert.ok(hud.hudContainer);

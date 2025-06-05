@@ -30,14 +30,19 @@ test('destroy marks buff as destroyed', () => {
 
 test('buff collision updates player', () => {
   buff.createBuff({ app });
+  buff.buff.getBounds = () => ({ x: 0, y: 0, width: 40, height: 40 });
   buff.update(player);
   assert.strictEqual(player.shooting.setFireVelocity, 2);
 });
 
 test('timers trigger destroy', () => {
-  const appImmediate = { ...createAppMock(), setInterval(fn){ fn(); return { clear(){} }; }, setTimeout(fn){ fn(); return { clear(){} }; } };
+  const cbs = [];
+  const appImmediate = {
+    ...createAppMock(),
+    setInterval(fn) { cbs.push(fn); return { clear() {} }; },
+    setTimeout(fn) { fn(); return { clear() {} }; }
+  };
   const b = new Buff({ app: appImmediate, hud });
-  b.buff.getBounds = () => ({ x: 0, y: 0, width: 40, height: 40 });
-  b.update(player);
+  cbs[0]();
   assert.ok(b.buff.destroyed);
 });

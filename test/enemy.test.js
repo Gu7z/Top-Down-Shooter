@@ -9,6 +9,7 @@ const container = new PIXI.Container();
 const enemy = new Enemy({ app, enemyRadius: 10, speed:1, color:0xff0000, life:2, value:1, container });
 const player = { player: new PIXI.Sprite(), lifes:1, points:0 };
 const spawner = { resetCalled:false, reset(){this.resetCalled=true;} };
+player.player.width = 20;
 player.player.position.set(enemy.enemy.position.x, enemy.enemy.position.y);
 
 test('randomPosition returns Victor instance', () => {
