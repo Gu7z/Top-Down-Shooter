@@ -1,8 +1,8 @@
-import Buff from "../src/buff";
-import Player from "../src/player";
-import Spawner from "../src/spanwer";
-import Hud from "./hud";
-import bulletHit from "./utils/bullet_hit";
+import Buff from "./buff.js";
+import Player from "./player.js";
+import Spawner from "./spanwer.js";
+import Hud from "./hud.js";
+import bulletHit from "./utils/bullet_hit.js";
 
 export default class Game {
   constructor({ app, username }) {

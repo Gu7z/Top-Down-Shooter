@@ -1,4 +1,4 @@
-import getUrl from "./get_url";
+import getUrl from "./get_url.js";
 
 const sendScore = async (score) => {
   const url = getUrl();

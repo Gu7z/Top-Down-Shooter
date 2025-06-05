@@ -1,6 +1,6 @@
-import Controls from "./controls";
-import Game from "./game";
-import Score from "./score";
+import Controls from "./controls.js";
+import Game from "./game.js";
+import Score from "./score.js";
 
 export default class Menu {
   constructor({ app }) {

@@ -1,6 +1,6 @@
-import Menu from "./menu";
-import getUrl from "./utils/get_url";
-import sendScore from "./utils/send_score";
+import Menu from "./menu.js";
+import getUrl from "./utils/get_url.js";
+import sendScore from "./utils/send_score.js";
 
 export default class Hud {
   constructor({ app, player, menu }) {

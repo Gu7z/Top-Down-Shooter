@@ -1,4 +1,4 @@
-import generateRandom from "./utils/generate_random";
+import generateRandom from "./utils/generate_random.js";
 
 export default class Buff {
   constructor({ app, hud }) {
