@@ -1,4 +1,4 @@
-import Shooting from "./shooting";
+import Shooting from "./shooting.js";
 
 export default class Player {
   constructor({ app, username, keys }) {

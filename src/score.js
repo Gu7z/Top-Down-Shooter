@@ -1,4 +1,4 @@
-import getUrl from './utils/get_url';
+import getUrl from "./utils/get_url.js";
 
 export default class Score {
   constructor({ onBack }) {

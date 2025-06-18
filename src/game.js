@@ -1,7 +1,7 @@
-import Buff from "../src/buff";
-import Player from "../src/player";
-import Spawner from "../src/spanwer";
-import bulletHit from "./utils/bullet_hit";
+import Buff from "./buff.js";
+import Player from "./player.js";
+import Spawner from "./spanwer.js";
+import bulletHit from "./utils/bullet_hit.js";
 
 export default class Game {
   constructor({ app, username, hud }) {
@@ -11,32 +11,33 @@ export default class Game {
     let shooting = false;
     const keys = {};
     const mousePosition = { x: 0, y: 0 };
-    const player = new Player({ app, mousePosition, username, keys });
-    const enemySpawner = new Spawner({ app, player });
-    hud.setPlayer(player);
-    const buff = new Buff({ app, hud });
+    this.player = new Player({ app, mousePosition, username, keys });
+    this.enemySpawner = new Spawner({ app, player: this.player });
+    this.hud = hud;
+    this.hud.setPlayer(this.player);
+    this.buff = new Buff({ app, hud: this.hud });
 
-    const clear = () => {
-      player.shooting.interval.clear();
-      app.stage.removeChild(player.playerContainer);
-      app.stage.removeChild(player.shooting.shootingContainer);
-      app.stage.removeChild(buff.buffContainer);
-      app.stage.removeChild(enemySpawner.spawnerContainer);
+    this.clear = () => {
+      this.player.shooting.interval.clear();
+      app.stage.removeChild(this.player.playerContainer);
+      app.stage.removeChild(this.player.shooting.shootingContainer);
+      app.stage.removeChild(this.buff.buffContainer);
+      app.stage.removeChild(this.enemySpawner.spawnerContainer);
     };
 
     this.ticker = app.ticker.add(() => {
-      hud.update(clear);
-      player.update(keys);
-      buff.update(player);
-      enemySpawner.update(player);
-      enemySpawner.spawns.forEach((enemy) => {
-        enemy.update(player, enemySpawner);
+      this.hud.update(this.clear);
+      this.player.update(keys);
+      this.buff.update(this.player);
+      this.enemySpawner.update(this.player);
+      this.enemySpawner.spawns.forEach((enemy) => {
+        enemy.update(this.player, this.enemySpawner);
       });
-      player.shooting.update(shooting, enemySpawner, player);
+      this.player.shooting.update(shooting, this.enemySpawner, this.player);
     });
 
-    app.renderer.view.onmousemove = function (e) {
-      player.setMousePosition(e.clientX, e.clientY);
+    app.renderer.view.onmousemove = (e) => {
+      this.player.setMousePosition(e.clientX, e.clientY);
     };
 
     window.addEventListener("pointerdown", () => {
@@ -60,8 +61,8 @@ export default class Game {
 
       switch (e.key) {
         case "Escape":
-          hud.showPaused = !paused;
-          player.shooting.update();
+          this.hud.showPaused = !paused;
+          this.player.shooting.update();
           app.render();
 
           if (paused) {

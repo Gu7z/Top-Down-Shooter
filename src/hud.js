@@ -1,4 +1,4 @@
-import sendScore from './utils/send_score';
+import sendScore from "./utils/send_score.js";
 
 export default class Hud {
   constructor({ app, onBack }) {

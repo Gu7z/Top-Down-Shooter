@@ -1,5 +1,5 @@
 import Victor from "victor";
-import bulletHit from "./utils/bullet_hit";
+import bulletHit from "./utils/bullet_hit.js";
 
 export default class Shooting {
   constructor({ app, player, playerSize, keys }) {
