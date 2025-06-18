@@ -1,4 +1,4 @@
-import Enemy from "./enemy";
+import Enemy from "./enemy.js";
 
 export default class Spawner {
   constructor({ app, player }) {
