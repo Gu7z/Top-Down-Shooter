@@ -1,11 +1,10 @@
 import Buff from "../src/buff";
 import Player from "../src/player";
 import Spawner from "../src/spanwer";
-import Hud from "./hud";
 import bulletHit from "./utils/bullet_hit";
 
 export default class Game {
-  constructor({ app, username }) {
+  constructor({ app, username, hud }) {
     this.app = app;
     let paused = false;
     let muted = false;
@@ -14,7 +13,7 @@ export default class Game {
     const mousePosition = { x: 0, y: 0 };
     const player = new Player({ app, mousePosition, username, keys });
     const enemySpawner = new Spawner({ app, player });
-    const hud = new Hud({ app, player });
+    hud.setPlayer(player);
     const buff = new Buff({ app, hud });
 
     const clear = () => {

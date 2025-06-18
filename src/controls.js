@@ -1,61 +1,54 @@
 export default class Controls {
-  constructor({ app, menu }) {
-    this.app = app;
-    this.controlsContainer = new PIXI.Container();
+  constructor({ onBack }) {
+    this.onBack = onBack;
+    this.container = document.createElement('div');
+    this.container.className = 'absolute inset-0 flex flex-col items-center justify-center space-y-4 bg-gray-900 bg-opacity-80 text-white pointer-events-auto';
 
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height / 3;
-    const square = new PIXI.Sprite(PIXI.Texture.WHITE);
-    square.tint = 0xffffff;
-    square.anchor.set(0.5);
-    square.position.set(x, y);
-    square.width = 380;
-    square.height = 400;
+    const title = document.createElement('h1');
+    title.textContent = 'Controls';
+    title.className = 'text-3xl font-bold';
+    this.container.appendChild(title);
 
-    const back = new PIXI.Sprite(PIXI.Texture.WHITE);
-    back.tint = 0xffffff;
-    back.anchor.set(0.5);
-    back.position.set(x, this.app.screen.height - 50);
-    back.width = 160;
-    back.height = 40;
-    back.interactive = true;
-    back.cursor = "pointer";
-    back.on("click", () => {
-      this.app.stage.removeChild(this.controlsContainer);
-      menu.show();
-    });
-
-    this.controlsContainer.addChild(square);
-    this.controlsContainer.addChild(back);
-    this.addText("Voltar", x, this.app.screen.height - 50);
-
-    const texts = [
-      "Mouse1/Espaço - Pressione para Atirar",
-      "W - Mover para cima",
-      "S - Mover para baixo",
-      "D - Mover para direita",
-      "A - Mover para esquerda",
-      "M - Mutar/Desmutar",
-      "Esc - Pausar",
+    const instructions = [
+      'Left click/Space - Shoot',
+      'W - Move up',
+      'S - Move down',
+      'D - Move right',
+      'A - Move left',
+      'M - Mute/Unmute',
+      'Esc - Pause',
     ];
 
-    let pos = { x, y: y - 150 };
-    texts.forEach((text) => {
-      this.addText(text, pos.x, pos.y);
-      pos.y += 50;
+    const list = document.createElement('ul');
+    list.className = 'space-y-2 text-lg';
+    instructions.forEach((text) => {
+      const item = document.createElement('li');
+      item.textContent = text;
+      list.appendChild(item);
     });
+    this.container.appendChild(list);
 
-    this.app.stage.addChild(this.controlsContainer);
+    this.container.appendChild(
+      this.createButton('Back', () => {
+        this.hide();
+        this.onBack();
+      })
+    );
   }
 
-  addText(text, x, y) {
-    const rule = new PIXI.Text(text, {
-      fill: 0x000000,
-      fontSize: 30,
-    });
-    rule.position.set(x, y);
-    rule.anchor.set(0.5);
+  createButton(text, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded w-48';
+    btn.textContent = text;
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
 
-    this.controlsContainer.addChild(rule);
+  show() {
+    document.getElementById('ui-root').appendChild(this.container);
+  }
+
+  hide() {
+    this.container.remove();
   }
 }

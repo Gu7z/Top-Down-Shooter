@@ -4,15 +4,16 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pixi Game v1</title>
+    <title>Top Down Shooter</title>
     <script src="./lib/pixi.min.js"></script>
     <script src="./lib/pixi-sound.js"></script>
-    <script src="./lib/pixi-text-input.js"></script>
-    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-
-  <body>
-    <canvas id="mycanvas"></canvas>
+  <body class="bg-gray-800">
+    <div id="game" class="relative w-full h-screen flex items-center justify-center">
+      <canvas id="mycanvas" class="border" width="1280" height="720"></canvas>
+      <div id="ui-root" class="absolute inset-0 pointer-events-none"></div>
+    </div>
     <script type="module" src="index.js"></script>
   </body>
 </html>

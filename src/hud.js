@@ -1,119 +1,85 @@
-import Menu from "./menu";
-import getUrl from "./utils/get_url";
-import sendScore from "./utils/send_score";
+import sendScore from './utils/send_score';
 
 export default class Hud {
-  constructor({ app, player, menu }) {
+  constructor({ app, onBack }) {
     this.app = app;
-    this.player = player;
-    this.menu = menu;
-    this.hudContainer = new PIXI.Container();
-    this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
-    this.dead = false;
+    this.onBack = onBack;
+    this.player = null;
+    this.deathSound = PIXI.sound.Sound.from('sound/death.mp3');
 
-    const textColor = {
-      fill: 0xffffff,
-    };
+    this.container = document.createElement('div');
+    this.container.className = 'absolute inset-0 pointer-events-none text-white text-lg';
 
-    this.textPoints = new PIXI.Text(`Pontos: ${this.player.points}`, textColor);
-    this.textPoints.position.set(0, 0);
+    this.stats = document.createElement('div');
+    this.stats.className = 'absolute top-2 left-2 space-y-1';
+    this.container.appendChild(this.stats);
 
-    this.textLifes = new PIXI.Text(`Vidas: ${this.player.lifes}`, textColor);
-    this.textLifes.position.set(0, 30);
+    this.textPoints = document.createElement('div');
+    this.textLifes = document.createElement('div');
+    this.stats.appendChild(this.textPoints);
+    this.stats.appendChild(this.textLifes);
 
-    this.textLifes = new PIXI.Text(`Pausado`, textColor);
-    this.textLifes.position.set(0, 30);
+    this.instructions = document.createElement('div');
+    this.instructions.className = 'absolute top-2 left-1/2 -translate-x-1/2 text-sm';
+    this.instructions.textContent = 'Hold left click or space to shoot. Use WASD to move';
+    this.container.appendChild(this.instructions);
+    setTimeout(() => this.instructions.remove(), 10000);
 
-    const middleWidth = app.screen.width / 2;
-    const middleHeight = app.screen.height / 6;
+    this.pausedText = document.createElement('div');
+    this.pausedText.className = 'absolute inset-0 flex items-center justify-center text-5xl font-bold hidden';
+    this.pausedText.textContent = 'Paused';
+    this.container.appendChild(this.pausedText);
 
-    this.instructionsText = new PIXI.Text(
-      `Segure Mouse1 ou espaço para atirar. Use WASD para se mover`,
-      textColor
-    );
-    this.instructionsText.position.set(middleWidth, 10);
-    this.instructionsText.anchor.set(0.5);
-    this.app.setTimeout(() => {
-      this.instructionsText.visible = false;
-    }, 10);
+    this.endText = document.createElement('div');
+    this.endText.className = 'absolute inset-0 flex items-center justify-center text-6xl font-bold hidden';
+    this.endText.textContent = 'Game Over';
+    this.container.appendChild(this.endText);
 
-    this.textEnd = new PIXI.Text("Game Over", textColor);
-    this.textEnd.visible = false;
-    this.textEnd.position.set(middleWidth, middleHeight);
-    this.textEnd.anchor.set(0.5);
+    this.backBtn = document.createElement('button');
+    this.backBtn.className = 'absolute bottom-10 left-1/2 -translate-x-1/2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded hidden pointer-events-auto';
+    this.backBtn.textContent = 'Back';
+    this.backBtn.addEventListener('click', () => {
+      this.hide();
+      this.onBack();
+    });
+    this.container.appendChild(this.backBtn);
 
-    this.textPaused = new PIXI.Text(`Pausado`, textColor);
-    this.textPaused.position.set(middleWidth, middleHeight);
-    this.textPaused.anchor.set(0.5);
-    this.textPaused.visible = false;
-
-    this.hudContainer.addChild(this.instructionsText);
-    this.hudContainer.addChild(this.textPaused);
-    this.hudContainer.addChild(this.textPoints);
-    this.hudContainer.addChild(this.textLifes);
-    this.hudContainer.addChild(this.textEnd);
-
-    this.app.stage.addChild(this.hudContainer);
+    document.getElementById('ui-root').appendChild(this.container);
   }
 
-  set showPaused(paused) {
-    this.textPaused.visible = paused;
+  setPlayer(player) {
+    this.player = player;
+  }
+
+  set showPaused(val) {
+    if (val) this.pausedText.classList.remove('hidden');
+    else this.pausedText.classList.add('hidden');
   }
 
   endgameCheck(clear) {
     if (this.player.lifes < 1) {
-      this.textEnd.visible = true;
-
+      this.endText.classList.remove('hidden');
+      this.backBtn.classList.remove('hidden');
       if (!this.dead) {
         this.dead = true;
         this.deathSound.play();
-        this.backButton(clear);
+        clear();
         this.app.stop();
-
-        sendScore({
-          name: this.player.username,
-          points: this.player.points,
-        });
+        sendScore({ name: this.player.username, points: this.player.points });
       }
     } else {
       this.dead = false;
     }
   }
 
-  backButton(clear) {
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height;
-    const back = new PIXI.Sprite(PIXI.Texture.WHITE);
-
-    back.tint = 0xffffff;
-    back.anchor.set(0.5);
-    back.position.set(x, y - 100);
-    back.width = 160;
-    back.height = 40;
-    back.interactive = true;
-    back.cursor = "pointer";
-    back.on("click", () => {
-      clear();
-      this.app.stage.removeChildren();
-      this.app.start();
-      new Menu({ app: this.app });
-    });
-
-    const backText = new PIXI.Text("Voltar", {
-      fill: 0x000000,
-      fontSize: 30,
-    });
-    backText.position.set(x, y - 100);
-    backText.anchor.set(0.5);
-
-    this.hudContainer.addChild(back);
-    this.hudContainer.addChild(backText);
+  update(clear) {
+    if (!this.player) return;
+    this.textPoints.textContent = `Pontos: ${this.player.points}`;
+    this.textLifes.textContent = `Vidas: ${this.player.lifes}`;
+    this.endgameCheck(clear);
   }
 
-  update(clear) {
-    this.textPoints.text = `Pontos: ${this.player.points}`;
-    this.textLifes.text = `Vidas: ${this.player.lifes}`;
-
-    this.endgameCheck(clear);
+  hide() {
+    this.container.remove();
   }
 }

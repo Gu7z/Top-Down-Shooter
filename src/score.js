@@ -1,135 +1,78 @@
-import getUrl from "./utils/get_url";
+import getUrl from './utils/get_url';
 
 export default class Score {
-  constructor({ app, menu }) {
-    this.app = app;
-    this.menu = menu;
-    this.scoreContainer = new PIXI.Container();
+  constructor({ onBack }) {
+    this.onBack = onBack;
+    this.container = document.createElement('div');
+    this.container.className = 'absolute inset-0 bg-gray-900 bg-opacity-80 flex flex-col items-center pt-10 space-y-6 text-white pointer-events-auto';
 
-    this.backButton();
-    this.app.stage.addChild(this.scoreContainer);
+    const title = document.createElement('h1');
+    title.textContent = 'Scoreboard';
+    title.className = 'text-3xl font-bold';
+    this.container.appendChild(title);
 
-    this.showScore().then(() => {
-      this.app.stage.addChild(this.scoreContainer);
-    });
+    this.table = document.createElement('table');
+    this.table.className = 'text-left text-lg border-collapse';
+    this.container.appendChild(this.table);
+
+    this.container.appendChild(
+      this.createButton('Back', () => {
+        this.hide();
+        this.onBack();
+      })
+    );
+
+    this.showScore();
   }
 
-  backButton() {
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height;
-    const back = new PIXI.Sprite(PIXI.Texture.WHITE);
-
-    back.tint = 0xffffff;
-    back.anchor.set(0.5);
-    back.position.set(x, y - 100);
-    back.width = 160;
-    back.height = 40;
-    back.interactive = true;
-    back.cursor = "pointer";
-    back.on("click", () => {
-      document.body.removeChild(document.getElementById("scoreboard"));
-      this.app.stage.removeChild(this.scoreContainer);
-      this.menu.show();
-    });
-
-    const backText = new PIXI.Text("Voltar", {
-      fill: 0x000000,
-      fontSize: 30,
-    });
-    backText.position.set(x, y - 100);
-    backText.anchor.set(0.5);
-
-    this.scoreContainer.addChild(back);
-    this.scoreContainer.addChild(backText);
-  }
-
-  drawLoading() {
-    const loading = document.createElement("h1");
-    loading.innerText = "Carregando ScoreBoard....";
-    loading.style.color = "white";
-    loading.style.position = "absolute";
-    loading.style.top = "5%";
-    loading.style.left = "40%";
-    loading.style.transform = "translate(-50%, -50%)";
-
-    return loading;
+  createButton(text, onClick) {
+    const btn = document.createElement('button');
+    btn.className = 'bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded w-48';
+    btn.textContent = text;
+    btn.addEventListener('click', onClick);
+    return btn;
   }
 
   async getScore() {
-    const loading = this.drawLoading();
-    document.body.appendChild(loading);
-
     const url = getUrl();
     const response = await fetch(url);
-    const data = await response.json();
-
-    document.body.removeChild(loading);
-
-    return data;
-  }
-
-  drawTable() {
-    const table = document.createElement("table");
-    table.id = "scoreboard";
-    table.style.fontSize = "30px";
-    table.style.position = "absolute";
-    table.style.top = "0";
-    table.style.left = "320px";
-    table.style.width = "640px";
-    table.style.backgroundColor = "white";
-
-    return table;
+    return response.json();
   }
 
   drawTableHead() {
-    const headtr = document.createElement("tr");
-    const rankth = document.createElement("th");
-    const nameth = document.createElement("th");
-    const pointsth = document.createElement("th");
-
-    rankth.innerText = "Rank";
-    nameth.innerText = "Nome";
-    pointsth.innerText = "Pontos";
-
-    headtr.appendChild(rankth);
-    headtr.appendChild(nameth);
-    headtr.appendChild(pointsth);
-
-    return headtr;
+    const head = document.createElement('tr');
+    ['Rank', 'Name', 'Points'].forEach((t) => {
+      const th = document.createElement('th');
+      th.textContent = t;
+      th.className = 'px-4 py-2';
+      head.appendChild(th);
+    });
+    this.table.appendChild(head);
   }
 
-  drawTableLine(index, name, points) {
-    const line = document.createElement("tr");
-    const ranktd = document.createElement("td");
-    const nametd = document.createElement("td");
-    const pointstd = document.createElement("td");
-
-    ranktd.style.textAlign = "center";
-    ranktd.innerText = index;
-
-    nametd.style.textAlign = "center";
-    nametd.innerText = name;
-
-    pointstd.style.textAlign = "center";
-    pointstd.innerText = points;
-
-    line.appendChild(ranktd);
-    line.appendChild(nametd);
-    line.appendChild(pointstd);
-
-    return line;
+  drawLine(index, name, points) {
+    const tr = document.createElement('tr');
+    [index, name, points].forEach((t) => {
+      const td = document.createElement('td');
+      td.textContent = t;
+      td.className = 'px-4 py-2 text-center';
+      tr.appendChild(td);
+    });
+    this.table.appendChild(tr);
   }
 
   async showScore() {
-    const score = await this.getScore();
+    const data = await this.getScore();
+    this.table.innerHTML = '';
+    this.drawTableHead();
+    data.forEach(({ name, points }, i) => this.drawLine(i + 1, name, points));
+  }
 
-    const table = this.drawTable();
-    table.appendChild(this.drawTableHead());
+  show() {
+    document.getElementById('ui-root').appendChild(this.container);
+  }
 
-    score.map(({ name, points }, index) => {
-      table.appendChild(this.drawTableLine(index + 1, name, points));
-    });
-
-    document.body.appendChild(table);
+  hide() {
+    this.container.remove();
   }
 }
