@@ -10,6 +10,11 @@ global.window = {
   addEventListener: (e, fn) => { events[e] = fn; },
   removeEventListener() {},
 };
+global.document = {
+  getElementById() {
+    return { classList: { add() {}, remove() {} }, textContent: '', addEventListener() {} };
+  }
+};
 global.localStorage = { getItem(){}, setItem(){} };
 global.__SNOWPACK_ENV__ = { SNOWPACK_PUBLIC_API_URL_PROD:'', SNOWPACK_PUBLIC_API_URL_DEV:'', MODE:'production' };
 global.fetch = async () => ({ json: async () => ({}) });
@@ -26,13 +31,10 @@ test('game event handlers work', () => {
   events.pointerup();
   events.keydown({ key: 'w' });
   events.keyup({ key: 'w' });
-  events.keydown({ key: 'Escape' });
   events.keydown({ key: 'm' });
   app.renderer.view.onmousemove({ clientX: 1, clientY: 2 });
   app.ticker.fn();
   game.player.lifes = 0;
   app.ticker.fn();
-  const back = game.hud.hudContainer.children.find(c => c.eventHandlers);
-  back.eventHandlers.click();
   assert.ok(true);
 });

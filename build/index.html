@@ -1,17 +1,60 @@
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixi Game v1</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Down Shooter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="./lib/pixi.min.js"></script>
     <script src="./lib/pixi-sound.js"></script>
-    <script src="./lib/pixi-text-input.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <script src="./lib/pixi-timeout.js"></script>
   </head>
+  <body class="bg-gray-900 text-white">
+    <div id="menu" class="flex flex-col items-center justify-center h-screen space-y-6">
+      <h1 class="text-4xl font-bold">Top Down Shooter</h1>
+      <input id="username" type="text" placeholder="Your Name" class="px-4 py-2 rounded bg-gray-800 focus:outline-none" />
+      <button id="playBtn" class="px-6 py-2 bg-blue-600 rounded hover:bg-blue-700">Play</button>
+      <div class="flex space-x-4">
+        <button id="scoreBtn" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Score</button>
+        <button id="controlsBtn" class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600">Controls</button>
+      </div>
+    </div>
 
-  <body>
-    <canvas id="mycanvas"></canvas>
+    <div id="hud" class="hidden absolute top-0 left-0 p-4 flex space-x-4 text-xl">
+      <div id="points">Points: 0</div>
+      <div id="lifes">Lifes: 1</div>
+    </div>
+
+    <div id="gameOver" class="hidden absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-90">
+      <div class="bg-gray-900 p-8 rounded text-center">
+        <h2 class="text-2xl mb-4">Game Over</h2>
+        <button id="backBtn" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Back to Menu</button>
+      </div>
+    </div>
+
+    <div id="scoreboard" class="hidden absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-90">
+      <div class="bg-gray-900 p-8 rounded">
+        <h2 class="text-2xl mb-4">Scoreboard</h2>
+        <table class="table-auto text-left text-white">
+          <thead><tr><th class='px-4'>Rank</th><th class='px-4'>Name</th><th class='px-4'>Points</th></tr></thead>
+          <tbody id="scoreTable"></tbody>
+        </table>
+        <button id="closeScore" class="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Close</button>
+      </div>
+    </div>
+
+    <div id="controls" class="hidden absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-90">
+      <div class="bg-gray-900 p-8 rounded space-y-2 text-center">
+        <h2 class="text-2xl mb-4">Controls</h2>
+        <p>WASD - Move</p>
+        <p>Mouse or Space - Shoot</p>
+        <p>M - Mute</p>
+        <p>Esc - Pause</p>
+        <button id="closeControls" class="mt-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Close</button>
+      </div>
+    </div>
+
+    <canvas id="mycanvas" class="hidden"></canvas>
     <script type="module" src="index.js"></script>
-  
-
-</body></html>
+  </body>
+</html>
