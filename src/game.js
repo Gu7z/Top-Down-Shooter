@@ -1,7 +1,7 @@
 import Buff from "./buff.js";
 import Player from "./player.js";
 import Spawner from "./spanwer.js";
-import Hud from "./hud.js";
+import Hud from "./ui/hud.js";
 import bulletHit from "./utils/bullet_hit.js";
 
 export default class Game {
@@ -14,7 +14,7 @@ export default class Game {
     const mousePosition = { x: 0, y: 0 };
     this.player = new Player({ app, mousePosition, username, keys });
     this.enemySpawner = new Spawner({ app, player: this.player });
-    this.hud = new Hud({ app, player: this.player });
+    this.hud = new Hud();
     this.buff = new Buff({ app, hud: this.hud });
 
     this.clear = () => {
@@ -26,7 +26,7 @@ export default class Game {
     };
 
     this.ticker = app.ticker.add(() => {
-      this.hud.update(this.clear);
+      this.hud.update(this.player, this.clear);
       this.player.update(keys);
       this.buff.update(this.player);
       this.enemySpawner.update(this.player);
@@ -56,31 +56,9 @@ export default class Game {
     });
 
     window.addEventListener("keydown", (e) => {
-      const usedKeys = ["Escape", "m"];
-      if (!usedKeys.includes(e.key)) return;
-
-      switch (e.key) {
-        case "Escape":
-          this.hud.showPaused = !paused;
-          this.player.shooting.update();
-          app.render();
-
-          if (paused) {
-            app.start();
-          } else {
-            app.stop();
-          }
-
-          paused = !paused;
-          break;
-
-        case "m":
-          PIXI.sound.volumeAll = muted ? 1 : 0;
-          muted = !muted;
-          break;
-
-        default:
-          break;
+      if (e.key === "m") {
+        PIXI.sound.volumeAll = muted ? 1 : 0;
+        muted = !muted;
       }
     });
   }
