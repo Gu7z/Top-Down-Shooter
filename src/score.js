@@ -5,6 +5,7 @@ export default class Score {
     this.app = app;
     this.menu = menu;
     this.scoreContainer = new PIXI.Container();
+    this.root = document.getElementById?.("ui-root") || document.body;
     this.createBackButton();
     this.app.stage.addChild(this.scoreContainer);
     this.showScore();
@@ -23,8 +24,8 @@ export default class Score {
     bg.interactive = true;
     bg.cursor = "pointer";
     bg.on("click", () => {
-      const table = document.getElementById("score-table");
-      if (table) document.getElementById("ui-root").removeChild(table);
+      const table = document.getElementById?.("score-table");
+      if (table) this.root.removeChild(table);
       this.app.stage.removeChild(this.scoreContainer);
       this.menu.show();
     });
@@ -42,11 +43,11 @@ export default class Score {
     loading.className =
       "text-white absolute top-5 left-1/2 -translate-x-1/2 pointer-events-auto";
     loading.innerText = "Carregando placar...";
-    document.getElementById("ui-root").appendChild(loading);
+    this.root.appendChild(loading);
     const url = getUrl();
     const response = await fetch(url);
     const data = await response.json();
-    document.getElementById("ui-root").removeChild(loading);
+    this.root.removeChild(loading);
     return data;
   }
 
@@ -61,11 +62,11 @@ export default class Score {
 
   async getScore() {
     const loading = this.drawLoading();
-    document.getElementById("ui-root").appendChild(loading);
+    this.root.appendChild(loading);
     const url = getUrl();
     const response = await fetch(url);
     const data = await response.json();
-    document.getElementById("ui-root").removeChild(loading);
+    this.root.removeChild(loading);
     return data;
   }
 
@@ -148,6 +149,6 @@ export default class Score {
     score.forEach(({ name, points }, i) => {
       table.appendChild(this.drawTableLine(i + 1, name, points));
     });
-    document.getElementById("ui-root").appendChild(table);
+    this.root.appendChild(table);
   }
 }

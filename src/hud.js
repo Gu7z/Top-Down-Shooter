@@ -9,14 +9,22 @@ export default class Hud {
     this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
     this.dead = false;
 
-    this.pointsText = this.createLabel(`Pontos: ${player.points}`, 10, 10);
-    this.lifesText = this.createLabel(`Vidas: ${player.lifes}`, 10, 40);
-    this.pauseText = this.createLabel("Pausado", app.screen.width / 2, app.screen.height / 2);
-    this.pauseText.anchor.set(0.5);
-    this.pauseText.visible = false;
-    this.endText = this.createLabel("Game Over", app.screen.width / 2, app.screen.height / 2 - 40);
-    this.endText.anchor.set(0.5);
-    this.endText.visible = false;
+    this.textPoints = this.createLabel(`Pontos: ${player.points}`, 10, 10);
+    this.textLifes = this.createLabel(`Vidas: ${player.lifes}`, 10, 40);
+    this.textPaused = this.createLabel(
+      "Pausado",
+      app.screen.width / 2,
+      app.screen.height / 2
+    );
+    this.textPaused.anchor.set(0.5);
+    this.textPaused.visible = false;
+    this.textEnd = this.createLabel(
+      "Game Over",
+      app.screen.width / 2,
+      app.screen.height / 2 - 40
+    );
+    this.textEnd.anchor.set(0.5);
+    this.textEnd.visible = false;
 
     this.app.stage.addChild(this.hudContainer);
   }
@@ -29,16 +37,16 @@ export default class Hud {
   }
 
   set showPaused(val) {
-    this.pauseText.visible = val;
+    this.textPaused.visible = val;
   }
 
   endgameCheck(clear) {
     if (this.player.lifes < 1) {
-      this.endText.visible = true;
+      this.textEnd.visible = true;
       if (!this.dead) {
         this.dead = true;
         this.deathSound.play();
-        this.createBackButton(clear);
+        this.backButton(clear);
         this.app.stop();
         sendScore({ name: this.player.username, points: this.player.points });
       }
@@ -47,7 +55,7 @@ export default class Hud {
     }
   }
 
-  createBackButton(clear) {
+  backButton(clear) {
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height - 80;
     const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
@@ -74,8 +82,8 @@ export default class Hud {
   }
 
   update(clear) {
-    this.pointsText.text = `Pontos: ${this.player.points}`;
-    this.lifesText.text = `Vidas: ${this.player.lifes}`;
+    this.textPoints.text = `Pontos: ${this.player.points}`;
+    this.textLifes.text = `Vidas: ${this.player.lifes}`;
     this.endgameCheck(clear);
   }
 }
