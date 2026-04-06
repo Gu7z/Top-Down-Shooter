@@ -24,8 +24,10 @@ export default class Buff {
       this.app.screen.height - this.height
     );
 
-    PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
     const buffTexture = PIXI.Texture.from("./images/speed_buff.png");
+    if (buffTexture?.baseTexture) {
+      buffTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+    }
     this.buff = new PIXI.Sprite(buffTexture);
     this.buff.position.set(randomX, randomY);
     this.buff.width = this.width;
