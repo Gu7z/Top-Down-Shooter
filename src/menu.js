@@ -1,104 +1,142 @@
 import Controls from "./controls.js";
 import Game from "./game.js";
 import Score from "./score.js";
+import {
+  UISkin,
+  createBackdrop,
+  createCard,
+  createLabel,
+  createPillButton,
+} from "./ui_system.js";
 
 export default class Menu {
   constructor({ app }) {
     this.app = app;
     this.menuContainer = new PIXI.Container();
     this.centerX = app.screen.width / 2;
-    this.centerY = app.screen.height / 3;
+    this.centerY = app.screen.height / 2;
     this.username = localStorage.getItem("username") || "";
-    this.drawBackground();
-    this.drawTitle();
-    this.drawInput();
-    this.drawButtons();
+
+    this.buildScene();
     this.app.stage.addChild(this.menuContainer);
   }
 
-  drawBackground() {
-    const panel = new PIXI.Sprite(PIXI.Texture.WHITE);
-    panel.tint = 0x0f172a;
-    panel.alpha = 0.9;
-    panel.width = 500;
-    panel.height = 480;
-    panel.anchor.set(0.5);
-    panel.position.set(this.centerX, this.centerY + 20);
-
-    this.menuContainer.addChild(panel);
-  }
-
-  drawTitle() {
-    const title = new PIXI.Text("Top Down Shooter", {
-      fill: 0x7dd3fc,
-      fontSize: 52,
-      fontWeight: "bold",
-      stroke: 0x020617,
-      strokeThickness: 8,
+  buildScene() {
+    createBackdrop(this.menuContainer, this.app);
+    createCard({
+      container: this.menuContainer,
+      x: this.centerX,
+      y: this.centerY,
+      width: 760,
+      height: 560,
     });
-    title.anchor.set(0.5);
-    title.position.set(this.centerX, this.centerY - 140);
-    this.menuContainer.addChild(title);
+
+    createLabel({
+      container: this.menuContainer,
+      text: "NEON HUNT",
+      x: this.centerX,
+      y: this.centerY - 220,
+      fontSize: 74,
+      color: UISkin.palette.highlightStrong,
+      bold: true,
+      letterSpacing: 4,
+    });
+
+    createLabel({
+      container: this.menuContainer,
+      text: "Top-Down Shooter",
+      x: this.centerX,
+      y: this.centerY - 170,
+      fontSize: 30,
+      color: UISkin.palette.textSecondary,
+      letterSpacing: 2,
+    });
+
+    createLabel({
+      container: this.menuContainer,
+      text: "Operador",
+      x: this.centerX,
+      y: this.centerY - 106,
+      fontSize: 22,
+      color: UISkin.palette.textSecondary,
+    });
+
+    this.buildInput();
+    this.buildButtons();
   }
 
-  drawInput() {
+  buildInput() {
     const input = new PIXI.TextInput({
-      input: { fontSize: "22pt", padding: "10px", width: "220px", color: "#000" },
-      box: { default: { fill: 0xfefefe, rounded: 8, stroke: { color: 0x0ea5e9, width: 2 } } },
+      input: {
+        fontSize: "20pt",
+        padding: "12px",
+        width: "300px",
+        color: "#e2e8f0",
+      },
+      box: {
+        default: {
+          fill: 0x1e293b,
+          rounded: 6,
+          stroke: { color: UISkin.palette.highlightStrong, width: 2 },
+        },
+        focused: {
+          fill: 0x0f172a,
+          rounded: 6,
+          stroke: { color: UISkin.palette.highlight, width: 2 },
+        },
+      },
     });
-    input.placeholder = "Nome";
+
+    input.placeholder = "Digite seu codinome";
     input.text = this.username;
     input.disabled = !!this.username;
-    input.x = this.centerX - 110;
-    input.y = this.centerY - 40;
-    input.on("input", (val) => {
-      this.username = val;
-      localStorage.setItem("username", val);
-      this.playButton.tint = val ? 0x38bdf8 : 0x334155;
+    input.x = this.centerX - 150;
+    input.y = this.centerY - 76;
+
+    input.on("input", (value) => {
+      this.username = value;
+      localStorage.setItem("username", value);
+      this.playButton.setEnabled(Boolean(value));
     });
+
     this.menuContainer.addChild(input);
     input.focus();
   }
 
-  createButton(label, offsetY, onClick) {
-    const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-    bg.tint = 0x38bdf8;
-    bg.anchor.set(0.5);
-    bg.position.set(this.centerX, this.centerY + offsetY);
-    bg.width = 220;
-    bg.height = 52;
-    bg.interactive = true;
-    bg.cursor = "pointer";
-    bg.on("click", onClick);
-    bg.on("pointerover", () => {
-      bg.alpha = 0.8;
-      bg.scale.x = 1.03;
-      bg.scale.y = 1.03;
-    });
-    bg.on("pointerout", () => {
-      bg.alpha = 1;
-      bg.scale.x = 1;
-      bg.scale.y = 1;
+  buildButtons() {
+    this.playButton = createPillButton({
+      container: this.menuContainer,
+      x: this.centerX,
+      y: this.centerY + 45,
+      text: "INICIAR RUN",
+      primary: true,
+      width: 320,
+      height: 64,
+      onClick: () => {
+        if (!this.username) return;
+        this.play();
+      },
     });
 
-    const text = new PIXI.Text(label, { fill: 0x020617, fontSize: 30, fontWeight: "bold" });
-    text.anchor.set(0.5);
-    text.position.set(this.centerX, this.centerY + offsetY);
+    this.playButton.setEnabled(Boolean(this.username));
 
-    this.menuContainer.addChild(bg);
-    this.menuContainer.addChild(text);
-    return bg;
-  }
-
-  drawButtons() {
-    this.playButton = this.createButton("Jogar", 60, () => {
-      if (!this.username) return;
-      this.play();
+    createPillButton({
+      container: this.menuContainer,
+      x: this.centerX,
+      y: this.centerY + 123,
+      text: "VER PLACAR",
+      width: 320,
+      onClick: () => this.showScore(),
     });
-    if (!this.username) this.playButton.tint = 0x334155;
 
-    this.createButton("Score", 130, () => this.showScore());
-    this.createButton("Controles", 200, () => this.showControls());
+    createPillButton({
+      container: this.menuContainer,
+      x: this.centerX,
+      y: this.centerY + 190,
+      text: "CONFIG. DE CONTROLES",
+      width: 320,
+      onClick: () => this.showControls(),
+    });
   }
 
   hide() {

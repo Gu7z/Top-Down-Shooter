@@ -23,7 +23,7 @@ test('showPaused toggles visibility', () => {
 test('endgameCheck adds back button', () => {
   player.lifes = 0;
   hud.endgameCheck(() => {});
-  const back = hud.hudContainer.children.find(c => c.eventHandlers);
+  const back = hud.hudContainer.children.find(c => c.eventHandlers?.click);
   back.eventHandlers.click();
   assert.ok(back);
 });

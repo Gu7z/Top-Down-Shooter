@@ -1,5 +1,11 @@
 import Menu from "./menu.js";
 import sendScore from "./utils/send_score.js";
+import {
+  UISkin,
+  createCard,
+  createLabel,
+  createPillButton,
+} from "./ui_system.js";
 
 export default class Hud {
   constructor({ app, player }) {
@@ -9,31 +15,47 @@ export default class Hud {
     this.deathSound = PIXI.sound.Sound.from("sound/death.mp3");
     this.dead = false;
 
-    this.textPoints = this.createLabel(`Pontos: ${player.points}`, 10, 10);
-    this.textLifes = this.createLabel(`Vidas: ${player.lifes}`, 10, 40);
-    this.textPaused = this.createLabel(
-      "Pausado",
-      app.screen.width / 2,
-      app.screen.height / 2
-    );
-    this.textPaused.anchor.set(0.5);
+    this.textPoints = this.createLabel(`Pontos ${player.points}`, 16, 12);
+    this.textLifes = this.createLabel(`Vidas ${player.lifes}`, 16, 42);
+
+    this.textPaused = createLabel({
+      container: this.hudContainer,
+      text: "RUN PAUSADA",
+      x: app.screen.width / 2,
+      y: app.screen.height / 2,
+      fontSize: 54,
+      color: UISkin.palette.highlightStrong,
+      bold: true,
+      letterSpacing: 3,
+    });
     this.textPaused.visible = false;
-    this.textEnd = this.createLabel(
-      "Game Over",
-      app.screen.width / 2,
-      app.screen.height / 2 - 40
-    );
-    this.textEnd.anchor.set(0.5);
+
+    this.textEnd = createLabel({
+      container: this.hudContainer,
+      text: "RUN ENCERRADA",
+      x: app.screen.width / 2,
+      y: app.screen.height / 2 - 76,
+      fontSize: 56,
+      color: UISkin.palette.warning,
+      bold: true,
+      letterSpacing: 3,
+    });
     this.textEnd.visible = false;
 
     this.app.stage.addChild(this.hudContainer);
   }
 
   createLabel(text, x, y) {
-    const t = new PIXI.Text(text, { fill: 0xffffff, fontSize: 24 });
-    t.position.set(x, y);
-    this.hudContainer.addChild(t);
-    return t;
+    return createLabel({
+      container: this.hudContainer,
+      text,
+      x,
+      y,
+      fontSize: 24,
+      color: UISkin.palette.textPrimary,
+      bold: true,
+      anchor: 0,
+    });
   }
 
   set showPaused(val) {
@@ -43,47 +65,63 @@ export default class Hud {
   endgameCheck(clear) {
     if (this.player.lifes < 1) {
       this.textEnd.visible = true;
-      if (!this.dead) {
-        this.dead = true;
-        this.deathSound.play();
-        this.backButton(clear);
-        this.app.stop();
-        sendScore({ name: this.player.username, points: this.player.points });
-      }
-    } else {
-      this.dead = false;
+      if (this.dead) return;
+
+      this.dead = true;
+      this.deathSound.play();
+      this.renderGameOverMenu(clear);
+      this.app.stop();
+      sendScore({ name: this.player.username, points: this.player.points });
+      return;
     }
+
+    this.dead = false;
   }
 
-  backButton(clear) {
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height - 80;
-    const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-    bg.tint = 0xffffff;
-    bg.anchor.set(0.5);
-    bg.position.set(x, y);
-    bg.width = 160;
-    bg.height = 48;
-    bg.interactive = true;
-    bg.cursor = "pointer";
-    bg.on("click", () => {
-      clear();
-      this.app.stage.removeChildren();
-      this.app.start();
-      new Menu({ app: this.app });
+  renderGameOverMenu(clear) {
+    const centerX = this.app.screen.width / 2;
+    const centerY = this.app.screen.height / 2;
+
+    createCard({
+      container: this.hudContainer,
+      x: centerX,
+      y: centerY,
+      width: 520,
+      height: 280,
+      alpha: 0.9,
     });
 
-    const txt = new PIXI.Text("Voltar", { fill: 0x000000, fontSize: 28 });
-    txt.anchor.set(0.5);
-    txt.position.set(x, y);
+    this.textEnd.position.set(centerX, centerY - 86);
 
-    this.hudContainer.addChild(bg);
-    this.hudContainer.addChild(txt);
+    createLabel({
+      container: this.hudContainer,
+      text: `Pontuação final: ${this.player.points}`,
+      x: centerX,
+      y: centerY - 26,
+      fontSize: 29,
+      color: UISkin.palette.textPrimary,
+      bold: true,
+    });
+
+    createPillButton({
+      container: this.hudContainer,
+      x: centerX,
+      y: centerY + 58,
+      text: "VOLTAR AO MENU",
+      width: 300,
+      primary: true,
+      onClick: () => {
+        clear();
+        this.app.stage.removeChildren();
+        this.app.start();
+        new Menu({ app: this.app });
+      },
+    });
   }
 
   update(clear) {
-    this.textPoints.text = `Pontos: ${this.player.points}`;
-    this.textLifes.text = `Vidas: ${this.player.lifes}`;
+    this.textPoints.text = `Pontos ${this.player.points}`;
+    this.textLifes.text = `Vidas ${this.player.lifes}`;
     this.endgameCheck(clear);
   }
 }

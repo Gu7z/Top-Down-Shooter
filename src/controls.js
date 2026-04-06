@@ -1,61 +1,102 @@
+import {
+  UISkin,
+  createBackdrop,
+  createCard,
+  createLabel,
+  createPillButton,
+} from "./ui_system.js";
+
 export default class Controls {
   constructor({ app, menu }) {
     this.app = app;
     this.controlsContainer = new PIXI.Container();
 
     const x = this.app.screen.width / 2;
-    const y = this.app.screen.height / 3;
-    const square = new PIXI.Sprite(PIXI.Texture.WHITE);
-    square.tint = 0xffffff;
-    square.anchor.set(0.5);
-    square.position.set(x, y);
-    square.width = 380;
-    square.height = 400;
+    const y = this.app.screen.height / 2;
 
-    const back = new PIXI.Sprite(PIXI.Texture.WHITE);
-    back.tint = 0xffffff;
-    back.anchor.set(0.5);
-    back.position.set(x, this.app.screen.height - 50);
-    back.width = 160;
-    back.height = 40;
-    back.interactive = true;
-    back.cursor = "pointer";
-    back.on("click", () => {
-      this.app.stage.removeChild(this.controlsContainer);
-      menu.show();
+    createBackdrop(this.controlsContainer, this.app);
+    createCard({
+      container: this.controlsContainer,
+      x,
+      y,
+      width: 820,
+      height: 560,
     });
 
-    this.controlsContainer.addChild(square);
-    this.controlsContainer.addChild(back);
-    this.addText("Voltar", x, this.app.screen.height - 50);
+    createLabel({
+      container: this.controlsContainer,
+      text: "COMANDOS DA RUN",
+      x,
+      y: y - 210,
+      fontSize: 50,
+      color: UISkin.palette.highlight,
+      bold: true,
+      letterSpacing: 3,
+    });
 
-    const texts = [
-      "Mouse1/Espaço - Pressione para Atirar",
-      "W - Mover para cima",
-      "S - Mover para baixo",
-      "D - Mover para direita",
-      "A - Mover para esquerda",
-      "M - Mutar/Desmutar",
-      "Esc - Pausar",
+    const rows = [
+      { key: "W A S D", action: "Movimentação" },
+      { key: "Mouse1 ou Espaço", action: "Disparo contínuo" },
+      { key: "ESC", action: "Pausar / Continuar" },
+      { key: "M", action: "Mutar áudio" },
     ];
 
-    let pos = { x, y: y - 150 };
-    texts.forEach((text) => {
-      this.addText(text, pos.x, pos.y);
-      pos.y += 50;
+    let lineY = y - 120;
+    rows.forEach((row) => {
+      createCard({
+        container: this.controlsContainer,
+        x,
+        y: lineY,
+        width: 620,
+        height: 64,
+        alpha: 0.8,
+      });
+
+      createLabel({
+        container: this.controlsContainer,
+        text: row.key,
+        x: x - 210,
+        y: lineY,
+        fontSize: 26,
+        color: UISkin.palette.highlightStrong,
+        bold: true,
+      });
+
+      createLabel({
+        container: this.controlsContainer,
+        text: row.action,
+        x: x + 40,
+        y: lineY,
+        fontSize: 24,
+        color: UISkin.palette.textPrimary,
+      });
+
+      lineY += 78;
+    });
+
+    createPillButton({
+      container: this.controlsContainer,
+      x,
+      y: this.app.screen.height - 80,
+      text: "VOLTAR AO MENU",
+      width: 280,
+      onClick: () => {
+        this.app.stage.removeChild(this.controlsContainer);
+        menu.show();
+      },
     });
 
     this.app.stage.addChild(this.controlsContainer);
   }
 
-  addText(text, x, y) {
-    const rule = new PIXI.Text(text, {
-      fill: 0x000000,
-      fontSize: 30,
+  addText(text, x, y, fill = UISkin.palette.textPrimary) {
+    createLabel({
+      container: this.controlsContainer,
+      text,
+      x,
+      y,
+      fontSize: 28,
+      color: fill,
     });
-    rule.position.set(x, y);
-    rule.anchor.set(0.5);
-
-    this.controlsContainer.addChild(rule);
   }
 }
