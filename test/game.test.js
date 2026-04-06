@@ -6,9 +6,20 @@ import { setupPixiMock, createAppMock } from './helpers.js';
 setupPixiMock();
 const app = { ...createAppMock(), render() {} };
 const events = {};
+const addEvent = (eventName, handler) => {
+  if (!events[eventName]) events[eventName] = [];
+  events[eventName].push(handler);
+};
+const removeEvent = (eventName, handler) => {
+  events[eventName] = (events[eventName] || []).filter((h) => h !== handler);
+};
+const triggerEvent = (eventName, payload) => {
+  (events[eventName] || []).forEach((handler) => handler(payload));
+};
+
 global.window = {
-  addEventListener: (e, fn) => { events[e] = fn; },
-  removeEventListener() {},
+  addEventListener: addEvent,
+  removeEventListener: removeEvent,
 };
 global.localStorage = { getItem(){}, setItem(){} };
 global.__SNOWPACK_ENV__ = { SNOWPACK_PUBLIC_API_URL_PROD:'', SNOWPACK_PUBLIC_API_URL_DEV:'', MODE:'production' };
@@ -22,12 +33,12 @@ test('game creates ticker handler', () => {
 });
 
 test('game event handlers work', () => {
-  events.pointerdown();
-  events.pointerup();
-  events.keydown({ key: 'w' });
-  events.keyup({ key: 'w' });
-  events.keydown({ key: 'Escape' });
-  events.keydown({ key: 'm' });
+  triggerEvent('pointerdown');
+  triggerEvent('pointerup');
+  triggerEvent('keydown', { key: 'w' });
+  triggerEvent('keyup', { key: 'w' });
+  triggerEvent('keydown', { key: 'Escape' });
+  triggerEvent('keydown', { key: 'm' });
   app.renderer.view.onmousemove({ clientX: 1, clientY: 2 });
   app.ticker.fn();
   game.player.lifes = 0;
@@ -35,4 +46,17 @@ test('game event handlers work', () => {
   const back = game.hud.hudContainer.children.find(c => c.eventHandlers);
   back.eventHandlers.click();
   assert.ok(true);
+});
+
+test('clear remove ticker and listeners', () => {
+  const anotherGame = new Game({ app, username: 'player-2' });
+  const keydownListenersBefore = events.keydown.length;
+  anotherGame.clear();
+
+  assert.equal(app.ticker.removedFn, anotherGame.tick);
+  assert.equal(app.renderer.view.onmousemove, null);
+  assert.equal(events.keydown.length, keydownListenersBefore - 2);
+  assert.equal(events.keyup.length, 0);
+  assert.equal(events.pointerdown.length, 0);
+  assert.equal(events.pointerup.length, 0);
 });
