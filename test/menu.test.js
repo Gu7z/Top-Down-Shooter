@@ -24,3 +24,19 @@ test('show and hide modify stage', () => {
   menu.show();
   assert.ok(true);
 });
+
+test('skill tree button opens the skill tree screen', () => {
+  const localApp = createAppMock();
+  localApp.screen = { width: 1280, height: 720 };
+  localApp.renderer.view.addEventListener = () => {};
+  localApp.renderer.view.removeEventListener = () => {};
+  const localMenu = new Menu({ app: localApp });
+
+  const labels = localMenu.menuContainer.children
+    .filter((child) => typeof child.text === 'string')
+    .map((child) => child.text);
+
+  assert.ok(labels.some((text) => text.includes('SKILL TREE')));
+  localMenu.showSkillTree();
+  assert.notEqual(localApp.stage.children.at(-1), localMenu.menuContainer);
+});

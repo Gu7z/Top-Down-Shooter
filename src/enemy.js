@@ -1,12 +1,14 @@
 import Victor from "victor";
 
 export default class Enemy {
-  constructor({ app, enemyRadius, speed, color, life, value, container }) {
+  constructor({ app, enemyRadius, speed, color, life, value, container, typeId = "unknown", isBoss = false }) {
     this.app = app;
     this.speed = speed;
     this.life = life;
     this.value = value;
     this.enemyRadius = enemyRadius;
+    this.typeId = typeId;
+    this.isBoss = isBoss;
 
     const textColor = [0xffffff, 0xffc0cb].includes(color) ? 0x000000 : 0xffffff;
     this.enemy = new PIXI.Graphics();
@@ -99,15 +101,21 @@ export default class Enemy {
     this.enemyLifeText.text = this.life;
   }
 
-  kill(enemies, indexEnemy, player, effects) {
-    if (this.life > 1) {
-      this.life -= 1;
+  kill(enemies, indexEnemy, player, effects, damage = 1) {
+    if (this.life > damage) {
+      this.life -= damage;
       return;
     }
 
     if (!enemies) return;
 
-    player.points += this.value;
+    const scoreMultiplier = player.skillEffects?.scoreMultiplier || 1;
+    player.points += Math.ceil(this.value * scoreMultiplier);
+    player.runStats?.recordKill?.({
+      typeId: this.typeId,
+      value: this.value,
+      isBoss: this.isBoss,
+    });
     if (effects) {
       effects.explosion(this.enemy.position.x, this.enemy.position.y, 0xfff275, 18);
       effects.shake(3.5);

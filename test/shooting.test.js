@@ -26,3 +26,27 @@ test('update moves bullets', () => {
   shooting.update(true, enemySpawner, { player: {} });
   assert.notStrictEqual(bullet.position.x, startX);
 });
+
+test('shooting applies firepower effects and records shots', () => {
+  const runStats = { shots: 0, recordShotFired() { this.shots += 1; } };
+  const boostedShooting = new Shooting({
+    app,
+    player,
+    playerSize: 20,
+    keys: {},
+    skillEffects: {
+      bulletSpeedBonus: 1,
+      bulletDamageBonus: 1,
+      extraProjectiles: 1,
+      spreadRadians: 0.2,
+    },
+    runStats,
+  });
+
+  boostedShooting.fire();
+
+  assert.equal(boostedShooting.bullets.length, 2);
+  assert.equal(boostedShooting.bullets[0].damage, 2);
+  assert.equal(boostedShooting.bullets[0].velocity.x, 5);
+  assert.equal(runStats.shots, 2);
+});

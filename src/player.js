@@ -1,11 +1,15 @@
 import Shooting from "./shooting.js";
+import { createDefaultSkillEffects } from "./progression/skill_effects.js";
 
 export default class Player {
-  constructor({ app, username, keys }) {
+  constructor({ app, username, keys, skillEffects = {}, runStats = null }) {
     this.app = app;
     this.points = 0;
-    this.lifes = 1;
-    this.velocity = 2;
+    this.skillEffects = { ...createDefaultSkillEffects(), ...skillEffects };
+    this.runStats = runStats;
+    this.lifes = 1 + this.skillEffects.maxLifeBonus;
+    this.shield = this.skillEffects.maxShield;
+    this.velocity = 2 + this.skillEffects.moveSpeedBonus;
     this.size = 20;
     this.username = username;
     this.playerContainer = new PIXI.Container();
@@ -32,6 +36,8 @@ export default class Player {
       player: this.player,
       playerSize: this.size,
       keys,
+      skillEffects: this.skillEffects,
+      runStats,
     });
 
     this.setMousePosition(middleWidth, 0);

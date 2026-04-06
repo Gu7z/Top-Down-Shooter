@@ -1,7 +1,14 @@
 export function setupPixiMock() {
   global.PIXI = {
     Container: class {
-      constructor() { this.children = []; }
+      constructor() {
+        this.children = [];
+        this.position = { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } };
+        this.scale = { x: 1, y: 1, set(x, y = x) { this.x = x; this.y = y; } };
+        this.interactive = false;
+        this.cursor = null;
+        this.eventHandlers = {};
+      }
       addChild(child) {
         this.children = this.children.filter(c => c !== child);
         this.children.push(child);
@@ -14,6 +21,11 @@ export function setupPixiMock() {
       removeChildren() {
         this.children.forEach(child => { if (child.parent === this) child.parent = null; });
         this.children = [];
+      }
+      on(event, fn) { this.eventHandlers[event] = fn; return this; }
+      off(event) {
+        delete this.eventHandlers[event];
+        return this;
       }
     },
     Sprite: class {

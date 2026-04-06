@@ -152,10 +152,16 @@ export default class Hud {
   set endRun(fn) {
     this._endRun = () => {
       fn();
-      this.app.stage.removeChildren();
-      this.app.start();
-      new Menu({ app: this.app });
+      if (!this._onRunEnded) {
+        this.app.stage.removeChildren();
+        this.app.start();
+        new Menu({ app: this.app });
+      }
     };
+  }
+
+  set onRunEnded(fn) {
+    this._onRunEnded = fn;
   }
 
   set showPaused(val) {
@@ -175,9 +181,14 @@ export default class Hud {
 
       this.dead = true;
       this.deathSound.play();
-      this.renderGameOverMenu(clear);
       this.app.stop();
       sendScore({ name: this.player.username, points: this.player.points });
+      if (this._onRunEnded) {
+        this._onRunEnded({ reason: "death" });
+        return;
+      }
+
+      this.renderGameOverMenu(clear);
       return;
     }
     this.dead = false;

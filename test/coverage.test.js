@@ -1,10 +1,16 @@
 import test from 'node:test';
 import fs from 'fs';
+import path from 'path';
 
-const files = fs.readdirSync('./src').flatMap(f => {
-  if (f === 'utils') return fs.readdirSync('./src/utils').map(u => 'src/utils/' + u);
-  return 'src/' + f;
-});
+function listFiles(dir) {
+  return fs.readdirSync(dir).flatMap((entry) => {
+    const fullPath = path.join(dir, entry);
+    if (fs.statSync(fullPath).isDirectory()) return listFiles(fullPath);
+    return fullPath;
+  });
+}
+
+const files = listFiles('./src');
 
 for (const file of files) {
   test(`cover ${file}`, () => {

@@ -6,7 +6,8 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
     const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
     if (distance < bulletRadius + enemy.enemyRadius) {
-      enemy.kill(enemies, indexEnemy, player, effects);
+      player.runStats?.recordShotHit?.();
+      enemy.kill(enemies, indexEnemy, player, effects, bullet.damage || 1);
       if (effects) {
         effects.pulse(enemy.enemy, 0xffffff, 6);
         effects.explosion(bullet.position.x, bullet.position.y, 0xffa940, 10);

@@ -26,3 +26,27 @@ test('bulletHit destroys bullet on impact', () => {
   assert.ok(bullet.destroyed);
   assert.strictEqual(enemy.killCalled, true);
 });
+
+test('bulletHit records hit stats and forwards bullet damage', () => {
+  const trackedBullet = {
+    position: { x: 0, y: 0 },
+    damage: 3,
+    destroy() { this.destroyed = true; },
+  };
+  let forwardedDamage = 0;
+  const trackedEnemy = {
+    enemy: { position: { x: 0, y: 0 } },
+    enemyRadius: 5,
+    kill(enemies, index, hitPlayer, effects, damage) {
+      forwardedDamage = damage;
+    },
+  };
+  const trackedPlayer = {
+    runStats: { hits: 0, recordShotHit() { this.hits += 1; } },
+  };
+
+  bulletHit(trackedBullet, [trackedEnemy], 5, trackedPlayer);
+
+  assert.equal(trackedPlayer.runStats.hits, 1);
+  assert.equal(forwardedDamage, 3);
+});

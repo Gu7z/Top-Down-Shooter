@@ -50,3 +50,15 @@ test('endgameCheck adds back button', () => {
   back.eventHandlers.pointerdown();
   assert.ok(back);
 });
+
+test('endgameCheck delegates to run-ended callback when configured', () => {
+  const localApp = createAppMock();
+  const localPlayer = { points: 0, lifes: 0, username: 'u' };
+  const localHud = new Hud({ app: localApp, player: localPlayer });
+  let reason = null;
+  localHud.onRunEnded = (payload) => { reason = payload.reason; };
+
+  localHud.endgameCheck(() => {});
+
+  assert.equal(reason, 'death');
+});

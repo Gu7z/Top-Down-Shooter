@@ -21,15 +21,25 @@ global.window = {
   addEventListener: addEvent,
   removeEventListener: removeEvent,
 };
-global.localStorage = { getItem(){}, setItem(){} };
+global.localStorage = {
+  storage: {},
+  getItem(key) { return this.storage[key] || null; },
+  setItem(key, value) { this.storage[key] = value; },
+};
 global.__SNOWPACK_ENV__ = { SNOWPACK_PUBLIC_API_URL_PROD:'', SNOWPACK_PUBLIC_API_URL_DEV:'', MODE:'production' };
 global.fetch = async () => ({ json: async () => ({}) });
 const game = new Game({ app, username: 'player' });
 game.player.player.getBounds = () => ({ x:0, y:0, width:40, height:40 });
-game.buff.buff.getBounds = () => ({ x:0, y:0, width:40, height:40 });
 
 test('game creates ticker handler', () => {
   assert.ok(game.ticker !== undefined);
+});
+
+test('game initializes progression without live buff pickup', () => {
+  assert.equal('buff' in game, false);
+  assert.ok(game.runStats);
+  assert.ok(game.skillEffects);
+  assert.ok(game.skillState);
 });
 
 test('game event handlers work', () => {
@@ -45,10 +55,12 @@ test('game event handlers work', () => {
   assert.strictEqual(app.stage.children.at(-1), game.hud.hudContainer);
   game.player.lifes = 0;
   app.ticker.fn();
-  const buttons = game.hud.hudContainer.children.filter(c => c.eventHandlers?.pointerdown);
-  const back = buttons[buttons.length - 1];
-  back.eventHandlers.pointerdown();
-  assert.ok(true);
+  const labels = app.stage.children
+    .at(-1)
+    .children
+    .filter(c => typeof c.text === 'string')
+    .map(c => c.text);
+  assert.ok(labels.includes('RUN SUMMARY'));
 });
 
 test('clear remove ticker and listeners', () => {

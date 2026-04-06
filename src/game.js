@@ -1,10 +1,14 @@
-import Buff from "./buff.js";
+import Menu from "./menu.js";
 import Player from "./player.js";
 import Spawner from "./spanwer.js";
 import Hud from "./hud.js";
 import Effects from "./effects.js";
 import { audio } from "./audio.js";
 import Settings from "./settings.js";
+import RunSummary from "./run_summary.js";
+import { createSkillTreeState } from "./progression/skill_tree_state.js";
+import { deriveSkillEffects } from "./progression/skill_effects.js";
+import { createRunStats, createRunSummary } from "./progression/run_stats.js";
 
 export default class Game {
   constructor({ app, username }) {
@@ -15,7 +19,17 @@ export default class Game {
     const keys = {};
 
     this.effects = new Effects({ app });
-    this.player = new Player({ app, username, keys });
+    this.skillState = createSkillTreeState();
+    this.skillEffects = deriveSkillEffects(this.skillState.getPurchasedIds());
+    this.runStats = createRunStats();
+    this.runFinished = false;
+    this.player = new Player({
+      app,
+      username,
+      keys,
+      skillEffects: this.skillEffects,
+      runStats: this.runStats,
+    });
     this.enemySpawner = new Spawner({ app, player: this.player });
     this.hud = new Hud({ app, player: this.player });
     this.hud.openSettings = () => {
@@ -31,7 +45,6 @@ export default class Game {
       });
       this.app.render?.();
     };
-    this.buff = new Buff({ app, hud: this.hud });
     this.app.stage.addChild(this.hud.hudContainer);
 
     this.player.shooting.registerEffects(this.effects);
@@ -102,16 +115,42 @@ export default class Game {
       window.removeEventListener("keydown", this.handleSystemKeys);
       app.stage.removeChild(this.player.playerContainer);
       app.stage.removeChild(this.player.shooting.shootingContainer);
-      app.stage.removeChild(this.buff.buffContainer);
       app.stage.removeChild(this.enemySpawner.spawnerContainer);
       app.stage.removeChild(this.hud.hudContainer);
     };
-    this.hud.endRun = this.clear;
+    this.finishRun = ({ reason = "manual" } = {}) => {
+      if (this.runFinished) return;
+      this.runFinished = true;
+
+      const summary = createRunSummary(
+        this.runStats.snapshot({
+          score: this.player.points,
+          now: Date.now(),
+        }),
+        this.skillEffects
+      );
+      this.skillState.addCredits(summary.credits.total);
+
+      this.clear();
+      this.app.stage.removeChildren();
+      this.app.start();
+      new RunSummary({
+        app: this.app,
+        username: this.player.username,
+        summary,
+        reason,
+        onBackToMenu: () => {
+          this.app.stage.removeChildren();
+          new Menu({ app: this.app });
+        },
+      });
+    };
+    this.hud.onRunEnded = this.finishRun;
+    this.hud.endRun = () => this.finishRun({ reason: "manual" });
 
     this.tick = () => {
       this.hud.update(this.clear);
       this.player.update(keys);
-      this.buff.update(this.player);
       this.enemySpawner.update(this.player);
       this.enemySpawner.spawns.forEach((enemy) => {
         enemy.update(this.player, this.enemySpawner, this.effects);

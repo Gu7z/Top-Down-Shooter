@@ -31,6 +31,39 @@ test('kill handles life decrement and removal', () => {
   assert.strictEqual(arr.length, 0);
 });
 
+test('kill applies damage, score multiplier, and run stats metadata', () => {
+  const trackedEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 3,
+    value: 2,
+    typeId: 'tracked',
+    isBoss: true,
+    container,
+  });
+  const trackedPlayer = {
+    points: 0,
+    skillEffects: { scoreMultiplier: 1.5 },
+    runStats: {
+      kills: [],
+      recordKill(kill) { this.kills.push(kill); },
+    },
+  };
+  const enemies = [trackedEnemy];
+
+  trackedEnemy.kill(enemies, 0, trackedPlayer, undefined, 3);
+
+  assert.equal(enemies.length, 0);
+  assert.equal(trackedPlayer.points, 3);
+  assert.deepEqual(trackedPlayer.runStats.kills[0], {
+    typeId: 'tracked',
+    value: 2,
+    isBoss: true,
+  });
+});
+
 test('update calls goToPlayer', () => {
   enemy.update(player, spawner);
   assert.ok(true);

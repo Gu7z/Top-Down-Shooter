@@ -15,6 +15,19 @@ test('player initializes with zero points and one life', () => {
   assert.strictEqual(player.lifes, 1);
 });
 
+test('player applies life and movement skill effects', () => {
+  const boosted = new Player({
+    app: createAppMock(),
+    username: 'boosted',
+    keys: {},
+    skillEffects: { moveSpeedBonus: 0.5, maxLifeBonus: 1, maxShield: 2 },
+  });
+
+  assert.equal(boosted.velocity, 2.5);
+  assert.equal(boosted.lifes, 2);
+  assert.equal(boosted.shield, 2);
+});
+
 test('outOfBounds detects bounds correctly', () => {
   player.player.position.set(0, 0);
   player.player.width = 10;

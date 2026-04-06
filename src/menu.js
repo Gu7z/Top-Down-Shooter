@@ -2,6 +2,7 @@ import Controls from "./controls.js";
 import Game from "./game.js";
 import Score from "./score.js";
 import Settings from "./settings.js";
+import SkillTree from "./skill_tree.js";
 import {
   UISkin,
   createBackdrop,
@@ -172,7 +173,7 @@ export default class Menu {
         fontSize:   "18pt",
         fontFamily: "'JetBrains Mono', 'Courier New', monospace",
         padding:    "10px 16px",
-        width:      "334px",
+        width:      "414px",
         color:      "#00FFFF",
         letterSpacing: "2px",
         background: "transparent",
@@ -195,7 +196,7 @@ export default class Menu {
     input.placeholder = "▶  DIGITE SEU CODINOME";
     input.text        = this.username;
     input.disabled    = !!this.username;
-    input.x = cx - 175;
+    input.x = cx - 215;
     input.y = cy - 76;
 
     input.on("input", (value) => {
@@ -211,10 +212,12 @@ export default class Menu {
   // ── Buttons ────────────────────────────────────────────────────
   buildButtons() {
     const { centerX: cx, centerY: cy } = this;
+    const startY = cy + 36;
+    const gap = 61;
 
     this.playButton = createPillButton({
       container: this.menuContainer,
-      x: cx, y: cy + 52,
+      x: cx, y: startY,
       text:    "▶   INICIAR  RUN",
       primary: true,
       width:   340,
@@ -226,7 +229,16 @@ export default class Menu {
 
     createPillButton({
       container: this.menuContainer,
-      x: cx, y: cy + 130,
+      x: cx, y: startY + gap,
+      text:   "SKILL TREE",
+      width:  340,
+      height: 56,
+      onClick: () => this.showSkillTree(),
+    });
+
+    createPillButton({
+      container: this.menuContainer,
+      x: cx, y: startY + gap * 2,
       text:   "RANKING  GLOBAL",
       width:  340,
       height: 56,
@@ -235,7 +247,7 @@ export default class Menu {
 
     createPillButton({
       container: this.menuContainer,
-      x: cx, y: cy + 197,
+      x: cx, y: startY + gap * 3,
       text:   "CONTROLES",
       width:  340,
       height: 56,
@@ -244,7 +256,7 @@ export default class Menu {
 
     createPillButton({
       container: this.menuContainer,
-      x: cx, y: cy + 264,
+      x: cx, y: startY + gap * 4,
       text:   "⚙  CONFIGURAÇÕES",
       width:  340,
       height: 56,
@@ -312,6 +324,14 @@ export default class Menu {
   showScore() {
     this.hide();
     new Score({ app: this.app, menu: this });
+  }
+
+  showSkillTree() {
+    this.hide();
+    new SkillTree({
+      app: this.app,
+      onBack: () => { new Menu({ app: this.app }); },
+    });
   }
 
   showSettings() {
