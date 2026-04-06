@@ -74,7 +74,7 @@ export function setupPixiMock() {
 export function createAppMock() {
   return {
     stage: { addChild() {}, removeChild() {}, removeChildren() {} },
-    ticker: { add(fn) { this.fn = fn; return {}; } },
+    ticker: { add(fn) { this.fn = fn; return {}; }, remove(fn) { this.removedFn = fn; } },
     screen: { width: 800, height: 600 },
     setInterval() { return { clear() {} }; },
     setTimeout() { return { clear() {} }; },

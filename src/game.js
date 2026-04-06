@@ -11,51 +11,32 @@ export default class Game {
     let muted = false;
     let shooting = false;
     const keys = {};
-    const mousePosition = { x: 0, y: 0 };
-    this.player = new Player({ app, mousePosition, username, keys });
+    this.player = new Player({ app, username, keys });
     this.enemySpawner = new Spawner({ app, player: this.player });
     this.hud = new Hud({ app, player: this.player });
     this.buff = new Buff({ app, hud: this.hud });
 
-    this.clear = () => {
-      this.player.shooting.interval.clear();
-      app.stage.removeChild(this.player.playerContainer);
-      app.stage.removeChild(this.player.shooting.shootingContainer);
-      app.stage.removeChild(this.buff.buffContainer);
-      app.stage.removeChild(this.enemySpawner.spawnerContainer);
-    };
-
-    this.ticker = app.ticker.add(() => {
-      this.hud.update(this.clear);
-      this.player.update(keys);
-      this.buff.update(this.player);
-      this.enemySpawner.update(this.player);
-      this.enemySpawner.spawns.forEach((enemy) => {
-        enemy.update(this.player, this.enemySpawner);
-      });
-      this.player.shooting.update(shooting, this.enemySpawner, this.player);
-    });
-
-    app.renderer.view.onmousemove = (e) => {
+    this.handleMouseMove = (e) => {
       this.player.setMousePosition(e.clientX, e.clientY);
     };
 
-    window.addEventListener("pointerdown", () => {
+    this.handlePointerDown = () => {
       shooting = true;
-    });
+    };
 
-    window.addEventListener("pointerup", () => {
+    this.handlePointerUp = () => {
       shooting = false;
-    });
+    };
 
-    window.addEventListener("keydown", (e) => {
+    this.handleKeyDown = (e) => {
       keys[e.key] = true;
-    });
-    window.addEventListener("keyup", (e) => {
-      keys[e.key] = false;
-    });
+    };
 
-    window.addEventListener("keydown", (e) => {
+    this.handleKeyUp = (e) => {
+      keys[e.key] = false;
+    };
+
+    this.handleSystemKeys = (e) => {
       const usedKeys = ["Escape", "m"];
       if (!usedKeys.includes(e.key)) return;
 
@@ -82,6 +63,41 @@ export default class Game {
         default:
           break;
       }
-    });
+    };
+
+    this.clear = () => {
+      this.player.shooting.interval.clear();
+      this.app.ticker.remove(this.tick);
+      this.app.renderer.view.onmousemove = null;
+      window.removeEventListener("pointerdown", this.handlePointerDown);
+      window.removeEventListener("pointerup", this.handlePointerUp);
+      window.removeEventListener("keydown", this.handleKeyDown);
+      window.removeEventListener("keyup", this.handleKeyUp);
+      window.removeEventListener("keydown", this.handleSystemKeys);
+      app.stage.removeChild(this.player.playerContainer);
+      app.stage.removeChild(this.player.shooting.shootingContainer);
+      app.stage.removeChild(this.buff.buffContainer);
+      app.stage.removeChild(this.enemySpawner.spawnerContainer);
+    };
+
+    this.tick = () => {
+      this.hud.update(this.clear);
+      this.player.update(keys);
+      this.buff.update(this.player);
+      this.enemySpawner.update(this.player);
+      this.enemySpawner.spawns.forEach((enemy) => {
+        enemy.update(this.player, this.enemySpawner);
+      });
+      this.player.shooting.update(shooting, this.enemySpawner, this.player);
+    };
+
+    this.ticker = app.ticker.add(this.tick);
+
+    app.renderer.view.onmousemove = this.handleMouseMove;
+    window.addEventListener("pointerdown", this.handlePointerDown);
+    window.addEventListener("pointerup", this.handlePointerUp);
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
+    window.addEventListener("keydown", this.handleSystemKeys);
   }
 }
