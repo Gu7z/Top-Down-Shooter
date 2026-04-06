@@ -44,26 +44,28 @@ function interval(pixi) {
     let progress = 0;
 
     var ticker = function ticker(delta) {
-      progress += delta;
-      var elapsed = (progress / (60 * pixi.ticker.speed)).toFixed(2);
-      if ((elapsed * 100) % (secs * 100) === 0) end(true);
-    };
-
-    var end = function end(fire) {
       if (stop) {
         pixi.ticker.remove(ticker);
-      } else {
-        if (fire) cb();
+        return;
+      }
+
+      progress += delta;
+      var elapsed = progress / (60 * pixi.ticker.speed);
+      if (elapsed >= secs) {
+        progress = 0;
+        cb();
       }
     };
 
     var clear = function clear() {
-      end(false);
       stop = true;
+      pixi.ticker.remove(ticker);
     };
 
     var finish = function finish() {
-      end(true);
+      if (stop) return;
+      progress = 0;
+      cb();
     };
 
     pixi.ticker.add(ticker);
