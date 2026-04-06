@@ -8,15 +8,16 @@ export default class Enemy {
     this.value = value;
     this.enemyRadius = enemyRadius;
 
-    const textColor = [0xffffff, 0xffc0cb].includes(color)
-      ? 0x000000
-      : 0xffffff;
+    const textColor = [0xffffff, 0xffc0cb].includes(color) ? 0x000000 : 0xffffff;
     this.enemy = new PIXI.Graphics();
     this.enemy.beginFill(color, 1);
     this.enemy.drawCircle(0, 0, enemyRadius);
     this.enemy.endFill();
+
     this.enemyLifeText = new PIXI.Text(this.life, {
       fill: textColor,
+      fontWeight: "bold",
+      fontSize: Math.max(12, enemyRadius),
     });
     this.enemyLifeText.position.set(0, 0);
     this.enemyLifeText.anchor.set(0.5);
@@ -29,10 +30,6 @@ export default class Enemy {
   }
 
   resetPosition() {
-    // const randomPosition = {
-    //   x: this.app.screen.width / 2,
-    //   y: this.app.screen.height / 2,
-    // };
     const randomPosition = this.randomPosition();
     this.enemy.position.set(randomPosition.x, randomPosition.y);
     this.enemyLifeText.position.set(randomPosition.x, randomPosition.y);
@@ -40,8 +37,8 @@ export default class Enemy {
 
   randomPosition() {
     const { width, height } = this.app.screen;
-    let edge = Math.floor(Math.random() * 4);
-    let spawnPoint = new Victor(0, 0);
+    const edge = Math.floor(Math.random() * 4);
+    const spawnPoint = new Victor(0, 0);
 
     switch (edge) {
       case 0:
@@ -65,27 +62,25 @@ export default class Enemy {
     return spawnPoint;
   }
 
-  removePlayerLife(player, spanwer) {
+  removePlayerLife(player, spanwer, effects) {
     player.lifes -= 1;
     spanwer.reset();
+    if (effects) {
+      effects.shake(8);
+      effects.explosion(player.player.position.x, player.player.position.y, 0xff2d55, 24);
+      effects.pulse(player.player, 0xff2d55, 15);
+    }
   }
 
-  goToPlayer(player, spanwer) {
+  goToPlayer(player, spanwer, effects) {
     const playerSquare = player.player;
 
-    const enemyPosition = new Victor(
-      this.enemy.position.x,
-      this.enemy.position.y
-    );
-    const playerPosition = new Victor(
-      playerSquare.position.x,
-      playerSquare.position.y
-    );
+    const enemyPosition = new Victor(this.enemy.position.x, this.enemy.position.y);
+    const playerPosition = new Victor(playerSquare.position.x, playerSquare.position.y);
 
-    const isHittingPlayer =
-      enemyPosition.distance(playerPosition) < playerSquare.width / 2;
+    const isHittingPlayer = enemyPosition.distance(playerPosition) < playerSquare.width / 2;
     if (isHittingPlayer) {
-      this.removePlayerLife(player, spanwer);
+      this.removePlayerLife(player, spanwer, effects);
 
       return;
     }
@@ -102,21 +97,27 @@ export default class Enemy {
     this.enemyLifeText.text = this.life;
   }
 
-  kill(enemies, indexEnemy, player) {
+  kill(enemies, indexEnemy, player, effects) {
     if (this.life > 1) {
       this.life -= 1;
-    } else {
-      if (enemies) {
-        player.points += this.value;
-        this.enemy.visible = false;
-        this.enemyLifeText.visible = false;
-        enemies.splice(indexEnemy, 1);
-      }
+      return;
     }
+
+    if (!enemies) return;
+
+    player.points += this.value;
+    if (effects) {
+      effects.explosion(this.enemy.position.x, this.enemy.position.y, 0xfff275, 18);
+      effects.shake(3.5);
+    }
+
+    this.enemy.visible = false;
+    this.enemyLifeText.visible = false;
+    enemies.splice(indexEnemy, 1);
   }
 
-  update(player, spanwer) {
+  update(player, spanwer, effects) {
     if (this.enemy.destroyed) return;
-    this.goToPlayer(player, spanwer);
+    this.goToPlayer(player, spanwer, effects);
   }
 }

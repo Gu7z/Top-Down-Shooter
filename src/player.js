@@ -21,6 +21,12 @@ export default class Player {
     this.player.anchor.set(0.5);
     this.player.position.set(middleWidth, middleHeight);
 
+    this.playerGlow = new PIXI.Graphics();
+    this.playerGlow.beginFill(0x00e5ff, 0.2);
+    this.playerGlow.drawCircle(0, 0, this.size * 1.2);
+    this.playerGlow.endFill();
+    this.playerGlow.position.set(middleWidth, middleHeight);
+
     this.shooting = new Shooting({
       app,
       player: this.player,
@@ -29,6 +35,7 @@ export default class Player {
     });
 
     this.setMousePosition(middleWidth, 0);
+    this.playerContainer.addChild(this.playerGlow);
     this.playerContainer.addChild(this.player);
     this.app.stage.addChild(this.playerContainer);
   }
@@ -50,48 +57,51 @@ export default class Player {
 
     switch (key) {
       case "w":
-        return playerYBoundarie < boundaries["leftAndTop"];
+        return playerYBoundarie < boundaries.leftAndTop;
       case "a":
-        return playerXBoundarie < boundaries["leftAndTop"];
+        return playerXBoundarie < boundaries.leftAndTop;
       case "s":
-        return playerYBoundarie > boundaries["bottom"];
+        return playerYBoundarie > boundaries.bottom;
       case "d":
-        return playerXBoundarie > boundaries["right"];
+        return playerXBoundarie > boundaries.right;
       default:
         return true;
     }
   }
 
   movePlayer = (keys) => {
-    if (keys["w"]) {
+    if (keys.w) {
       if (this.outOfBounds("w")) return;
       this.player.y -= this.velocity;
     }
-    if (keys["a"]) {
+    if (keys.a) {
       if (this.outOfBounds("a")) return;
       this.player.x -= this.velocity;
     }
-    if (keys["s"]) {
+    if (keys.s) {
       if (this.outOfBounds("s")) return;
       this.player.y += this.velocity;
     }
-    if (keys["d"]) {
+    if (keys.d) {
       if (this.outOfBounds("d")) return;
       this.player.x += this.velocity;
     }
   };
 
   lookTo = () => {
-    const angle = Math.atan2(
-      this.mouseY - this.player.position.y,
-      this.mouseX - this.player.position.x
-    );
+    const angle = Math.atan2(this.mouseY - this.player.position.y, this.mouseX - this.player.position.x);
 
     this.player.rotation = angle;
   };
 
+  updateGlow() {
+    this.playerGlow.position.set(this.player.position.x, this.player.position.y);
+    this.playerGlow.alpha = 0.17 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.18;
+  }
+
   update(keys) {
     this.lookTo();
     this.movePlayer(keys);
+    this.updateGlow();
   }
 }

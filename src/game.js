@@ -2,7 +2,7 @@ import Buff from "./buff.js";
 import Player from "./player.js";
 import Spawner from "./spanwer.js";
 import Hud from "./hud.js";
-import bulletHit from "./utils/bullet_hit.js";
+import Effects from "./effects.js";
 
 export default class Game {
   constructor({ app, username }) {
@@ -11,10 +11,14 @@ export default class Game {
     let muted = false;
     let shooting = false;
     const keys = {};
+
+    this.effects = new Effects({ app });
     this.player = new Player({ app, username, keys });
     this.enemySpawner = new Spawner({ app, player: this.player });
     this.hud = new Hud({ app, player: this.player });
     this.buff = new Buff({ app, hud: this.hud });
+
+    this.player.shooting.registerEffects(this.effects);
 
     this.handleMouseMove = (e) => {
       this.player.setMousePosition(e.clientX, e.clientY);
@@ -22,6 +26,7 @@ export default class Game {
 
     this.handlePointerDown = () => {
       shooting = true;
+      this.effects.shake(1.5);
     };
 
     this.handlePointerUp = () => {
@@ -67,6 +72,7 @@ export default class Game {
 
     this.clear = () => {
       this.player.shooting.interval.clear();
+      this.effects.destroy();
       this.app.ticker.remove(this.tick);
       this.app.renderer.view.onmousemove = null;
       window.removeEventListener("pointerdown", this.handlePointerDown);
@@ -78,6 +84,7 @@ export default class Game {
       app.stage.removeChild(this.player.shooting.shootingContainer);
       app.stage.removeChild(this.buff.buffContainer);
       app.stage.removeChild(this.enemySpawner.spawnerContainer);
+      app.stage.removeChild(this.hud.hudContainer);
     };
 
     this.tick = () => {
@@ -86,7 +93,7 @@ export default class Game {
       this.buff.update(this.player);
       this.enemySpawner.update(this.player);
       this.enemySpawner.spawns.forEach((enemy) => {
-        enemy.update(this.player, this.enemySpawner);
+        enemy.update(this.player, this.enemySpawner, this.effects);
       });
       this.player.shooting.update(shooting, this.enemySpawner, this.player);
     };
