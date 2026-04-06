@@ -1,57 +1,74 @@
+import {
+  MenuTheme,
+  addMenuOverlay,
+  addPanel,
+  addSectionTitle,
+  addSectionSubtitle,
+  createMenuButton,
+} from "./ui_theme.js";
+
 export default class Controls {
   constructor({ app, menu }) {
     this.app = app;
     this.controlsContainer = new PIXI.Container();
 
     const x = this.app.screen.width / 2;
-    const y = this.app.screen.height / 3;
-    const square = new PIXI.Sprite(PIXI.Texture.WHITE);
-    square.tint = 0xffffff;
-    square.anchor.set(0.5);
-    square.position.set(x, y);
-    square.width = 380;
-    square.height = 400;
+    const y = this.app.screen.height / 2;
 
-    const back = new PIXI.Sprite(PIXI.Texture.WHITE);
-    back.tint = 0xffffff;
-    back.anchor.set(0.5);
-    back.position.set(x, this.app.screen.height - 50);
-    back.width = 160;
-    back.height = 40;
-    back.interactive = true;
-    back.cursor = "pointer";
-    back.on("click", () => {
-      this.app.stage.removeChild(this.controlsContainer);
-      menu.show();
+    addMenuOverlay(this.controlsContainer, this.app);
+    addPanel({
+      container: this.controlsContainer,
+      x,
+      y,
+      width: 760,
+      height: 560,
+      tint: MenuTheme.color.panel,
     });
 
-    this.controlsContainer.addChild(square);
-    this.controlsContainer.addChild(back);
-    this.addText("Voltar", x, this.app.screen.height - 50);
+    addSectionTitle(this.controlsContainer, "CONTROLES", x, y - 215, 52);
+    addSectionSubtitle(
+      this.controlsContainer,
+      "Aprenda os atalhos para sobreviver mais tempo.",
+      x,
+      y - 170,
+      20
+    );
 
     const texts = [
-      "Mouse1/Espaço - Pressione para Atirar",
-      "W - Mover para cima",
-      "S - Mover para baixo",
-      "D - Mover para direita",
-      "A - Mover para esquerda",
-      "M - Mutar/Desmutar",
-      "Esc - Pausar",
+      "Mouse1 / Espaço · Atirar",
+      "W A S D · Movimento",
+      "M · Mutar / Desmutar áudio",
+      "ESC · Pausar / Continuar",
     ];
 
-    let pos = { x, y: y - 150 };
-    texts.forEach((text) => {
-      this.addText(text, pos.x, pos.y);
-      pos.y += 50;
+    let posY = y - 90;
+    texts.forEach((text, index) => {
+      this.addText(text, x, posY, index === 0 ? MenuTheme.color.accent : MenuTheme.color.text);
+      posY += 58;
+    });
+
+    createMenuButton({
+      container: this.controlsContainer,
+      x,
+      y: this.app.screen.height - 86,
+      label: "VOLTAR",
+      onClick: () => {
+        this.app.stage.removeChild(this.controlsContainer);
+        menu.show();
+      },
+      width: 220,
+      height: 54,
     });
 
     this.app.stage.addChild(this.controlsContainer);
   }
 
-  addText(text, x, y) {
+  addText(text, x, y, fill = MenuTheme.color.text) {
     const rule = new PIXI.Text(text, {
-      fill: 0x000000,
+      fill,
       fontSize: 30,
+      fontWeight: "600",
+      align: "center",
     });
     rule.position.set(x, y);
     rule.anchor.set(0.5);

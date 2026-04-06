@@ -43,7 +43,7 @@ test('game event handlers work', () => {
   app.ticker.fn();
   game.player.lifes = 0;
   app.ticker.fn();
-  const back = game.hud.hudContainer.children.find(c => c.eventHandlers);
+  const back = game.hud.hudContainer.children.find(c => c.eventHandlers?.click);
   back.eventHandlers.click();
   assert.ok(true);
 });
