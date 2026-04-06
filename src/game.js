@@ -106,6 +106,7 @@ export default class Game {
       app.stage.removeChild(this.enemySpawner.spawnerContainer);
       app.stage.removeChild(this.hud.hudContainer);
     };
+    this.hud.endRun = this.clear;
 
     this.tick = () => {
       this.hud.update(this.clear);

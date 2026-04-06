@@ -115,6 +115,21 @@ export default class Hud {
     this.pauseSettingsBtn.bg.visible = false;
     this.pauseSettingsBtn.label.visible = false;
 
+    this.pauseEndRunBtn = createPillButton({
+      container: this.hudContainer,
+      x:         cx,
+      y:         cy + 116,
+      text:      "■  ENCERRAR RUN",
+      width:     280,
+      height:    52,
+      danger:    true,
+      onClick:   () => {
+        if (this._endRun) this._endRun();
+      },
+    });
+    this.pauseEndRunBtn.bg.visible = false;
+    this.pauseEndRunBtn.label.visible = false;
+
     this.textEnd = createLabel({
       container:    this.hudContainer,
       text:         "RUN  TERMINATED",
@@ -134,10 +149,21 @@ export default class Hud {
     this._openSettings = fn;
   }
 
+  set endRun(fn) {
+    this._endRun = () => {
+      fn();
+      this.app.stage.removeChildren();
+      this.app.start();
+      new Menu({ app: this.app });
+    };
+  }
+
   set showPaused(val) {
     this.textPaused.visible = val;
     this.pauseSettingsBtn.bg.visible = val;
     this.pauseSettingsBtn.label.visible = val;
+    this.pauseEndRunBtn.bg.visible = val;
+    this.pauseEndRunBtn.label.visible = val;
     if (val) this.app.stage.addChild(this.hudContainer);
   }
 

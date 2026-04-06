@@ -206,12 +206,12 @@ export function createLabel({
 export function createPillButton({
   container, x, y, text,
   width = 280, height = 56,
-  primary = false, onClick,
+  primary = false, danger = false, onClick,
 }) {
   const c = 8;
-  const fillColor  = primary ? UISkin.palette.accent     : UISkin.palette.card;
-  const borderColor = primary ? UISkin.palette.accent    : UISkin.palette.accentAlt;
-  const textColor  = primary ? UISkin.palette.ink        : UISkin.palette.textPrimary;
+  const fillColor  = primary ? UISkin.palette.accent  : UISkin.palette.card;
+  const borderColor = danger ? UISkin.palette.danger  : primary ? UISkin.palette.accent : UISkin.palette.accentAlt;
+  const textColor  = danger ? UISkin.palette.danger   : primary ? UISkin.palette.ink    : UISkin.palette.textPrimary;
 
   const bg = new PIXI.Graphics();
   let disabled = false;

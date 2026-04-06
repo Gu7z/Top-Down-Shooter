@@ -26,9 +26,20 @@ test('showPaused toggles visibility', () => {
   hud.showPaused = true;
   assert.strictEqual(hud.textPaused.visible, true);
   assert.strictEqual(hud.textPaused.glowHalo.visible, true);
+  assert.strictEqual(hud.pauseSettingsBtn.bg.visible, true);
+  assert.strictEqual(hud.pauseEndRunBtn.bg.visible, true);
   hud.showPaused = false;
   assert.strictEqual(hud.textPaused.visible, false);
   assert.strictEqual(hud.textPaused.glowHalo.visible, false);
+  assert.strictEqual(hud.pauseSettingsBtn.bg.visible, false);
+  assert.strictEqual(hud.pauseEndRunBtn.bg.visible, false);
+});
+
+test('pause end run button calls configured callback', () => {
+  let ended = false;
+  hud.endRun = () => { ended = true; };
+  hud.pauseEndRunBtn.bg.eventHandlers.pointerdown();
+  assert.strictEqual(ended, true);
 });
 
 test('endgameCheck adds back button', () => {
