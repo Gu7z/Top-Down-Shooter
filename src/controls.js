@@ -4,99 +4,137 @@ import {
   createCard,
   createLabel,
   createPillButton,
+  addScreenCorners,
 } from "./ui_system.js";
+
+const BINDINGS = [
+  { key: "W  /  A  /  S  /  D",     action: "Movimentação"          },
+  { key: "Mouse1  /  Espaço",        action: "Disparo contínuo"      },
+  { key: "ESC",                      action: "Pausar / Continuar"    },
+  { key: "M",                        action: "Mutar / Demutar áudio" },
+];
 
 export default class Controls {
   constructor({ app, menu }) {
     this.app = app;
     this.controlsContainer = new PIXI.Container();
 
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height / 2;
+    const cx = app.screen.width  / 2;
+    const cy = app.screen.height / 2;
 
-    createBackdrop(this.controlsContainer, this.app);
+    createBackdrop(this.controlsContainer, app);
+    addScreenCorners(this.controlsContainer, app);
+
     createCard({
-      container: this.controlsContainer,
-      x,
-      y,
-      width: 820,
-      height: 560,
+      container:   this.controlsContainer,
+      x:           cx,
+      y:           cy,
+      width:       840,
+      height:      558,
+      chamfer:     16,
+      bracketSize: 22,
     });
 
     createLabel({
-      container: this.controlsContainer,
-      text: "COMANDOS DA RUN",
-      x,
-      y: y - 210,
-      fontSize: 50,
-      color: UISkin.palette.highlight,
-      bold: true,
+      container:    this.controlsContainer,
+      text:         "CONTROLES",
+      x:            cx,
+      y:            cy - 222,
+      fontSize:     50,
+      color:        UISkin.palette.accent,
+      bold:         true,
+      letterSpacing: 6,
+      glow:         true,
+    });
+
+    createLabel({
+      container:    this.controlsContainer,
+      text:         "▸  CONFIGURAÇÕES DE ENTRADA  ◂",
+      x:            cx,
+      y:            cy - 176,
+      fontSize:     13,
+      color:        UISkin.palette.textSecondary,
+      mono:         true,
       letterSpacing: 3,
     });
 
-    const rows = [
-      { key: "W A S D", action: "Movimentação" },
-      { key: "Mouse1 ou Espaço", action: "Disparo contínuo" },
-      { key: "ESC", action: "Pausar / Continuar" },
-      { key: "M", action: "Mutar áudio" },
-    ];
+    // Divider under subtitle
+    const div = new PIXI.Graphics();
+    div.lineStyle(1, UISkin.palette.accent, 0.22);
+    div.moveTo(cx - 310, cy - 157);
+    div.lineTo(cx + 310, cy - 157);
+    this.controlsContainer.addChild(div);
 
-    let lineY = y - 120;
-    rows.forEach((row) => {
-      createCard({
-        container: this.controlsContainer,
-        x,
-        y: lineY,
-        width: 620,
-        height: 64,
-        alpha: 0.8,
-      });
+    // Binding rows
+    let rowY = cy - 112;
+    BINDINGS.forEach(({ key, action }, idx) => {
+      // Alternating row tint
+      const rowBg = new PIXI.Graphics();
+      rowBg.beginFill(idx % 2 === 0 ? 0x080812 : 0x0A0A0F, 0.55);
+      rowBg.lineStyle(1, UISkin.palette.accent, 0.08);
+      rowBg.drawRect(cx - 340, rowY - 27, 680, 54);
+      rowBg.endFill();
+      this.controlsContainer.addChild(rowBg);
 
+      // Left cyan accent strip
+      const strip = new PIXI.Graphics();
+      strip.beginFill(UISkin.palette.accent, 0.82);
+      strip.drawRect(cx - 340, rowY - 27, 3, 54);
+      strip.endFill();
+      this.controlsContainer.addChild(strip);
+
+      // Key badge
       createLabel({
-        container: this.controlsContainer,
-        text: row.key,
-        x: x - 210,
-        y: lineY,
-        fontSize: 26,
-        color: UISkin.palette.highlightStrong,
-        bold: true,
+        container:    this.controlsContainer,
+        text:         key,
+        x:            cx - 130,
+        y:            rowY,
+        fontSize:     18,
+        color:        UISkin.palette.accent,
+        bold:         true,
+        letterSpacing: 2,
+        mono:         true,
       });
 
+      // Separator dot
       createLabel({
-        container: this.controlsContainer,
-        text: row.action,
-        x: x + 40,
-        y: lineY,
-        fontSize: 24,
-        color: UISkin.palette.textPrimary,
+        container:    this.controlsContainer,
+        text:         "›",
+        x:            cx + 20,
+        y:            rowY,
+        fontSize:     20,
+        color:        UISkin.palette.textSecondary,
+        mono:         true,
       });
 
-      lineY += 78;
+      // Action description
+      createLabel({
+        container:    this.controlsContainer,
+        text:         action,
+        x:            cx + 130,
+        y:            rowY,
+        fontSize:     17,
+        color:        UISkin.palette.textPrimary,
+        mono:         true,
+        letterSpacing: 1,
+      });
+
+      rowY += 70;
     });
 
     createPillButton({
       container: this.controlsContainer,
-      x,
-      y: this.app.screen.height - 80,
-      text: "VOLTAR AO MENU",
-      width: 280,
-      onClick: () => {
+      x:         cx,
+      y:         cy + 218,
+      text:      "↩   VOLTAR AO MENU",
+      width:     300,
+      height:    54,
+      onClick:   () => {
         this.app.stage.removeChild(this.controlsContainer);
         menu.show();
       },
     });
 
     this.app.stage.addChild(this.controlsContainer);
-  }
-
-  addText(text, x, y, fill = UISkin.palette.textPrimary) {
-    createLabel({
-      container: this.controlsContainer,
-      text,
-      x,
-      y,
-      fontSize: 28,
-      color: fill,
-    });
   }
 }

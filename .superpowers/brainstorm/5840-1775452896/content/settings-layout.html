@@ -1,0 +1,212 @@
+<style>
+  body { background: #0A0A0F; color: #CCEEFF; font-family: 'Courier New', monospace; margin: 0; }
+  .question { text-align: center; margin-bottom: 28px; }
+  .question h2 { color: #00FFFF; font-size: 18px; letter-spacing: 4px; margin-bottom: 6px; }
+  .question p  { color: #4A6888; font-size: 11px; letter-spacing: 2px; }
+
+  /* ── game canvas mockup ── */
+  .game-frame {
+    width: 760px;
+    height: 430px;
+    background: #070710;
+    border: 1.5px solid #00FFFF44;
+    position: relative;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  /* grid bg */
+  .game-frame::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(#003355 1px, transparent 1px),
+      linear-gradient(90deg, #003355 1px, transparent 1px);
+    background-size: 38px 38px;
+    opacity: 0.045;
+  }
+
+  /* scanlines */
+  .game-frame::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px, transparent 2px,
+      rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* HUD stat panels */
+  .hud-pts {
+    position: absolute; top: 10px; left: 10px;
+    background: #0C0C1A; border: 1px solid #00FFFF55;
+    padding: 6px 14px; font-size: 11px; color: #00FFFF; letter-spacing: 2px;
+  }
+  .hud-hp {
+    position: absolute; top: 10px; right: 10px;
+    background: #0C0C1A; border: 1px solid #00FFFF55;
+    padding: 6px 14px; font-size: 11px; color: #00FF88; letter-spacing: 2px;
+  }
+
+  /* ── settings card overlay ── */
+  .settings-card {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 460px;
+    background: #0C0C1A;
+    border: 1.5px solid #00FFFF;
+    padding: 28px 32px 24px;
+    z-index: 10;
+  }
+  /* corner brackets */
+  .settings-card::before, .settings-card::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+  }
+  .corner-tl { position: absolute; top: -2px; left: -2px;
+    border-top: 2px solid #00FFFF; border-left: 2px solid #00FFFF; width: 18px; height: 18px; }
+  .corner-tr { position: absolute; top: -2px; right: -2px;
+    border-top: 2px solid #00FFFF; border-right: 2px solid #00FFFF; width: 18px; height: 18px; }
+  .corner-bl { position: absolute; bottom: -2px; left: -2px;
+    border-bottom: 2px solid #00FFFF; border-left: 2px solid #00FFFF; width: 18px; height: 18px; }
+  .corner-br { position: absolute; bottom: -2px; right: -2px;
+    border-bottom: 2px solid #00FFFF; border-right: 2px solid #00FFFF; width: 18px; height: 18px; }
+
+  /* visor accent line */
+  .visor { height: 2px; background: #00FFFF; margin: 0 0 16px; opacity: 0.9; }
+
+  .card-title {
+    color: #00FFFF; font-size: 18px; font-weight: bold;
+    letter-spacing: 5px; text-align: center; margin-bottom: 4px;
+  }
+  .card-subtitle {
+    color: #4A6888; font-size: 10px; letter-spacing: 3px; text-align: center; margin-bottom: 22px;
+  }
+
+  /* ── volume row ── */
+  .vol-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .vol-header { display: flex; justify-content: space-between; align-items: center; }
+  .vol-label { font-size: 12px; color: #00FFFF; letter-spacing: 3px; }
+  .vol-value { font-size: 20px; color: #00FFFF; font-weight: bold; letter-spacing: 2px; }
+
+  .track { position: relative; height: 6px; background: #1C1C2E; cursor: pointer; }
+  .track-fill { height: 100%; background: linear-gradient(90deg, #00FFFF, #00FF88); width: 70%; pointer-events: none; }
+  .thumb {
+    position: absolute; top: 50%; left: calc(70% - 8px);
+    width: 16px; height: 16px;
+    background: #00FFFF; border: 2px solid #070710;
+    transform: translateY(-50%);
+    box-shadow: 0 0 8px #00FFFF88;
+  }
+
+  /* mute row */
+  .mute-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+    border-top: 1px solid #00FFFF15;
+    margin-bottom: 20px;
+  }
+  .mute-label { font-size: 12px; color: #CCEEFF; letter-spacing: 2px; }
+  .mute-hint  { font-size: 10px; color: #4A6888; letter-spacing: 1px; margin-top: 2px; }
+  .toggle {
+    width: 46px; height: 22px; background: #00FFFF; position: relative;
+    border: 1px solid #00FFFF;
+  }
+  .toggle-dot {
+    position: absolute; right: 3px; top: 3px;
+    width: 14px; height: 14px; background: #070710;
+  }
+
+  /* back button */
+  .back-btn {
+    width: 100%; padding: 11px;
+    background: #070710;
+    border: 1.5px solid #FF00FF;
+    color: #CCEEFF; font-family: 'Courier New', monospace;
+    font-size: 13px; letter-spacing: 3px; text-align: center;
+    cursor: pointer;
+  }
+
+  /* dim backdrop when settings open */
+  .dim {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 5;
+  }
+
+  /* pause text behind */
+  .pause-bg {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #FF00FF44; font-size: 28px; font-weight: bold;
+    letter-spacing: 6px; white-space: nowrap;
+    z-index: 2;
+  }
+
+  .caption {
+    text-align: center; color: #4A6888; font-size: 10px;
+    letter-spacing: 2px; margin-top: 10px;
+  }
+</style>
+
+<div class="question">
+  <h2>LAYOUT DA TELA DE CONFIGURAÇÕES</h2>
+  <p>Overlay sobre o jogo pausado — aparece tanto no menu quanto durante a pausa</p>
+</div>
+
+<!-- Game frame with settings overlay -->
+<div class="game-frame">
+  <!-- HUD -->
+  <div class="hud-pts">PTS  1240</div>
+  <div class="hud-hp">HP  1</div>
+
+  <!-- pause text (faint, behind) -->
+  <div class="pause-bg">//  PAUSED  //</div>
+
+  <!-- dim scrim -->
+  <div class="dim"></div>
+
+  <!-- settings card -->
+  <div class="settings-card">
+    <div class="corner-tl"></div>
+    <div class="corner-tr"></div>
+    <div class="corner-bl"></div>
+    <div class="corner-br"></div>
+
+    <div class="visor"></div>
+    <div class="card-title">⚙  CONFIGURAÇÕES</div>
+    <div class="card-subtitle">▸  AJUSTES DE ÁUDIO  ◂</div>
+
+    <!-- Volume slider -->
+    <div class="vol-row">
+      <div class="vol-header">
+        <span class="vol-label">VOLUME</span>
+        <span class="vol-value">70</span>
+      </div>
+      <div class="track">
+        <div class="track-fill"></div>
+        <div class="thumb"></div>
+      </div>
+    </div>
+
+    <!-- Mute toggle -->
+    <div class="mute-row">
+      <div>
+        <div class="mute-label">MUDO</div>
+        <div class="mute-hint">tecla M também alterna</div>
+      </div>
+      <div class="toggle"><div class="toggle-dot"></div></div>
+    </div>
+
+    <!-- Back button -->
+    <div class="back-btn">↩   VOLTAR</div>
+  </div>
+</div>
+
+<div class="caption">
+  CONFIGURAÇÕES SALVAS AUTOMATICAMENTE · PERSISTE ENTRE SESSÕES (localStorage)
+</div>

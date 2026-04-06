@@ -2,58 +2,72 @@ import getUrl from "./utils/get_url.js";
 import {
   UISkin,
   createBackdrop,
-  createCard,
   createLabel,
   createPillButton,
+  addScreenCorners,
 } from "./ui_system.js";
 
 export default class Score {
   constructor({ app, menu }) {
-    this.app = app;
-    this.menu = menu;
+    this.app   = app;
+    this.menu  = menu;
     this.scoreContainer = new PIXI.Container();
-    this.root = document.getElementById?.("ui-root") || document.body;
+    this.root  = document.getElementById?.("ui-root") || document.body;
 
     this.mountScene();
     this.app.stage.addChild(this.scoreContainer);
-    this.showScore();
+    this.loadScore();
   }
 
+  // ── PIXI background layer ──────────────────────────────────────
   mountScene() {
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height / 2;
+    const x = this.app.screen.width  / 2;
+    const H = this.app.screen.height;
 
     createBackdrop(this.scoreContainer, this.app);
-    createCard({ container: this.scoreContainer, x, y, width: 980, height: 620 });
+    addScreenCorners(this.scoreContainer, this.app);
+
+    // Title
+    createLabel({
+      container:    this.scoreContainer,
+      text:         "NEURAL  RANKING",
+      x,
+      y:            58,
+      fontSize:     50,
+      color:        UISkin.palette.accent,
+      bold:         true,
+      letterSpacing: 6,
+      glow:         true,
+    });
 
     createLabel({
-      container: this.scoreContainer,
-      text: "RANKING DE CAÇADORES",
+      container:    this.scoreContainer,
+      text:         "▸  OPERADORES MAIS LETAIS DA REDE  ◂",
       x,
-      y: y - 248,
-      fontSize: 48,
-      color: UISkin.palette.highlight,
-      bold: true,
+      y:            106,
+      fontSize:     13,
+      color:        UISkin.palette.textSecondary,
+      mono:         true,
       letterSpacing: 3,
     });
 
-    createLabel({
-      container: this.scoreContainer,
-      text: "Quem sobrevive mais tempo domina o topo.",
-      x,
-      y: y - 206,
-      fontSize: 22,
-      color: UISkin.palette.textSecondary,
-    });
+    // Divider
+    const div = new PIXI.Graphics();
+    div.lineStyle(1, UISkin.palette.accent, 0.28);
+    div.moveTo(x - 340, 126);
+    div.lineTo(x + 340, 126);
+    this.scoreContainer.addChild(div);
 
+    // Back button
     createPillButton({
       container: this.scoreContainer,
       x,
-      y: this.app.screen.height - 78,
-      text: "VOLTAR AO MENU",
-      width: 280,
+      y: H - 50,
+      text:   "↩   VOLTAR AO MENU",
+      width:  300,
+      height: 54,
       onClick: () => {
-        const table = document.getElementById?.("score-table");
+        const table = document.getElementById("score-table");
         if (table) this.root.removeChild(table);
         this.app.stage.removeChild(this.scoreContainer);
         this.menu.show();
@@ -61,93 +75,151 @@ export default class Score {
     });
   }
 
-  drawLoading() {
+  // ── Load & render leaderboard ──────────────────────────────────
+  async loadScore() {
+    const loader = this.makeLoader();
+    this.root.appendChild(loader);
+
+    try {
+      const res  = await fetch(getUrl());
+      const data = await res.json();
+      this.root.removeChild(loader);
+      this.root.appendChild(this.buildTable(data));
+    } catch (_) {
+      loader.textContent  = "ERRO  //  SERVIDOR INDISPONÍVEL";
+      loader.style.color  = "#FF3366";
+    }
+  }
+
+  makeLoader() {
     const el = document.createElement("div");
-    el.className = "absolute top-5 left-1/2 -translate-x-1/2 pointer-events-auto";
-    el.innerText = "Carregando placar...";
-    el.style.color = "#e2e8f0";
-    el.style.fontSize = "20px";
-    el.style.fontWeight = "700";
+    el.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #00FFFF;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 16px;
+      letter-spacing: 4px;
+      pointer-events: none;
+      animation: hud-blink 1s step-end infinite;
+    `;
+    el.textContent = "▶  CARREGANDO DADOS...";
     return el;
   }
 
-  async getScore() {
-    const loading = this.drawLoading();
-    this.root.appendChild(loading);
+  buildTable(data) {
+    const wrap = document.createElement("div");
+    wrap.id = "score-table";
+    wrap.style.cssText = `
+      position: absolute;
+      top: 144px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 860px;
+      pointer-events: auto;
+    `;
 
-    const url = getUrl();
-    const response = await fetch(url);
-    const data = await response.json();
-
-    this.root.removeChild(loading);
-    return data;
-  }
-
-  drawTable() {
     const table = document.createElement("table");
-    table.id = "score-table";
-    table.className = "pointer-events-auto mx-auto";
-    table.style.marginTop = "160px";
-    table.style.minWidth = "760px";
-    table.style.background = "rgba(15, 23, 42, 0.96)";
-    table.style.color = "#f8fafc";
-    table.style.border = "2px solid #60a5fa";
-    table.style.borderRadius = "12px";
-    table.style.overflow = "hidden";
-    table.style.textAlign = "left";
-    table.style.fontSize = "22px";
-    return table;
-  }
+    table.style.cssText = `
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 15px;
+      color: #CCEEFF;
+      border: 1px solid rgba(0,255,255,0.18);
+    `;
 
-  drawTableHead() {
-    const row = document.createElement("tr");
-    ["Posição", "Operador", "Pontos"].forEach((text) => {
+    // Header
+    const thead = document.createElement("thead");
+    const hr    = document.createElement("tr");
+    [
+      { label: "POS",       align: "center" },
+      { label: "OPERADOR",  align: "left"   },
+      { label: "PONTUAÇÃO", align: "right"  },
+    ].forEach(({ label, align }) => {
       const th = document.createElement("th");
-      th.className = "px-4 py-2";
-      th.innerText = text;
-      th.style.background = "#1d4ed8";
-      th.style.color = "#eff6ff";
-      th.style.textTransform = "uppercase";
-      th.style.fontSize = "18px";
-      th.style.letterSpacing = "1px";
-      row.appendChild(th);
+      th.textContent   = label;
+      th.style.cssText = `
+        padding: 13px 22px;
+        text-align: ${align};
+        color: #00FFFF;
+        font-size: 12px;
+        letter-spacing: 4px;
+        font-weight: 700;
+        border-bottom: 1px solid rgba(0,255,255,0.3);
+        background: rgba(0,10,18,0.72);
+        text-transform: uppercase;
+      `;
+      hr.appendChild(th);
     });
-    return row;
-  }
+    thead.appendChild(hr);
+    table.appendChild(thead);
 
-  drawTableLine(index, name, points) {
-    const row = document.createElement("tr");
-    row.style.background = index % 2 ? "rgba(30, 41, 59, 0.95)" : "rgba(15, 23, 42, 0.95)";
+    // Body
+    const tbody = document.createElement("tbody");
+    const medals = ["#FFD700", "#C0C0C0", "#CD7F32"];
 
-    const rank = document.createElement("td");
-    rank.className = "px-4 py-2";
-    rank.innerText = index;
-    rank.style.fontWeight = "700";
-    rank.style.color = index < 4 ? "#22d3ee" : "#e2e8f0";
+    data.forEach(({ name, points }, i) => {
+      const rank    = i + 1;
+      const top3    = rank <= 3;
+      const rankCol = top3 ? medals[i] : "#4A6888";
+      const rowBg   = i % 2 === 0
+        ? "rgba(12,12,26,0.72)"
+        : "rgba(8,8,16,0.72)";
 
-    const operator = document.createElement("td");
-    operator.className = "px-4 py-2";
-    operator.innerText = name;
+      const row = document.createElement("tr");
+      row.style.background  = rowBg;
+      row.style.borderBottom = "1px solid rgba(0,255,255,0.06)";
+      row.style.transition   = "background 0.15s";
+      row.onmouseenter = () => { row.style.background = "rgba(0,255,255,0.05)"; };
+      row.onmouseleave = () => { row.style.background = rowBg; };
 
-    const score = document.createElement("td");
-    score.className = "px-4 py-2";
-    score.innerText = points;
-    score.style.fontWeight = "700";
+      const cells = [
+        {
+          text: `#${rank}`,
+          style: `
+            text-align: center;
+            font-weight: 700;
+            color: ${rankCol};
+            font-size: 14px;
+            ${top3 ? `text-shadow: 0 0 10px ${rankCol}55;` : ""}
+          `,
+        },
+        {
+          text: name,
+          style: `
+            text-align: left;
+            color: ${top3 ? "#CCE8FF" : "#7A99AA"};
+            font-weight: ${top3 ? "700" : "400"};
+            letter-spacing: 1px;
+          `,
+        },
+        {
+          text: typeof points === "number" ? points.toLocaleString("pt-BR") : points,
+          style: `
+            text-align: right;
+            font-weight: 700;
+            color: ${top3 ? "#00FF88" : "#2A7050"};
+            font-size: 15px;
+            letter-spacing: 2px;
+          `,
+        },
+      ];
 
-    row.appendChild(rank);
-    row.appendChild(operator);
-    row.appendChild(score);
-    return row;
-  }
+      cells.forEach(({ text, style }) => {
+        const td = document.createElement("td");
+        td.textContent   = text;
+        td.style.cssText = `padding: 12px 22px; ${style}`;
+        row.appendChild(td);
+      });
 
-  async showScore() {
-    const score = await this.getScore();
-    const table = this.drawTable();
-    table.appendChild(this.drawTableHead());
-    score.forEach(({ name, points }, i) => {
-      table.appendChild(this.drawTableLine(i + 1, name, points));
+      tbody.appendChild(row);
     });
 
-    this.root.appendChild(table);
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
   }
 }

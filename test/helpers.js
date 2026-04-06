@@ -2,9 +2,19 @@ export function setupPixiMock() {
   global.PIXI = {
     Container: class {
       constructor() { this.children = []; }
-      addChild(child) { this.children.push(child); }
-      removeChild(child) {}
-      removeChildren() { this.children = []; }
+      addChild(child) {
+        this.children = this.children.filter(c => c !== child);
+        this.children.push(child);
+        child.parent = this;
+      }
+      removeChild(child) {
+        this.children = this.children.filter(c => c !== child);
+        if (child.parent === this) child.parent = null;
+      }
+      removeChildren() {
+        this.children.forEach(child => { if (child.parent === this) child.parent = null; });
+        this.children = [];
+      }
     },
     Sprite: class {
       constructor(texture = {}) {
@@ -36,11 +46,28 @@ export function setupPixiMock() {
     },
     Graphics: class {
       constructor() {
+        this.alpha = 1;
+        this.visible = true;
+        this.interactive = false;
+        this.cursor = null;
         this.position = { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } };
+        this.eventHandlers = {};
       }
-      beginFill() {}
-      drawCircle() {}
-      endFill() {}
+      beginFill()  { return this; }
+      endFill()    { return this; }
+      lineStyle()  { return this; }
+      moveTo()     { return this; }
+      lineTo()     { return this; }
+      closePath()  { return this; }
+      drawRect()   { return this; }
+      drawEllipse(){ return this; }
+      drawCircle() { return this; }
+      clear()      { return this; }
+      on(event, fn)  { this.eventHandlers[event] = fn; return this; }
+      off(event) {
+        delete this.eventHandlers[event];
+        return this;
+      }
       destroy() { this.destroyed = true; }
     },
     Text: class {
@@ -50,6 +77,7 @@ export function setupPixiMock() {
         this.position = { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } };
         this.anchor = { set() {} };
         this.visible = true;
+        this.alpha = 1;
       }
       destroy() { this.destroyed = true; }
     },
@@ -73,8 +101,31 @@ export function setupPixiMock() {
 
 export function createAppMock() {
   return {
-    stage: { addChild() {}, removeChild() {}, removeChildren() {} },
-    ticker: { add(fn) { this.fn = fn; return {}; }, remove(fn) { this.removedFn = fn; } },
+    stage: {
+      children: [],
+      addChild(child) {
+        this.children = this.children.filter(c => c !== child);
+        this.children.push(child);
+        child.parent = this;
+      },
+      removeChild(child) {
+        this.children = this.children.filter(c => c !== child);
+        if (child.parent === this) child.parent = null;
+      },
+      removeChildren() {
+        this.children.forEach(child => { if (child.parent === this) child.parent = null; });
+        this.children = [];
+      },
+      _events: {},
+      on(ev, fn) { this._events[ev] = fn; },
+      off(ev) { delete this._events[ev]; },
+    },
+    ticker: {
+      fn: null,
+      removedFn: null,
+      add(fn) { this.fn = fn; return {}; },
+      remove(fn) { this.removedFn = fn; },
+    },
     screen: { width: 800, height: 600 },
     setInterval() { return { clear() {} }; },
     setTimeout() { return { clear() {} }; },

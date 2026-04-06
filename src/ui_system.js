@@ -1,152 +1,266 @@
+// ─────────────────────────────────────────────────────────────
+//  UI SYSTEM — Cyberpunk HUD Design Language
+//  Palette: void black / neon cyan / magenta / danger red
+//  Typography: Orbitron (headings) · JetBrains Mono (data/body)
+//  Shapes: chamfered 45° corners · HUD corner brackets
+// ─────────────────────────────────────────────────────────────
+
 export const UISkin = {
   palette: {
-    background: 0x030712,
-    haze: 0x0b1220,
-    panel: 0x121a2b,
-    panelSoft: 0x192235,
-    highlight: 0x60a5fa,
-    highlightStrong: 0x22d3ee,
-    textPrimary: 0xf8fafc,
-    textSecondary: 0x94a3b8,
-    warning: 0xfb7185,
-    ok: 0x4ade80,
-    disabled: 0x334155,
-    ink: 0x020617,
+    void:        0x0A0A0F,
+    card:        0x0C0C1A,
+    accent:      0x00FFFF,  // cyan — primary
+    accentAlt:   0xFF00FF,  // magenta — secondary
+    accentGreen: 0x00FF88,  // neon green — ok / health
+    textPrimary: 0xCCEEFF,
+    textSecondary: 0x4A6888,
+    danger:      0xFF3366,
+    disabled:    0x1C1C2E,
+    ink:         0x000308,
+    grid:        0x003355,
   },
 };
 
+// ── Internal: draw chamfered octagon path centred at (cx, cy) ──
+function chamferedPath(g, cx, cy, w, h, c) {
+  const x0 = cx - w / 2, x1 = cx + w / 2;
+  const y0 = cy - h / 2, y1 = cy + h / 2;
+  g.moveTo(x0 + c, y0);
+  g.lineTo(x1 - c, y0);
+  g.lineTo(x1,     y0 + c);
+  g.lineTo(x1,     y1 - c);
+  g.lineTo(x1 - c, y1);
+  g.lineTo(x0 + c, y1);
+  g.lineTo(x0,     y1 - c);
+  g.lineTo(x0,     y0 + c);
+  g.closePath();
+}
+
+// ── Backdrop: void bg + grid + radial glow + scanlines ─────────
 export function createBackdrop(container, app) {
-  const base = new PIXI.Sprite(PIXI.Texture.WHITE);
-  base.tint = UISkin.palette.background;
-  base.width = app.screen.width;
-  base.height = app.screen.height;
-  container.addChild(base);
+  const W = app.screen.width, H = app.screen.height;
 
-  const hazeBands = [0.1, 0.18, 0.22];
-  hazeBands.forEach((alpha, index) => {
-    const band = new PIXI.Sprite(PIXI.Texture.WHITE);
-    band.tint = UISkin.palette.haze;
-    band.alpha = alpha;
-    band.width = app.screen.width + 100;
-    band.height = 120;
-    band.anchor.set(0.5);
-    band.position.set(app.screen.width / 2, 130 + index * 180);
-    band.rotation = -0.06 + index * 0.03;
-    container.addChild(band);
-  });
+  const bg = new PIXI.Graphics();
+  bg.beginFill(UISkin.palette.void);
+  bg.drawRect(0, 0, W, H);
+  bg.endFill();
+  container.addChild(bg);
+
+  // Subtle grid
+  const grid = new PIXI.Graphics();
+  const step = 64;
+  grid.lineStyle(1, UISkin.palette.grid, 0.045);
+  for (let x = step; x < W; x += step) { grid.moveTo(x, 0);   grid.lineTo(x, H); }
+  for (let y = step; y < H; y += step) { grid.moveTo(0, y);   grid.lineTo(W, y); }
+  container.addChild(grid);
+
+  // Centre radial blue glow
+  const glow = new PIXI.Graphics();
+  glow.beginFill(0x001020, 0.55);
+  glow.drawEllipse(W / 2, H / 2, W * 0.44, H * 0.37);
+  glow.endFill();
+  container.addChild(glow);
+
+  // Scanlines
+  const scan = new PIXI.Graphics();
+  scan.beginFill(0x000000, 0.13);
+  for (let y = 0; y < H; y += 4) scan.drawRect(0, y, W, 2);
+  scan.endFill();
+  container.addChild(scan);
 }
 
-export function createCard({ container, x, y, width, height, alpha = 0.96 }) {
-  const card = new PIXI.Sprite(PIXI.Texture.WHITE);
-  card.tint = UISkin.palette.panel;
-  card.alpha = alpha;
-  card.anchor.set(0.5);
-  card.position.set(x, y);
-  card.width = width;
-  card.height = height;
-  container.addChild(card);
-
-  const accent = new PIXI.Sprite(PIXI.Texture.WHITE);
-  accent.tint = UISkin.palette.highlight;
-  accent.anchor.set(0.5);
-  accent.position.set(x, y - height / 2 + 12);
-  accent.width = width - 20;
-  accent.height = 3;
-  container.addChild(accent);
-
-  return card;
+// ── Screen-corner HUD brackets (decorative) ────────────────────
+export function addScreenCorners(container, app, alpha = 0.22) {
+  const W = app.screen.width, H = app.screen.height;
+  const len = 72;
+  const g = new PIXI.Graphics();
+  g.lineStyle(1.5, UISkin.palette.accent, alpha);
+  // TL
+  g.moveTo(len, 0); g.lineTo(0, 0); g.lineTo(0, len);
+  // TR
+  g.moveTo(W - len, 0); g.lineTo(W, 0); g.lineTo(W, len);
+  // BL
+  g.moveTo(0, H - len); g.lineTo(0, H); g.lineTo(len, H);
+  // BR
+  g.moveTo(W, H - len); g.lineTo(W, H); g.lineTo(W - len, H);
+  container.addChild(g);
 }
 
-export function createLabel({
-  container,
-  text,
-  x,
-  y,
-  fontSize = 24,
-  color = UISkin.palette.textPrimary,
-  bold = false,
-  anchor = 0.5,
-  letterSpacing = 1,
+// ── Card-corner brackets ────────────────────────────────────────
+export function addCornerBrackets(container, cx, cy, w, h, size = 20, color = UISkin.palette.accent, alpha = 0.88) {
+  const g = new PIXI.Graphics();
+  g.lineStyle(2, color, alpha);
+  const x0 = cx - w / 2, y0 = cy - h / 2;
+  const x1 = cx + w / 2, y1 = cy + h / 2;
+  // TL
+  g.moveTo(x0 + size, y0); g.lineTo(x0, y0); g.lineTo(x0, y0 + size);
+  // TR
+  g.moveTo(x1 - size, y0); g.lineTo(x1, y0); g.lineTo(x1, y0 + size);
+  // BL
+  g.moveTo(x0, y1 - size); g.lineTo(x0, y1); g.lineTo(x0 + size, y1);
+  // BR
+  g.moveTo(x1, y1 - size); g.lineTo(x1, y1); g.lineTo(x1 - size, y1);
+  container.addChild(g);
+  return g;
+}
+
+// ── Chamfered card panel ────────────────────────────────────────
+export function createCard({
+  container, x, y, width, height,
+  alpha = 0.97, chamfer = 14, brackets = true,
+  bracketSize = 20, accentLine = true,
 }) {
+  const g = new PIXI.Graphics();
+
+  // Fill + border in one draw call
+  g.beginFill(UISkin.palette.card, alpha);
+  g.lineStyle(1.5, UISkin.palette.accent, 0.8);
+  chamferedPath(g, x, y, width, height, chamfer);
+  g.endFill();
+
+  container.addChild(g);
+
+  // Top visor accent line
+  if (accentLine) {
+    const line = new PIXI.Graphics();
+    const lw = width - (chamfer + 14) * 2;
+    line.lineStyle(2, UISkin.palette.accent, 0.9);
+    line.moveTo(x - lw / 2, y - height / 2 + 1);
+    line.lineTo(x + lw / 2, y - height / 2 + 1);
+    container.addChild(line);
+  }
+
+  if (brackets) {
+    addCornerBrackets(container, x, y, width, height, bracketSize);
+  }
+
+  return g;
+}
+
+// ── Text label with optional glow halo ─────────────────────────
+export function createLabel({
+  container, text, x, y,
+  fontSize = 24, color = UISkin.palette.textPrimary,
+  bold = false, anchor = 0.5, letterSpacing = 2,
+  glow = false, mono = false,
+}) {
+  const fontFamily = mono
+    ? "'JetBrains Mono', 'Courier New', monospace"
+    : "'Orbitron', 'Arial Narrow', sans-serif";
+
+  // Glow halo layer (duplicated text with wide stroke at low alpha)
+  let halo = null;
+  if (glow) {
+    halo = new PIXI.Text(text, {
+      fontFamily,
+      fill: color,
+      fontSize,
+      fontWeight: "900",
+      letterSpacing,
+      stroke: color,
+      strokeThickness: Math.max(8, Math.round(fontSize * 0.24)),
+    });
+    halo.anchor.set(anchor);
+    halo.position.set(x, y);
+    halo.alpha = 0.16;
+    container.addChild(halo);
+  }
+
   const label = new PIXI.Text(text, {
+    fontFamily,
     fill: color,
     fontSize,
-    fontWeight: bold ? "700" : "500",
+    fontWeight: bold ? "900" : mono ? "500" : "700",
     letterSpacing,
     stroke: UISkin.palette.ink,
-    strokeThickness: fontSize > 30 ? 4 : 2,
+    strokeThickness: fontSize > 40 ? 4 : 2,
   });
   label.anchor.set(anchor);
   label.position.set(x, y);
   container.addChild(label);
+
+  if (halo) {
+    label.glowHalo = halo;
+
+    const setPosition = label.position.set.bind(label.position);
+    label.position.set = (nextX, nextY) => {
+      setPosition(nextX, nextY);
+      halo.position.set(nextX, nextY);
+    };
+
+    let visible = label.visible;
+    Object.defineProperty(label, "visible", {
+      get: () => visible,
+      set: (value) => {
+        visible = value;
+        halo.visible = value;
+      },
+      configurable: true,
+    });
+  }
+
   return label;
 }
 
+// ── Chamfered button ────────────────────────────────────────────
 export function createPillButton({
-  container,
-  x,
-  y,
-  text,
-  width = 280,
-  height = 56,
-  primary = false,
-  onClick,
+  container, x, y, text,
+  width = 280, height = 56,
+  primary = false, onClick,
 }) {
-  const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-  bg.anchor.set(0.5);
-  bg.position.set(x, y);
-  bg.width = width;
-  bg.height = height;
+  const c = 8;
+  const fillColor  = primary ? UISkin.palette.accent     : UISkin.palette.card;
+  const borderColor = primary ? UISkin.palette.accent    : UISkin.palette.accentAlt;
+  const textColor  = primary ? UISkin.palette.ink        : UISkin.palette.textPrimary;
+
+  const bg = new PIXI.Graphics();
+  let disabled = false;
+
+  function draw(hover) {
+    bg.clear();
+    const ww = hover ? width  * 1.018 : width;
+    const hh = hover ? height * 1.018 : height;
+    const bc = disabled ? UISkin.palette.disabled : borderColor;
+    const fc = disabled ? UISkin.palette.disabled : fillColor;
+    const bA = disabled ? 0.25 : hover ? 1 : 0.72;
+    const fA = disabled ? 0.35 : primary ? 1 : hover ? 0.9 : 0.78;
+
+    bg.beginFill(fc, fA);
+    bg.lineStyle(1.5, bc, bA);
+    chamferedPath(bg, x, y, ww, hh, c);
+    bg.endFill();
+  }
+
+  draw(false);
   bg.interactive = true;
   bg.cursor = "pointer";
-  bg.tint = primary ? UISkin.palette.highlightStrong : UISkin.palette.panelSoft;
-
-  const border = new PIXI.Sprite(PIXI.Texture.WHITE);
-  border.anchor.set(0.5);
-  border.position.set(x, y);
-  border.width = width + 2;
-  border.height = 2;
-  border.tint = UISkin.palette.highlight;
 
   const label = createLabel({
-    container,
-    text,
-    x,
-    y,
-    fontSize: 25,
-    color: primary ? UISkin.palette.ink : UISkin.palette.textPrimary,
+    container, text, x, y,
+    fontSize: 18,
+    color: textColor,
     bold: true,
+    letterSpacing: 3,
   });
 
-  const setHoverState = (isHover) => {
-    bg.scale.x = isHover ? 1.03 : 1;
-    bg.scale.y = isHover ? 1.03 : 1;
-    border.alpha = isHover ? 1 : 0.8;
-  };
+  bg.on("pointerdown", onClick);
+  bg.on("pointerover", () => { if (!disabled) draw(true); });
+  bg.on("pointerout",  () => draw(false));
 
-  bg.on("click", onClick);
-  bg.on("pointerover", () => setHoverState(true));
-  bg.on("pointerout", () => setHoverState(false));
-
+  // Bring label in front of button background
   container.addChild(bg);
-  container.addChild(border);
   container.removeChild(label);
   container.addChild(label);
 
   return {
     bg,
     label,
-    border,
     setEnabled(enabled) {
+      disabled = !enabled;
       bg.interactive = enabled;
       bg.cursor = enabled ? "pointer" : "default";
-      bg.tint = enabled
-        ? primary
-          ? UISkin.palette.highlightStrong
-          : UISkin.palette.panelSoft
-        : UISkin.palette.disabled;
-      label.alpha = enabled ? 1 : 0.6;
-      border.alpha = enabled ? 0.8 : 0.35;
+      draw(false);
+      label.alpha = enabled ? 1 : 0.38;
     },
   };
 }

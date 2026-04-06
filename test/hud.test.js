@@ -15,15 +15,27 @@ test('hud container initialized', () => {
   assert.ok(hud.hudContainer);
 });
 
+test('pause and end glow layers start hidden', () => {
+  assert.strictEqual(hud.textPaused.visible, false);
+  assert.strictEqual(hud.textPaused.glowHalo.visible, false);
+  assert.strictEqual(hud.textEnd.visible, false);
+  assert.strictEqual(hud.textEnd.glowHalo.visible, false);
+});
+
 test('showPaused toggles visibility', () => {
   hud.showPaused = true;
   assert.strictEqual(hud.textPaused.visible, true);
+  assert.strictEqual(hud.textPaused.glowHalo.visible, true);
+  hud.showPaused = false;
+  assert.strictEqual(hud.textPaused.visible, false);
+  assert.strictEqual(hud.textPaused.glowHalo.visible, false);
 });
 
 test('endgameCheck adds back button', () => {
   player.lifes = 0;
   hud.endgameCheck(() => {});
-  const back = hud.hudContainer.children.find(c => c.eventHandlers?.click);
-  back.eventHandlers.click();
+  const buttons = hud.hudContainer.children.filter(c => c.eventHandlers?.pointerdown);
+  const back = buttons[buttons.length - 1];
+  back.eventHandlers.pointerdown();
   assert.ok(back);
 });

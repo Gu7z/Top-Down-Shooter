@@ -1,99 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Pixi Game v1</title>
+    <title>NEON HUNT — Top-Down Shooter</title>
+
+    <!-- Cyberpunk fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@700;900&display=swap"
+      rel="stylesheet"
+    />
+
     <script src="./lib/pixi.min.js"></script>
     <script src="./lib/pixi-sound.js"></script>
     <script src="./lib/pixi-text-input.js"></script>
+
     <style>
+      *,
+      *::before,
+      *::after { box-sizing: border-box; }
+
       body {
         margin: 0;
         overflow: hidden;
-        background: #000;
+        background: #0A0A0F;
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
       }
 
-      .absolute {
-        position: absolute;
+      /* Loading screen animation used by score.js loader */
+      @keyframes hud-blink {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0; }
       }
 
-      .inset-0 {
-        inset: 0;
-      }
-
-      .top-5 {
-        top: 1.25rem;
-      }
-
-      .left-1\/2 {
-        left: 50%;
-      }
-
-      .-translate-x-1\/2 {
-        transform: translateX(-50%);
-      }
-
-      .pointer-events-none {
-        pointer-events: none;
-      }
-
-      .pointer-events-auto {
-        pointer-events: auto;
-      }
-
-      .mx-auto {
-        margin-left: auto;
-        margin-right: auto;
-      }
-
-      .mt-4 {
-        margin-top: 1rem;
-      }
-
-      .text-xl {
-        font-size: 1.25rem;
-        line-height: 1.75rem;
-      }
-
-      .text-center {
-        text-align: center;
-      }
-
-      .text-white {
-        color: #fff;
-      }
-
-      .text-gray-800 {
-        color: #1f2937;
-      }
-
-      .bg-white {
-        background-color: #fff;
-      }
-
-      .bg-gray-800 {
-        background-color: #1f2937;
-      }
-
-      .bg-gray-100 {
-        background-color: #f3f4f6;
-      }
-
-      .px-4 {
-        padding-left: 1rem;
-        padding-right: 1rem;
-      }
-
-      .py-2 {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-      }
-
-      table {
-        border-collapse: collapse;
-      }
+      /* ── Utility classes used by score.js HTML overlay ── */
+      .absolute      { position: absolute; }
+      .inset-0       { inset: 0; }
+      .top-5         { top: 1.25rem; }
+      .left-1\/2     { left: 50%; }
+      .-translate-x-1\/2 { transform: translateX(-50%); }
+      .pointer-events-none { pointer-events: none; }
+      .pointer-events-auto { pointer-events: auto; }
+      .mx-auto       { margin-left: auto; margin-right: auto; }
+      .mt-4          { margin-top: 1rem; }
+      .text-xl       { font-size: 1.25rem; line-height: 1.75rem; }
+      .text-center   { text-align: center; }
+      .text-white    { color: #fff; }
+      .px-4          { padding-left: 1rem; padding-right: 1rem; }
+      .py-2          { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      table          { border-collapse: collapse; }
     </style>
   </head>
 

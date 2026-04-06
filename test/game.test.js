@@ -39,12 +39,15 @@ test('game event handlers work', () => {
   triggerEvent('keyup', { key: 'w' });
   triggerEvent('keydown', { key: 'Escape' });
   triggerEvent('keydown', { key: 'm' });
+  assert.strictEqual(app.stage.children.at(-1), game.hud.hudContainer);
   app.renderer.view.onmousemove({ clientX: 1, clientY: 2 });
   app.ticker.fn();
+  assert.strictEqual(app.stage.children.at(-1), game.hud.hudContainer);
   game.player.lifes = 0;
   app.ticker.fn();
-  const back = game.hud.hudContainer.children.find(c => c.eventHandlers?.click);
-  back.eventHandlers.click();
+  const buttons = game.hud.hudContainer.children.filter(c => c.eventHandlers?.pointerdown);
+  const back = buttons[buttons.length - 1];
+  back.eventHandlers.pointerdown();
   assert.ok(true);
 });
 

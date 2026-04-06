@@ -1,0 +1,122 @@
+<style>
+  body { background: #0A0A0F; color: #CCEEFF; font-family: 'Courier New', monospace; }
+  .question { text-align: center; margin-bottom: 32px; }
+  .question h2 { color: #00FFFF; font-size: 20px; letter-spacing: 4px; margin-bottom: 8px; }
+  .question p  { color: #4A6888; font-size: 12px; letter-spacing: 2px; }
+
+  .split { display: flex; gap: 28px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+
+  .option {
+    background: #0C0C1A;
+    border: 1.5px solid #00FFFF33;
+    padding: 24px 20px;
+    width: 320px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative;
+  }
+  .option:hover { border-color: #00FFFF; transform: translateY(-2px); }
+  .option.selected { border-color: #00FFFF; background: #0E0E22; }
+  .option.selected::before {
+    content: "✓";
+    position: absolute; top: 10px; right: 14px;
+    color: #00FFFF; font-size: 14px;
+  }
+  .option .letter {
+    background: #00FFFF22; border: 1px solid #00FFFF;
+    color: #00FFFF; font-size: 12px; font-weight: bold;
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; letter-spacing: 0;
+  }
+  .option h3 { color: #00FFFF; font-size: 13px; letter-spacing: 3px; margin: 0 0 6px; }
+  .option .desc { color: #4A6888; font-size: 11px; letter-spacing: 1px; margin: 0 0 20px; line-height: 1.6; }
+
+  /* mini mockup of menu buttons */
+  .mini-menu { display: flex; flex-direction: column; gap: 6px; }
+  .mini-btn {
+    padding: 8px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-align: center;
+    border: 1px solid;
+  }
+  .mini-btn.primary { background: #00FFFF; color: #000; border-color: #00FFFF; font-weight: bold; }
+  .mini-btn.secondary { background: #0C0C1A; color: #CCEEFF; border-color: #FF00FF55; }
+  .mini-btn.new-btn { background: #0C0C1A; color: #00FFFF; border-color: #00FFFF88; }
+  .mini-btn.disabled { background: #0A0A0F; color: #1C1C2E; border-color: #1C1C2E; }
+  .mini-btn.highlight { background: #0A0A0F; color: #FF00FF; border-color: #FF00FF; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+  .mini-label {
+    font-size: 10px; color: #4A6888; letter-spacing: 2px;
+    text-align: center; margin-bottom: 8px; text-transform: uppercase;
+  }
+  .mini-divider {
+    border: none; border-top: 1px solid #00FFFF22; margin: 8px 0;
+  }
+
+  /* pause overlay mockup */
+  .pause-overlay {
+    background: #0A0A0F99;
+    padding: 16px;
+    text-align: center;
+  }
+  .pause-text { color: #FF00FF; font-size: 14px; letter-spacing: 4px; font-weight: bold; margin-bottom: 12px; }
+  .gear-icon { font-size: 18px; position: absolute; top: 10px; right: 10px; color: #00FFFF88; cursor: pointer; }
+
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    background: #00FF8833;
+    border: 1px solid #00FF88;
+    color: #00FF88;
+    padding: 2px 7px;
+    letter-spacing: 2px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+</style>
+
+<div class="question">
+  <h2>DE ONDE ACESSAR AS CONFIGURAÇÕES?</h2>
+  <p>Onde o botão de configurações vai aparecer no jogo</p>
+</div>
+
+<div class="split">
+
+  <!-- Option A: only main menu -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <h3>SÓ NO MENU PRINCIPAL</h3>
+    <p class="desc">Um novo botão "CONFIGURAÇÕES" aparece no menu, ao lado de CONTROLES. Simples e direto.</p>
+    <div class="mini-label">Menu principal</div>
+    <div class="mini-menu">
+      <div class="mini-btn primary">▶   INICIAR  RUN</div>
+      <div class="mini-btn secondary">RANKING  GLOBAL</div>
+      <div class="mini-btn secondary">CONTROLES</div>
+      <div class="mini-btn new-btn">⚙  CONFIGURAÇÕES  ←  NOVO</div>
+    </div>
+  </div>
+
+  <!-- Option B: menu + pause -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <h3>MENU  +  PAUSA  EM JOGO<span class="badge">RECOMENDADO</span></h3>
+    <p class="desc">Botão no menu principal E um ícone ⚙ acessível durante a pausa — assim o jogador ajusta o volume sem sair da partida.</p>
+    <div class="mini-label">Menu principal</div>
+    <div class="mini-menu">
+      <div class="mini-btn primary">▶   INICIAR  RUN</div>
+      <div class="mini-btn secondary">RANKING  GLOBAL</div>
+      <div class="mini-btn secondary">CONTROLES</div>
+      <div class="mini-btn new-btn">⚙  CONFIGURAÇÕES  ←  NOVO</div>
+    </div>
+    <hr class="mini-divider">
+    <div class="mini-label">Tela de pausa (ESC)</div>
+    <div class="pause-overlay" style="position:relative">
+      <div class="pause-text">//  PAUSED  //</div>
+      <div class="mini-btn highlight" style="font-size:10px">⚙  CONFIGURAÇÕES  ←  NOVO</div>
+    </div>
+  </div>
+
+</div>

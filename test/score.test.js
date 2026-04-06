@@ -13,34 +13,41 @@ global.__SNOWPACK_ENV__ = {
 
 global.fetch = async () => ({ json: async () => [{ name: 'a', points: 1 }] });
 
+const createElement = (tag) => ({
+  tag,
+  children: [],
+  style: {},
+  textContent: '',
+  innerText: '',
+  id: '',
+  position: {},
+  appendChild(child) { this.children.push(child); return child; },
+  removeChild(child) { this.children = this.children.filter(c => c !== child); },
+  setAttribute() {},
+});
+
 global.document = {
-  body: {
-    removeChild() {},
-    appendChild() {},
-  },
-  createElement: (tag) => {
-    return { appendChild(){}, style: {}, innerText:'', id:'', position:{}, setAttribute(){}, };
-  }
+  body: createElement('body'),
+  getElementById() { return null; },
+  createElement,
 };
 
 const app = createAppMock();
 const menu = { show() {} };
-Score.prototype.showScore = async function() {};
+Score.prototype.loadScore = async function() {};
 const score = new Score({ app, menu });
 
 test('score container exists', () => {
   assert.ok(score.scoreContainer);
 });
 
-test('drawLoading returns element', () => {
-  const el = score.drawLoading();
-  assert.ok(el.innerText.includes('Carregando'));
+test('makeLoader returns element', () => {
+  const el = score.makeLoader();
+  assert.ok(el.textContent.includes('CARREGANDO'));
 });
 
-test('drawTable functions return elements', async () => {
-  const table = score.drawTable();
-  table.appendChild(score.drawTableHead());
-  table.appendChild(score.drawTableLine(1,'a',1));
-  assert.ok(table);
-  await score.getScore();
+test('buildTable returns leaderboard wrapper', () => {
+  const table = score.buildTable([{ name: 'a', points: 1 }]);
+  assert.strictEqual(table.id, 'score-table');
+  assert.strictEqual(table.children.length, 1);
 });

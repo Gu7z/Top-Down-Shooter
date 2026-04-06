@@ -11,6 +11,7 @@ export default class Spawner {
     this.alreadySpawnedBosses = new Set();
 
     this.spawnerContainer = new PIXI.Container();
+    this.app.stage.addChild(this.spawnerContainer);
 
     this.app.setInterval(() => {
       this.spawnLimit += 1;

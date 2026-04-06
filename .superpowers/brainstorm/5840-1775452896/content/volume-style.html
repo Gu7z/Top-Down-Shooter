@@ -1,0 +1,146 @@
+<style>
+  body { background: #0A0A0F; color: #CCEEFF; font-family: 'Courier New', monospace; }
+
+  .question {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .question h2 { color: #00FFFF; font-size: 22px; letter-spacing: 4px; margin-bottom: 8px; }
+  .question p  { color: #4A6888; font-size: 13px; letter-spacing: 2px; }
+
+  .cards { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+
+  .card {
+    background: #0C0C1A;
+    border: 1.5px solid #00FFFF44;
+    width: 280px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative;
+  }
+  .card:hover { border-color: #00FFFF; transform: translateY(-2px); }
+  .card.selected { border-color: #00FFFF; background: #0E0E22; }
+  .card.selected::before {
+    content: "✓ SELECIONADO";
+    position: absolute;
+    top: 10px; right: 12px;
+    font-size: 10px;
+    color: #00FFFF;
+    letter-spacing: 2px;
+  }
+
+  .card h3 { color: #00FFFF; font-size: 14px; letter-spacing: 3px; margin: 0 0 6px; }
+  .card .desc { color: #4A6888; font-size: 12px; letter-spacing: 1px; margin: 0 0 24px; }
+
+  /* ── OPTION A: horizontal slider ── */
+  .slider-wrap { margin: 8px 0; }
+  .slider-label { display: flex; justify-content: space-between; font-size: 11px; color: #4A6888; letter-spacing: 2px; margin-bottom: 8px; }
+  .slider-track { position: relative; height: 6px; background: #1C1C2E; }
+  .slider-fill  { height: 100%; background: linear-gradient(90deg, #00FFFF, #00FF88); width: 65%; }
+  .slider-thumb {
+    position: absolute; top: 50%; right: calc(35% - 8px);
+    width: 16px; height: 16px;
+    background: #00FFFF; border: 2px solid #0A0A0F;
+    transform: translateY(-50%);
+  }
+  .slider-value { text-align: right; color: #00FFFF; font-size: 18px; font-weight: bold; letter-spacing: 2px; margin-top: 10px; }
+
+  /* ── OPTION B: vertical bars (equalizer) ── */
+  .bars { display: flex; align-items: flex-end; gap: 5px; height: 70px; justify-content: center; margin: 8px 0; }
+  .bar { width: 18px; background: #1C1C2E; position: relative; flex-shrink: 0; }
+  .bar-fill { position: absolute; bottom: 0; width: 100%; background: #00FFFF; transition: height 0.2s; }
+  .bar:nth-child(-n+6) .bar-fill { background: linear-gradient(to top, #00FFFF, #00FF88); }
+  .bar:nth-child(n+7) .bar-fill  { background: #1C1C2E; }
+  .bars-label { text-align: center; color: #4A6888; font-size: 11px; letter-spacing: 2px; margin-top: 8px; }
+  .bars-value { text-align: center; color: #00FFFF; font-size: 18px; font-weight: bold; letter-spacing: 2px; margin-top: 6px; }
+
+  /* ── OPTION C: +/- buttons ── */
+  .plusminus { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 16px 0; }
+  .pm-btn {
+    width: 44px; height: 44px;
+    background: #0A0A0F;
+    border: 1.5px solid #FF00FF;
+    color: #FF00FF;
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-family: monospace;
+  }
+  .pm-display {
+    width: 90px; height: 44px;
+    background: #07070F;
+    border: 1.5px solid #00FFFF;
+    display: flex; align-items: center; justify-content: center;
+    color: #00FFFF; font-size: 24px; font-weight: bold; letter-spacing: 3px;
+  }
+  .pm-bar { width: 100%; height: 4px; background: #1C1C2E; margin-top: 14px; }
+  .pm-bar-fill { width: 65%; height: 100%; background: #00FFFF; }
+</style>
+
+<div class="question">
+  <h2>COMO DEVE SER O CONTROLE DE VOLUME?</h2>
+  <p>Escolha o estilo do controle deslizante no menu de configurações</p>
+</div>
+
+<div class="cards">
+
+  <!-- A: Horizontal slider -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>SLIDER HORIZONTAL</h3>
+      <p class="desc">Barra deslizante com valor numérico — clássico e preciso</p>
+
+      <div class="slider-wrap">
+        <div class="slider-label"><span>VOLUME</span><span>0 ————— 100</span></div>
+        <div class="slider-track">
+          <div class="slider-fill"></div>
+          <div class="slider-thumb"></div>
+        </div>
+        <div class="slider-value">65</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: Equalizer bars -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>BARRAS  EQ</h3>
+      <p class="desc">Segmentos estilo equalizador — visual cyberpunk imersivo</p>
+
+      <div class="bars">
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:100%"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:100%"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:100%"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:100%"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:100%"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:100%"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:0"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:0"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:0"></div></div>
+        <div class="bar" style="height:70px"><div class="bar-fill" style="height:0"></div></div>
+      </div>
+      <div class="bars-label">CLIQUE NAS BARRAS PARA AJUSTAR</div>
+      <div class="bars-value">60%</div>
+    </div>
+  </div>
+
+  <!-- C: +/- buttons -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>BOTÕES  +  /  −</h3>
+      <p class="desc">Incremento com botões — simples, sem mouse de precisão</p>
+
+      <div class="plusminus">
+        <div class="pm-btn">−</div>
+        <div class="pm-display">65</div>
+        <div class="pm-btn">+</div>
+      </div>
+      <div class="pm-bar"><div class="pm-bar-fill"></div></div>
+    </div>
+  </div>
+
+</div>

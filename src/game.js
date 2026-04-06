@@ -3,20 +3,36 @@ import Player from "./player.js";
 import Spawner from "./spanwer.js";
 import Hud from "./hud.js";
 import Effects from "./effects.js";
+import { audio } from "./audio.js";
+import Settings from "./settings.js";
 
 export default class Game {
   constructor({ app, username }) {
     this.app = app;
     let paused = false;
-    let muted = false;
     let shooting = false;
+    let settingsScreen = null;
     const keys = {};
 
     this.effects = new Effects({ app });
     this.player = new Player({ app, username, keys });
     this.enemySpawner = new Spawner({ app, player: this.player });
     this.hud = new Hud({ app, player: this.player });
+    this.hud.openSettings = () => {
+      if (settingsScreen) return;
+      this.app.stage.removeChild(this.hud.hudContainer);
+      settingsScreen = new Settings({
+        app: this.app,
+        onBack: () => {
+          settingsScreen = null;
+          this.app.stage.addChild(this.hud.hudContainer);
+          this.app.render?.();
+        },
+      });
+      this.app.render?.();
+    };
     this.buff = new Buff({ app, hud: this.hud });
+    this.app.stage.addChild(this.hud.hudContainer);
 
     this.player.shooting.registerEffects(this.effects);
 
@@ -47,6 +63,11 @@ export default class Game {
 
       switch (e.key) {
         case "Escape":
+          if (settingsScreen) {
+            settingsScreen.close();
+            break;
+          }
+
           this.hud.showPaused = !paused;
           this.player.shooting.update();
           app.render();
@@ -61,8 +82,7 @@ export default class Game {
           break;
 
         case "m":
-          PIXI.sound.volumeAll = muted ? 1 : 0;
-          muted = !muted;
+          audio.toggleMute();
           break;
 
         default:

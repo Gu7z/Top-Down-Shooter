@@ -51,7 +51,9 @@ export default class Buff {
     }, 20);
 
     this.buffContainer.addChild(this.buff);
-    app.stage.addChild(this.buffContainer);
+    if (!app.stage.children.includes(this.buffContainer)) {
+      app.stage.addChild(this.buffContainer);
+    }
   }
 
   get(player) {

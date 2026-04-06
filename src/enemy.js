@@ -26,7 +26,9 @@ export default class Enemy {
 
     container.addChild(this.enemy);
     container.addChild(this.enemyLifeText);
-    app.stage.addChild(container);
+    if (!app.stage.children.includes(container)) {
+      app.stage.addChild(container);
+    }
   }
 
   resetPosition() {

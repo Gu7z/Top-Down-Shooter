@@ -1,97 +1,202 @@
 import Controls from "./controls.js";
 import Game from "./game.js";
 import Score from "./score.js";
+import Settings from "./settings.js";
 import {
   UISkin,
   createBackdrop,
   createCard,
   createLabel,
   createPillButton,
+  addScreenCorners,
 } from "./ui_system.js";
 
 export default class Menu {
   constructor({ app }) {
     this.app = app;
     this.menuContainer = new PIXI.Container();
-    this.centerX = app.screen.width / 2;
+    this.centerX = app.screen.width  / 2;
     this.centerY = app.screen.height / 2;
     this.username = localStorage.getItem("username") || "";
+    this._ticker = null;
 
     this.buildScene();
     this.app.stage.addChild(this.menuContainer);
   }
 
+  // ── Scene ──────────────────────────────────────────────────────
   buildScene() {
+    const { centerX: cx, centerY: cy } = this;
+
     createBackdrop(this.menuContainer, this.app);
+    addScreenCorners(this.menuContainer, this.app);
+    this.buildStatusBar();
+
     createCard({
-      container: this.menuContainer,
-      x: this.centerX,
-      y: this.centerY,
-      width: 760,
-      height: 560,
+      container:   this.menuContainer,
+      x:           cx,
+      y:           cy,
+      width:       780,
+      height:      640,
+      chamfer:     16,
+      bracketSize: 22,
     });
+
+    this.buildTitle();
+    this.buildInput();
+    this.buildButtons();
+    this.startGlitch();
+  }
+
+  // ── Bottom status bar ──────────────────────────────────────────
+  buildStatusBar() {
+    const H = this.app.screen.height;
+    const W = this.app.screen.width;
+
+    const bar = new PIXI.Graphics();
+    bar.lineStyle(1, UISkin.palette.accent, 0.18);
+    bar.moveTo(0, H - 1);
+    bar.lineTo(W, H - 1);
+    this.menuContainer.addChild(bar);
 
     createLabel({
       container: this.menuContainer,
-      text: "NEON HUNT",
-      x: this.centerX,
-      y: this.centerY - 220,
-      fontSize: 74,
-      color: UISkin.palette.highlightStrong,
-      bold: true,
+      text: "SYS:ONLINE  //  BUILD:1.0.0  //  PRESS ESC TO PAUSE",
+      x: W / 2,
+      y: H - 14,
+      fontSize: 11,
+      color: UISkin.palette.textSecondary,
+      mono: true,
+      letterSpacing: 1,
+    });
+  }
+
+  // ── Title + glitch targets ─────────────────────────────────────
+  buildTitle() {
+    const { centerX: cx, centerY: cy } = this;
+    const titleY = cy - 224;
+
+    // Glitch layer 1 — magenta offset (invisible until animation fires)
+    this.glitch1 = new PIXI.Text("NEON HUNT", {
+      fontFamily: "'Orbitron', sans-serif",
+      fill:       UISkin.palette.accentAlt,
+      fontSize:   82,
+      fontWeight: "900",
+      letterSpacing: 8,
+    });
+    this.glitch1.anchor.set(0.5);
+    this.glitch1.position.set(cx, titleY);
+    this.glitch1.alpha = 0;
+    this.menuContainer.addChild(this.glitch1);
+
+    // Glitch layer 2 — danger red offset
+    this.glitch2 = new PIXI.Text("NEON HUNT", {
+      fontFamily: "'Orbitron', sans-serif",
+      fill:       UISkin.palette.danger,
+      fontSize:   82,
+      fontWeight: "900",
+      letterSpacing: 8,
+    });
+    this.glitch2.anchor.set(0.5);
+    this.glitch2.position.set(cx, titleY);
+    this.glitch2.alpha = 0;
+    this.menuContainer.addChild(this.glitch2);
+
+    // Glow halo (wide stroke, very low alpha)
+    const halo = new PIXI.Text("NEON HUNT", {
+      fontFamily: "'Orbitron', sans-serif",
+      fill:       UISkin.palette.accent,
+      fontSize:   82,
+      fontWeight: "900",
+      letterSpacing: 8,
+      stroke:     UISkin.palette.accent,
+      strokeThickness: 18,
+    });
+    halo.anchor.set(0.5);
+    halo.position.set(cx, titleY);
+    halo.alpha = 0.14;
+    this.menuContainer.addChild(halo);
+
+    // Main title
+    this.titleText = new PIXI.Text("NEON HUNT", {
+      fontFamily: "'Orbitron', sans-serif",
+      fill:       UISkin.palette.accent,
+      fontSize:   82,
+      fontWeight: "900",
+      letterSpacing: 8,
+      stroke:     UISkin.palette.ink,
+      strokeThickness: 4,
+    });
+    this.titleText.anchor.set(0.5);
+    this.titleText.position.set(cx, titleY);
+    this.menuContainer.addChild(this.titleText);
+
+    // Subtitle
+    createLabel({
+      container:    this.menuContainer,
+      text:         "▸  T O P - D O W N  S H O O T E R  ◂",
+      x:            cx,
+      y:            cy - 163,
+      fontSize:     14,
+      color:        UISkin.palette.textSecondary,
+      mono:         true,
       letterSpacing: 4,
     });
 
-    createLabel({
-      container: this.menuContainer,
-      text: "Top-Down Shooter",
-      x: this.centerX,
-      y: this.centerY - 170,
-      fontSize: 30,
-      color: UISkin.palette.textSecondary,
-      letterSpacing: 2,
-    });
+    // Divider
+    const div = new PIXI.Graphics();
+    div.lineStyle(1, UISkin.palette.accent, 0.22);
+    div.moveTo(cx - 240, cy - 144);
+    div.lineTo(cx + 240, cy - 144);
+    this.menuContainer.addChild(div);
 
+    // Operator label
     createLabel({
-      container: this.menuContainer,
-      text: "Operador",
-      x: this.centerX,
-      y: this.centerY - 106,
-      fontSize: 22,
-      color: UISkin.palette.textSecondary,
+      container:    this.menuContainer,
+      text:         "[ OPERADOR_ID ]",
+      x:            cx,
+      y:            cy - 102,
+      fontSize:     13,
+      color:        UISkin.palette.textSecondary,
+      mono:         true,
+      letterSpacing: 3,
     });
-
-    this.buildInput();
-    this.buildButtons();
   }
 
+  // ── Input field ────────────────────────────────────────────────
   buildInput() {
+    const { centerX: cx, centerY: cy } = this;
+
     const input = new PIXI.TextInput({
       input: {
-        fontSize: "20pt",
-        padding: "12px",
-        width: "300px",
-        color: "#e2e8f0",
+        fontSize:   "18pt",
+        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+        padding:    "10px 16px",
+        width:      "334px",
+        color:      "#00FFFF",
+        letterSpacing: "2px",
+        background: "transparent",
+        caretColor: "#00FFFF",
       },
       box: {
         default: {
-          fill: 0x1e293b,
-          rounded: 6,
-          stroke: { color: UISkin.palette.highlightStrong, width: 2 },
+          fill:    0x07070F,
+          rounded: 0,
+          stroke:  { color: UISkin.palette.accent, width: 1.5 },
         },
         focused: {
-          fill: 0x0f172a,
-          rounded: 6,
-          stroke: { color: UISkin.palette.highlight, width: 2 },
+          fill:    0x05050D,
+          rounded: 0,
+          stroke:  { color: UISkin.palette.accentAlt, width: 2 },
         },
       },
     });
 
-    input.placeholder = "Digite seu codinome";
-    input.text = this.username;
-    input.disabled = !!this.username;
-    input.x = this.centerX - 150;
-    input.y = this.centerY - 76;
+    input.placeholder = "▶  DIGITE SEU CODINOME";
+    input.text        = this.username;
+    input.disabled    = !!this.username;
+    input.x = cx - 175;
+    input.y = cy - 76;
 
     input.on("input", (value) => {
       this.username = value;
@@ -103,48 +208,95 @@ export default class Menu {
     input.focus();
   }
 
+  // ── Buttons ────────────────────────────────────────────────────
   buildButtons() {
+    const { centerX: cx, centerY: cy } = this;
+
     this.playButton = createPillButton({
       container: this.menuContainer,
-      x: this.centerX,
-      y: this.centerY + 45,
-      text: "INICIAR RUN",
+      x: cx, y: cy + 52,
+      text:    "▶   INICIAR  RUN",
       primary: true,
-      width: 320,
-      height: 64,
-      onClick: () => {
-        if (!this.username) return;
-        this.play();
-      },
+      width:   340,
+      height:  62,
+      onClick: () => { if (this.username) this.play(); },
     });
 
     this.playButton.setEnabled(Boolean(this.username));
 
     createPillButton({
       container: this.menuContainer,
-      x: this.centerX,
-      y: this.centerY + 123,
-      text: "VER PLACAR",
-      width: 320,
+      x: cx, y: cy + 130,
+      text:   "RANKING  GLOBAL",
+      width:  340,
+      height: 56,
       onClick: () => this.showScore(),
     });
 
     createPillButton({
       container: this.menuContainer,
-      x: this.centerX,
-      y: this.centerY + 190,
-      text: "CONFIG. DE CONTROLES",
-      width: 320,
+      x: cx, y: cy + 197,
+      text:   "CONTROLES",
+      width:  340,
+      height: 56,
       onClick: () => this.showControls(),
+    });
+
+    createPillButton({
+      container: this.menuContainer,
+      x: cx, y: cy + 264,
+      text:   "⚙  CONFIGURAÇÕES",
+      width:  340,
+      height: 56,
+      onClick: () => this.showSettings(),
     });
   }
 
+  // ── Glitch title animation ─────────────────────────────────────
+  startGlitch() {
+    const cx     = this.centerX;
+    const titleY = this.centerY - 224;
+    let   tick   = 0;
+
+    this._ticker = () => {
+      tick++;
+      const frame = tick % 220; // glitch burst every ~3.6 s at 60fps
+
+      if (frame < 5) {
+        const dx = (Math.random() - 0.5) * 16;
+        const dy = (Math.random() - 0.5) * 3;
+
+        this.glitch1.x     = cx + dx;
+        this.glitch1.y     = titleY + dy;
+        this.glitch1.alpha = Math.random() * 0.55 + 0.08;
+
+        this.glitch2.x     = cx - dx * 0.6;
+        this.glitch2.y     = titleY - dy * 0.5;
+        this.glitch2.alpha = Math.random() * 0.3 + 0.04;
+
+        this.titleText.x   = cx + dx * 0.1;
+      } else {
+        this.glitch1.alpha = 0;
+        this.glitch2.alpha = 0;
+        this.titleText.x   = cx;
+      }
+    };
+
+    this.app.ticker.add(this._ticker);
+  }
+
+  // ── Lifecycle ──────────────────────────────────────────────────
   hide() {
+    if (this._ticker) {
+      this.app.ticker.remove(this._ticker);
+      this._ticker = null;
+    }
     this.app.stage.removeChild(this.menuContainer);
   }
 
   show() {
     this.app.stage.addChild(this.menuContainer);
+    this.startGlitch();
   }
 
   play() {
@@ -160,5 +312,13 @@ export default class Menu {
   showScore() {
     this.hide();
     new Score({ app: this.app, menu: this });
+  }
+
+  showSettings() {
+    this.hide();
+    new Settings({
+      app: this.app,
+      onBack: () => { new Menu({ app: this.app }); },
+    });
   }
 }
