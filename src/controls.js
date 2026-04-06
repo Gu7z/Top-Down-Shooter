@@ -1,11 +1,10 @@
 import {
-  MenuTheme,
-  addMenuOverlay,
-  addPanel,
-  addSectionTitle,
-  addSectionSubtitle,
-  createMenuButton,
-} from "./ui_theme.js";
+  UISkin,
+  createBackdrop,
+  createCard,
+  createLabel,
+  createPillButton,
+} from "./ui_system.js";
 
 export default class Controls {
   constructor({ app, menu }) {
@@ -15,64 +14,89 @@ export default class Controls {
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height / 2;
 
-    addMenuOverlay(this.controlsContainer, this.app);
-    addPanel({
+    createBackdrop(this.controlsContainer, this.app);
+    createCard({
       container: this.controlsContainer,
       x,
       y,
-      width: 760,
+      width: 820,
       height: 560,
-      tint: MenuTheme.color.panel,
     });
 
-    addSectionTitle(this.controlsContainer, "CONTROLES", x, y - 215, 52);
-    addSectionSubtitle(
-      this.controlsContainer,
-      "Aprenda os atalhos para sobreviver mais tempo.",
+    createLabel({
+      container: this.controlsContainer,
+      text: "COMANDOS DA RUN",
       x,
-      y - 170,
-      20
-    );
+      y: y - 210,
+      fontSize: 50,
+      color: UISkin.palette.highlight,
+      bold: true,
+      letterSpacing: 3,
+    });
 
-    const texts = [
-      "Mouse1 / Espaço · Atirar",
-      "W A S D · Movimento",
-      "M · Mutar / Desmutar áudio",
-      "ESC · Pausar / Continuar",
+    const rows = [
+      { key: "W A S D", action: "Movimentação" },
+      { key: "Mouse1 ou Espaço", action: "Disparo contínuo" },
+      { key: "ESC", action: "Pausar / Continuar" },
+      { key: "M", action: "Mutar áudio" },
     ];
 
-    let posY = y - 90;
-    texts.forEach((text, index) => {
-      this.addText(text, x, posY, index === 0 ? MenuTheme.color.accent : MenuTheme.color.text);
-      posY += 58;
+    let lineY = y - 120;
+    rows.forEach((row) => {
+      createCard({
+        container: this.controlsContainer,
+        x,
+        y: lineY,
+        width: 620,
+        height: 64,
+        alpha: 0.8,
+      });
+
+      createLabel({
+        container: this.controlsContainer,
+        text: row.key,
+        x: x - 210,
+        y: lineY,
+        fontSize: 26,
+        color: UISkin.palette.highlightStrong,
+        bold: true,
+      });
+
+      createLabel({
+        container: this.controlsContainer,
+        text: row.action,
+        x: x + 40,
+        y: lineY,
+        fontSize: 24,
+        color: UISkin.palette.textPrimary,
+      });
+
+      lineY += 78;
     });
 
-    createMenuButton({
+    createPillButton({
       container: this.controlsContainer,
       x,
-      y: this.app.screen.height - 86,
-      label: "VOLTAR",
+      y: this.app.screen.height - 80,
+      text: "VOLTAR AO MENU",
+      width: 280,
       onClick: () => {
         this.app.stage.removeChild(this.controlsContainer);
         menu.show();
       },
-      width: 220,
-      height: 54,
     });
 
     this.app.stage.addChild(this.controlsContainer);
   }
 
-  addText(text, x, y, fill = MenuTheme.color.text) {
-    const rule = new PIXI.Text(text, {
-      fill,
-      fontSize: 30,
-      fontWeight: "600",
-      align: "center",
+  addText(text, x, y, fill = UISkin.palette.textPrimary) {
+    createLabel({
+      container: this.controlsContainer,
+      text,
+      x,
+      y,
+      fontSize: 28,
+      color: fill,
     });
-    rule.position.set(x, y);
-    rule.anchor.set(0.5);
-
-    this.controlsContainer.addChild(rule);
   }
 }

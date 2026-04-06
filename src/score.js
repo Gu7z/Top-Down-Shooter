@@ -1,12 +1,11 @@
 import getUrl from "./utils/get_url.js";
 import {
-  MenuTheme,
-  addMenuOverlay,
-  addPanel,
-  addSectionTitle,
-  addSectionSubtitle,
-  createMenuButton,
-} from "./ui_theme.js";
+  UISkin,
+  createBackdrop,
+  createCard,
+  createLabel,
+  createPillButton,
+} from "./ui_system.js";
 
 export default class Score {
   constructor({ app, menu }) {
@@ -15,53 +14,50 @@ export default class Score {
     this.scoreContainer = new PIXI.Container();
     this.root = document.getElementById?.("ui-root") || document.body;
 
-    this.drawBackground();
-    this.createBackButton();
+    this.mountScene();
     this.app.stage.addChild(this.scoreContainer);
     this.showScore();
   }
 
-  drawBackground() {
+  mountScene() {
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height / 2;
 
-    addMenuOverlay(this.scoreContainer, this.app);
-    addPanel({
+    createBackdrop(this.scoreContainer, this.app);
+    createCard({ container: this.scoreContainer, x, y, width: 980, height: 620 });
+
+    createLabel({
       container: this.scoreContainer,
+      text: "RANKING DE CAÇADORES",
       x,
-      y,
-      width: 820,
-      height: 620,
-      tint: MenuTheme.color.panel,
+      y: y - 248,
+      fontSize: 48,
+      color: UISkin.palette.highlight,
+      bold: true,
+      letterSpacing: 3,
     });
 
-    addSectionTitle(this.scoreContainer, "PLACAR GLOBAL", x, y - 250, 50);
-    addSectionSubtitle(
-      this.scoreContainer,
-      "Top jogadores da sessão online.",
+    createLabel({
+      container: this.scoreContainer,
+      text: "Quem sobrevive mais tempo domina o topo.",
       x,
-      y - 206,
-      20
-    );
-  }
+      y: y - 206,
+      fontSize: 22,
+      color: UISkin.palette.textSecondary,
+    });
 
-  createBackButton() {
-    const x = this.app.screen.width / 2;
-    const y = this.app.screen.height - 80;
-
-    createMenuButton({
+    createPillButton({
       container: this.scoreContainer,
       x,
-      y,
-      label: "VOLTAR",
+      y: this.app.screen.height - 78,
+      text: "VOLTAR AO MENU",
+      width: 280,
       onClick: () => {
         const table = document.getElementById?.("score-table");
         if (table) this.root.removeChild(table);
         this.app.stage.removeChild(this.scoreContainer);
         this.menu.show();
       },
-      width: 220,
-      height: 54,
     });
   }
 
@@ -72,16 +68,17 @@ export default class Score {
     el.style.color = "#e2e8f0";
     el.style.fontSize = "20px";
     el.style.fontWeight = "700";
-    el.style.letterSpacing = "1px";
     return el;
   }
 
   async getScore() {
     const loading = this.drawLoading();
     this.root.appendChild(loading);
+
     const url = getUrl();
     const response = await fetch(url);
     const data = await response.json();
+
     this.root.removeChild(loading);
     return data;
   }
@@ -90,57 +87,56 @@ export default class Score {
     const table = document.createElement("table");
     table.id = "score-table";
     table.className = "pointer-events-auto mx-auto";
-    table.style.marginTop = "170px";
-    table.style.minWidth = "640px";
-    table.style.background = "rgba(15, 23, 42, 0.95)";
-    table.style.border = "2px solid #22d3ee";
+    table.style.marginTop = "160px";
+    table.style.minWidth = "760px";
+    table.style.background = "rgba(15, 23, 42, 0.96)";
+    table.style.color = "#f8fafc";
+    table.style.border = "2px solid #60a5fa";
     table.style.borderRadius = "12px";
     table.style.overflow = "hidden";
-    table.style.color = "#e2e8f0";
-    table.style.fontSize = "22px";
     table.style.textAlign = "left";
+    table.style.fontSize = "22px";
     return table;
   }
 
   drawTableHead() {
-    const head = document.createElement("tr");
-    ["Rank", "Nome", "Pontos"].forEach((h) => {
+    const row = document.createElement("tr");
+    ["Posição", "Operador", "Pontos"].forEach((text) => {
       const th = document.createElement("th");
       th.className = "px-4 py-2";
-      th.innerText = h;
-      th.style.background = "#0e7490";
-      th.style.color = "#ecfeff";
-      th.style.fontSize = "19px";
+      th.innerText = text;
+      th.style.background = "#1d4ed8";
+      th.style.color = "#eff6ff";
       th.style.textTransform = "uppercase";
+      th.style.fontSize = "18px";
       th.style.letterSpacing = "1px";
-      head.appendChild(th);
+      row.appendChild(th);
     });
-    return head;
+    return row;
   }
 
   drawTableLine(index, name, points) {
     const row = document.createElement("tr");
-    row.className = index % 2 ? "bg-gray-100" : "";
-    row.style.background = index % 2 ? "rgba(30, 41, 59, 0.9)" : "rgba(15, 23, 42, 0.92)";
+    row.style.background = index % 2 ? "rgba(30, 41, 59, 0.95)" : "rgba(15, 23, 42, 0.95)";
 
     const rank = document.createElement("td");
     rank.className = "px-4 py-2";
     rank.innerText = index;
     rank.style.fontWeight = "700";
-    rank.style.color = "#67e8f9";
+    rank.style.color = index < 4 ? "#22d3ee" : "#e2e8f0";
 
-    const user = document.createElement("td");
-    user.className = "px-4 py-2";
-    user.innerText = name;
+    const operator = document.createElement("td");
+    operator.className = "px-4 py-2";
+    operator.innerText = name;
 
-    const pts = document.createElement("td");
-    pts.className = "px-4 py-2";
-    pts.innerText = points;
-    pts.style.fontWeight = "700";
+    const score = document.createElement("td");
+    score.className = "px-4 py-2";
+    score.innerText = points;
+    score.style.fontWeight = "700";
 
     row.appendChild(rank);
-    row.appendChild(user);
-    row.appendChild(pts);
+    row.appendChild(operator);
+    row.appendChild(score);
     return row;
   }
 
@@ -151,6 +147,7 @@ export default class Score {
     score.forEach(({ name, points }, i) => {
       table.appendChild(this.drawTableLine(i + 1, name, points));
     });
+
     this.root.appendChild(table);
   }
 }

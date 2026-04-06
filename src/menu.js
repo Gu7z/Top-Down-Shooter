@@ -2,13 +2,12 @@ import Controls from "./controls.js";
 import Game from "./game.js";
 import Score from "./score.js";
 import {
-  MenuTheme,
-  addMenuOverlay,
-  addPanel,
-  addSectionTitle,
-  addSectionSubtitle,
-  createMenuButton,
-} from "./ui_theme.js";
+  UISkin,
+  createBackdrop,
+  createCard,
+  createLabel,
+  createPillButton,
+} from "./ui_system.js";
 
 export default class Menu {
   constructor({ app }) {
@@ -18,119 +17,125 @@ export default class Menu {
     this.centerY = app.screen.height / 2;
     this.username = localStorage.getItem("username") || "";
 
-    this.drawBackground();
-    this.drawTitle();
-    this.drawInput();
-    this.drawButtons();
-
+    this.buildScene();
     this.app.stage.addChild(this.menuContainer);
   }
 
-  drawBackground() {
-    addMenuOverlay(this.menuContainer, this.app);
-    addPanel({
+  buildScene() {
+    createBackdrop(this.menuContainer, this.app);
+    createCard({
       container: this.menuContainer,
       x: this.centerX,
       y: this.centerY,
-      width: 620,
+      width: 760,
       height: 560,
-      tint: MenuTheme.color.panel,
-      alpha: 0.96,
     });
-  }
 
-  drawTitle() {
-    addSectionTitle(this.menuContainer, "TOP DOWN", this.centerX, this.centerY - 220);
-    addSectionTitle(this.menuContainer, "SHOOTER", this.centerX, this.centerY - 164);
-    addSectionSubtitle(
-      this.menuContainer,
-      "Sobreviva, escale o placar e mantenha seu combo vivo.",
-      this.centerX,
-      this.centerY - 108,
-      22
-    );
-  }
+    createLabel({
+      container: this.menuContainer,
+      text: "NEON HUNT",
+      x: this.centerX,
+      y: this.centerY - 220,
+      fontSize: 74,
+      color: UISkin.palette.highlightStrong,
+      bold: true,
+      letterSpacing: 4,
+    });
 
-  drawInput() {
-    const inputLabel = new PIXI.Text("Nome de piloto", {
-      fill: MenuTheme.color.textDim,
+    createLabel({
+      container: this.menuContainer,
+      text: "Top-Down Shooter",
+      x: this.centerX,
+      y: this.centerY - 170,
+      fontSize: 30,
+      color: UISkin.palette.textSecondary,
+      letterSpacing: 2,
+    });
+
+    createLabel({
+      container: this.menuContainer,
+      text: "Operador",
+      x: this.centerX,
+      y: this.centerY - 106,
       fontSize: 22,
-      fontWeight: "600",
+      color: UISkin.palette.textSecondary,
     });
-    inputLabel.anchor.set(0.5);
-    inputLabel.position.set(this.centerX, this.centerY - 44);
 
+    this.buildInput();
+    this.buildButtons();
+  }
+
+  buildInput() {
     const input = new PIXI.TextInput({
       input: {
         fontSize: "20pt",
         padding: "12px",
-        width: "280px",
-        color: "#020617",
+        width: "300px",
+        color: "#e2e8f0",
       },
       box: {
         default: {
-          fill: 0xe2e8f0,
-          rounded: 10,
-          stroke: { color: MenuTheme.color.accentStrong, width: 2 },
+          fill: 0x1e293b,
+          rounded: 6,
+          stroke: { color: UISkin.palette.highlightStrong, width: 2 },
         },
         focused: {
-          fill: 0xf8fafc,
-          rounded: 10,
-          stroke: { color: MenuTheme.color.accent, width: 2 },
+          fill: 0x0f172a,
+          rounded: 6,
+          stroke: { color: UISkin.palette.highlight, width: 2 },
         },
       },
     });
 
-    input.placeholder = "Digite seu nome";
+    input.placeholder = "Digite seu codinome";
     input.text = this.username;
     input.disabled = !!this.username;
-    input.x = this.centerX - 140;
-    input.y = this.centerY - 18;
-    input.on("input", (val) => {
-      this.username = val;
-      localStorage.setItem("username", val);
-      this.playButton.setEnabled(Boolean(val));
+    input.x = this.centerX - 150;
+    input.y = this.centerY - 76;
+
+    input.on("input", (value) => {
+      this.username = value;
+      localStorage.setItem("username", value);
+      this.playButton.setEnabled(Boolean(value));
     });
 
-    this.menuContainer.addChild(inputLabel);
     this.menuContainer.addChild(input);
     input.focus();
   }
 
-  drawButtons() {
-    this.playButton = createMenuButton({
+  buildButtons() {
+    this.playButton = createPillButton({
       container: this.menuContainer,
       x: this.centerX,
-      y: this.centerY + 94,
-      label: "JOGAR",
+      y: this.centerY + 45,
+      text: "INICIAR RUN",
+      primary: true,
+      width: 320,
+      height: 64,
       onClick: () => {
         if (!this.username) return;
         this.play();
       },
-      isPrimary: true,
-      width: 300,
-      height: 64,
     });
+
     this.playButton.setEnabled(Boolean(this.username));
 
-    createMenuButton({
+    createPillButton({
       container: this.menuContainer,
       x: this.centerX,
-      y: this.centerY + 168,
-      label: "PLACAR GLOBAL",
+      y: this.centerY + 123,
+      text: "VER PLACAR",
+      width: 320,
       onClick: () => this.showScore(),
-      width: 300,
-      height: 54,
     });
 
-    createMenuButton({
+    createPillButton({
       container: this.menuContainer,
       x: this.centerX,
-      y: this.centerY + 232,
-      label: "CONTROLES",
+      y: this.centerY + 190,
+      text: "CONFIG. DE CONTROLES",
+      width: 320,
       onClick: () => this.showControls(),
-      width: 300,
-      height: 54,
     });
   }
 
