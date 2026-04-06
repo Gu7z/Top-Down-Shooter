@@ -1,4 +1,12 @@
 import getUrl from "./utils/get_url.js";
+import {
+  MenuTheme,
+  addMenuOverlay,
+  addPanel,
+  addSectionTitle,
+  addSectionSubtitle,
+  createMenuButton,
+} from "./ui_theme.js";
 
 export default class Score {
   constructor({ app, menu }) {
@@ -6,57 +14,65 @@ export default class Score {
     this.menu = menu;
     this.scoreContainer = new PIXI.Container();
     this.root = document.getElementById?.("ui-root") || document.body;
+
+    this.drawBackground();
     this.createBackButton();
     this.app.stage.addChild(this.scoreContainer);
     this.showScore();
+  }
+
+  drawBackground() {
+    const x = this.app.screen.width / 2;
+    const y = this.app.screen.height / 2;
+
+    addMenuOverlay(this.scoreContainer, this.app);
+    addPanel({
+      container: this.scoreContainer,
+      x,
+      y,
+      width: 820,
+      height: 620,
+      tint: MenuTheme.color.panel,
+    });
+
+    addSectionTitle(this.scoreContainer, "PLACAR GLOBAL", x, y - 250, 50);
+    addSectionSubtitle(
+      this.scoreContainer,
+      "Top jogadores da sessão online.",
+      x,
+      y - 206,
+      20
+    );
   }
 
   createBackButton() {
     const x = this.app.screen.width / 2;
     const y = this.app.screen.height - 80;
 
-    const bg = new PIXI.Sprite(PIXI.Texture.WHITE);
-    bg.tint = 0xffffff;
-    bg.anchor.set(0.5);
-    bg.position.set(x, y);
-    bg.width = 160;
-    bg.height = 48;
-    bg.interactive = true;
-    bg.cursor = "pointer";
-    bg.on("click", () => {
-      const table = document.getElementById?.("score-table");
-      if (table) this.root.removeChild(table);
-      this.app.stage.removeChild(this.scoreContainer);
-      this.menu.show();
+    createMenuButton({
+      container: this.scoreContainer,
+      x,
+      y,
+      label: "VOLTAR",
+      onClick: () => {
+        const table = document.getElementById?.("score-table");
+        if (table) this.root.removeChild(table);
+        this.app.stage.removeChild(this.scoreContainer);
+        this.menu.show();
+      },
+      width: 220,
+      height: 54,
     });
-
-    const text = new PIXI.Text("Voltar", { fill: 0x000000, fontSize: 28 });
-    text.anchor.set(0.5);
-    text.position.set(x, y);
-
-    this.scoreContainer.addChild(bg);
-    this.scoreContainer.addChild(text);
   }
 
-  async fetchScore() {
-    const loading = document.createElement("div");
-    loading.className =
-      "text-white absolute top-5 left-1/2 -translate-x-1/2 pointer-events-auto";
-    loading.innerText = "Carregando placar...";
-    this.root.appendChild(loading);
-    const url = getUrl();
-    const response = await fetch(url);
-    const data = await response.json();
-    this.root.removeChild(loading);
-    return data;
-  }
-
-  // Compatibility with tests
   drawLoading() {
     const el = document.createElement("div");
-    el.className =
-      "text-white absolute top-5 left-1/2 -translate-x-1/2 pointer-events-auto";
+    el.className = "absolute top-5 left-1/2 -translate-x-1/2 pointer-events-auto";
     el.innerText = "Carregando placar...";
+    el.style.color = "#e2e8f0";
+    el.style.fontSize = "20px";
+    el.style.fontWeight = "700";
+    el.style.letterSpacing = "1px";
     return el;
   }
 
@@ -73,8 +89,16 @@ export default class Score {
   drawTable() {
     const table = document.createElement("table");
     table.id = "score-table";
-    table.className =
-      "pointer-events-auto mx-auto mt-4 text-xl text-center bg-white text-gray-800";
+    table.className = "pointer-events-auto mx-auto";
+    table.style.marginTop = "170px";
+    table.style.minWidth = "640px";
+    table.style.background = "rgba(15, 23, 42, 0.95)";
+    table.style.border = "2px solid #22d3ee";
+    table.style.borderRadius = "12px";
+    table.style.overflow = "hidden";
+    table.style.color = "#e2e8f0";
+    table.style.fontSize = "22px";
+    table.style.textAlign = "left";
     return table;
   }
 
@@ -82,8 +106,13 @@ export default class Score {
     const head = document.createElement("tr");
     ["Rank", "Nome", "Pontos"].forEach((h) => {
       const th = document.createElement("th");
-      th.className = "px-4 py-2 bg-gray-800 text-white";
+      th.className = "px-4 py-2";
       th.innerText = h;
+      th.style.background = "#0e7490";
+      th.style.color = "#ecfeff";
+      th.style.fontSize = "19px";
+      th.style.textTransform = "uppercase";
+      th.style.letterSpacing = "1px";
       head.appendChild(th);
     });
     return head;
@@ -92,54 +121,27 @@ export default class Score {
   drawTableLine(index, name, points) {
     const row = document.createElement("tr");
     row.className = index % 2 ? "bg-gray-100" : "";
+    row.style.background = index % 2 ? "rgba(30, 41, 59, 0.9)" : "rgba(15, 23, 42, 0.92)";
+
     const rank = document.createElement("td");
     rank.className = "px-4 py-2";
     rank.innerText = index;
+    rank.style.fontWeight = "700";
+    rank.style.color = "#67e8f9";
+
     const user = document.createElement("td");
     user.className = "px-4 py-2";
     user.innerText = name;
+
     const pts = document.createElement("td");
     pts.className = "px-4 py-2";
     pts.innerText = points;
+    pts.style.fontWeight = "700";
+
     row.appendChild(rank);
     row.appendChild(user);
     row.appendChild(pts);
     return row;
-  }
-
-  createTable(scores) {
-    const table = document.createElement("table");
-    table.id = "score-table";
-    table.className =
-      "pointer-events-auto mx-auto mt-4 text-xl text-center bg-white text-gray-800";
-    const header = document.createElement("tr");
-    ["Rank", "Nome", "Pontos"].forEach((h) => {
-      const th = document.createElement("th");
-      th.className = "px-4 py-2 bg-gray-800 text-white";
-      th.innerText = h;
-      header.appendChild(th);
-    });
-    table.appendChild(header);
-
-    scores.forEach(({ name, points }, index) => {
-      const row = document.createElement("tr");
-      row.className = index % 2 ? "bg-gray-100" : "";
-      const rank = document.createElement("td");
-      rank.className = "px-4 py-2";
-      rank.innerText = index + 1;
-      const user = document.createElement("td");
-      user.className = "px-4 py-2";
-      user.innerText = name;
-      const pts = document.createElement("td");
-      pts.className = "px-4 py-2";
-      pts.innerText = points;
-      row.appendChild(rank);
-      row.appendChild(user);
-      row.appendChild(pts);
-      table.appendChild(row);
-    });
-
-    return table;
   }
 
   async showScore() {
