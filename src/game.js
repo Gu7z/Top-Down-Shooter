@@ -5,6 +5,7 @@ import Hud from "./hud.js";
 import Effects from "./effects.js";
 import { audio } from "./audio.js";
 import Settings from "./settings.js";
+import Controls from "./controls.js";
 import RunSummary from "./run_summary.js";
 import DroneSystem from "./drone.js";
 import { createSkillTreeState } from "./progression/skill_tree_state.js";
@@ -61,6 +62,19 @@ export default class Game {
           settingsScreen = null;
           this.app.stage.addChild(this.hud.hudContainer);
           this.app.render?.();
+        },
+      });
+      this.app.render?.();
+    };
+    this.hud.openControls = () => {
+      this.app.stage.removeChild(this.hud.hudContainer);
+      new Controls({
+        app: this.app,
+        menu: {
+          show: () => {
+            this.app.stage.addChild(this.hud.hudContainer);
+            this.app.render?.();
+          },
         },
       });
       this.app.render?.();
