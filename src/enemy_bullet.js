@@ -51,6 +51,10 @@ export default class EnemyBullet {
       this.trailContainer.addChild(trail);
       
       const fadeInterval = setInterval(() => {
+        if (trail.destroyed) {
+          clearInterval(fadeInterval);
+          return;
+        }
         trail.alpha -= 0.05;
         trail.scale.x *= 0.9;
         trail.scale.y *= 0.9;

@@ -148,6 +148,10 @@ export function createAppMock() {
     setInterval() { return { clear() {} }; },
     setTimeout() { return { clear() {} }; },
     renderer: { view: { onmousemove: null } },
+    view: {
+      getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600 })
+    },
+    render() {},
     start() {},
     stop() {},
   };

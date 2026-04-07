@@ -78,7 +78,12 @@ export default class Game {
     this.player.shooting.registerEffects(this.effects);
 
     this.handleMouseMove = (e) => {
-      this.player.setMousePosition(e.clientX, e.clientY);
+      const rect = app.view.getBoundingClientRect();
+      const scaleX = app.screen.width / rect.width;
+      const scaleY = app.screen.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      this.player.setMousePosition(x, y);
     };
 
     this.handlePointerDown = () => {
