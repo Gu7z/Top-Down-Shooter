@@ -76,8 +76,8 @@ test('update calls goToPlayer', () => {
 
 // ── Control Effects Tests ──────────────────────────────────────────
 
-test('applyControlEffects applies slow to enemy', () => {
-  const slowEnemy = new Enemy({
+test('applyControlEffects freezes enemy on successful roll', () => {
+  const freezeEnemy = new Enemy({
     app,
     enemyRadius: 10,
     speed: 2,
@@ -87,11 +87,12 @@ test('applyControlEffects applies slow to enemy', () => {
     container,
   });
 
-  assert.equal(slowEnemy.speedMultiplier, 1);
+  assert.equal(freezeEnemy.frozen, false);
 
-  slowEnemy.applyControlEffects({ slowFieldMultiplier: 0.5 });
-  assert.equal(slowEnemy.speedMultiplier, 0.5);
-  assert.equal(slowEnemy.controlTimers.length, 1);
+  // Force freeze by passing 100% chance
+  freezeEnemy.applyControlEffects({ freezeChance: 1.0 });
+  assert.equal(freezeEnemy.frozen, true);
+  assert.ok(freezeEnemy.freezeTimer > 0);
 });
 
 test('applyControlEffects applies weaken to enemy', () => {
@@ -128,7 +129,7 @@ test('applyControlEffects applies knockback', () => {
   assert.equal(kbEnemy.enemy.position.x, startX + 20);
 });
 
-test('control timers expire and reverse effects', () => {
+test('freeze timer is set based on duration multiplier', () => {
   const timedEnemy = new Enemy({
     app,
     enemyRadius: 10,
@@ -139,16 +140,10 @@ test('control timers expire and reverse effects', () => {
     container,
   });
 
-  timedEnemy.applyControlEffects({ slowFieldMultiplier: 0.5 }, 1);
-  assert.equal(timedEnemy.speedMultiplier, 0.5);
-
-  // Tick for 61 frames (base 60 * duration 1)
-  for (let i = 0; i < 61; i++) {
-    timedEnemy.updateControlTimers();
-  }
-
-  // Speed should be restored (approximately 1 due to floating point)
-  assert.ok(Math.abs(timedEnemy.speedMultiplier - 1) < 0.001);
+  // Base duration is 120 frames; multiplier 2 should give 240
+  timedEnemy.applyControlEffects({ freezeChance: 1.0 }, 2);
+  assert.equal(timedEnemy.frozen, true);
+  assert.equal(timedEnemy.freezeTimer, 240);
 });
 
 test('kill applies damageMultiplier from weaken effect', () => {

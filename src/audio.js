@@ -12,7 +12,7 @@ export const audio = {
   },
 
   apply() {
-    PIXI.sound.volumeAll = this.muted ? 0 : this.volume;
+    PIXI.sound.volumeAll = this.muted ? 0 : this.volume * 0.1;
   },
 
   setVolume(value) {

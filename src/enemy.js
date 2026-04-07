@@ -15,9 +15,11 @@ export default class Enemy {
     this.color = color;
 
     // Control effect state
-    this.speedMultiplier = 1;
+    this.frozen = false;
+    this.freezeTimer = 0;
     this.damageMultiplier = 1;
     this.controlTimers = [];
+    this.contactCooldown = 0;
 
     // AI State for ranged enemies
     this.aiState = "aproximar"; // aproximar, strafe, recuar
@@ -86,17 +88,17 @@ export default class Enemy {
   applyControlEffects(controlEffects, durationMultiplier = 1) {
     if (!controlEffects) return;
 
-    const baseDuration = 60; // ~1 second at 60fps
+    const baseDuration = 120; // ~2 seconds at 60fps
     const duration = Math.ceil(baseDuration * durationMultiplier);
 
-    // Slow field
-    if (controlEffects.slowFieldMultiplier && controlEffects.slowFieldMultiplier < 1) {
-      this.speedMultiplier *= controlEffects.slowFieldMultiplier;
-      this.controlTimers.push({
-        type: "slow",
-        timer: duration,
-        value: controlEffects.slowFieldMultiplier,
-      });
+    // Freeze
+    if (controlEffects.freezeChance && Math.random() < controlEffects.freezeChance) {
+      if (!this.frozen) {
+        this.frozen = true;
+        this.freezeTimer = duration;
+        this.enemy.tint = 0x88ccff;
+        this.enemyLifeText.style.fill = 0x002244;
+      }
     }
 
     // Enemy weaken
@@ -125,14 +127,14 @@ export default class Enemy {
   }
 
   updateControlTimers() {
+    if (this.contactCooldown > 0) this.contactCooldown -= 1;
+
     if (this.controlTimers.length === 0) return;
 
     this.controlTimers = this.controlTimers.filter((entry) => {
       entry.timer -= 1;
       if (entry.timer <= 0) {
-        if (entry.type === "slow") {
-          this.speedMultiplier /= entry.value;
-        } else if (entry.type === "weaken") {
+        if (entry.type === "weaken") {
           this.damageMultiplier /= entry.value;
         }
         return false;
@@ -142,22 +144,66 @@ export default class Enemy {
   }
 
   removePlayerLife(player, spanwer, effects) {
-    const damaged = player.takeDamage?.(1, effects);
-    if (damaged === undefined) {
-      player.lifes -= 1;
+    if (this.contactCooldown > 0) return;
+
+    // Heavy enemy (>10 HP): damage player once + knockback both, never forceKill
+    if (this.life > 10) {
+      const damaged = player.takeDamage?.(1, effects);
+      if (damaged === undefined) player.lifes -= 1;
+      // Always apply knockback and cooldown regardless of invulnerability
+      this.contactCooldown = 90;
+      this._applyCollisionKnockback(player);
+      if (effects) {
+        effects.shake(6);
+        effects.explosion(player.player.position.x, player.player.position.y, 0xff2d55, 18);
+        effects.pulse(player.player, 0xff2d55, 12);
+      }
+      return;
     }
-    
+
+    // Light enemy: player invulnerable → 10 contact damage to enemy
+    const damaged = player.takeDamage?.(1, effects);
+
+    if (damaged === false) {
+      this.contactCooldown = 90;
+      const index = spanwer.spawns.indexOf(this);
+      if (index > -1) {
+        this.kill(spanwer.spawns, index, player, effects, 10);
+      }
+      return;
+    }
+
+    if (damaged === undefined) player.lifes -= 1;
+
     this.forceKill();
     const index = spanwer.spawns.indexOf(this);
-    if (index > -1) {
-      spanwer.spawns.splice(index, 1);
-    }
+    if (index > -1) spanwer.spawns.splice(index, 1);
 
     if (effects) {
       effects.shake(8);
       effects.explosion(player.player.position.x, player.player.position.y, 0xff2d55, 24);
       effects.pulse(player.player, 0xff2d55, 15);
     }
+  }
+
+  _applyCollisionKnockback(player) {
+    const dx = player.player.position.x - this.enemy.position.x;
+    const dy = player.player.position.y - this.enemy.position.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = dx / len;
+    const ny = dy / len;
+
+    const playerKb = 90;
+    const enemyKb  = 50;
+
+    player.player.x += nx * playerKb;
+    player.player.y += ny * playerKb;
+
+    this.enemy.position.set(
+      this.enemy.position.x - nx * enemyKb,
+      this.enemy.position.y - ny * enemyKb
+    );
+    this.enemyLifeText.position.set(this.enemy.position.x, this.enemy.position.y);
   }
 
   updateRanged(player, spanwer, effects) {
@@ -188,23 +234,22 @@ export default class Enemy {
     }
 
     // Movement execution
-    const effectiveSpeed = this.speed * this.speedMultiplier;
     let velocity;
 
     const distanceVec = playerPosition.clone().subtract(enemyPosition);
     distanceVec.normalize();
 
     if (this.aiState === "recuar") {
-      velocity = distanceVec.clone().invert().multiplyScalar(effectiveSpeed);
+      velocity = distanceVec.clone().invert().multiplyScalar(this.speed);
     } else if (this.aiState === "strafe") {
       // Orthogonal vector for strafing
-      velocity = new Victor(-distanceVec.y * this.strafeDirection, distanceVec.x * this.strafeDirection).multiplyScalar(effectiveSpeed * 0.8);
-      
+      velocity = new Victor(-distanceVec.y * this.strafeDirection, distanceVec.x * this.strafeDirection).multiplyScalar(this.speed * 0.8);
+
       // Slight pull towards player so it doesn't drift off screen completely
-      velocity.add(distanceVec.clone().multiplyScalar(effectiveSpeed * 0.15));
+      velocity.add(distanceVec.clone().multiplyScalar(this.speed * 0.15));
     } else {
       // "aproximar"
-      velocity = distanceVec.clone().multiplyScalar(effectiveSpeed);
+      velocity = distanceVec.clone().multiplyScalar(this.speed);
     }
 
     // Add tiny random variation so movement isn't perfectly rigid
@@ -279,8 +324,7 @@ export default class Enemy {
     }
 
     const distance = playerPosition.subtract(enemyPosition);
-    const effectiveSpeed = this.speed * this.speedMultiplier;
-    const velocity = distance.normalize().multiplyScalar(effectiveSpeed);
+    const velocity = distance.normalize().multiplyScalar(this.speed);
 
     const newX = this.enemy.position.x + velocity.x;
     const newY = this.enemy.position.y + velocity.y;
@@ -328,8 +372,22 @@ export default class Enemy {
 
   update(player, spanwer, effects) {
     if (this.enemy.destroyed) return;
+
+
+    if (this.frozen) {
+      this.enemyLifeText.text = this.life;
+      this.freezeTimer -= 1;
+      if (this.freezeTimer <= 0) {
+        this.frozen = false;
+        this.enemy.tint = 0xffffff;
+        this.enemyLifeText.style.fill = [0xffffff, 0xffc0cb, 0xffdd00].includes(this.color) ? 0x000000 : 0xffffff;
+      } else {
+        return;
+      }
+    }
+
     this.updateControlTimers();
-    
+
     if (this.behaviorType === "ranged") {
       this.updateRanged(player, spanwer, effects);
     } else {

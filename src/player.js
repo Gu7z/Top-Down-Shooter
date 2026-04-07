@@ -98,7 +98,13 @@ export default class Player {
       runStats,
     });
 
+    // Shield bubble — visible only when shield > 0
+    this.shieldBubble = new PIXI.Graphics();
+    this._drawShieldBubble();
+    this.shieldBubble.position.set(middleWidth, middleHeight);
+
     this.setMousePosition(middleWidth, 0);
+    this.playerContainer.addChild(this.shieldBubble);
     this.playerContainer.addChild(this.playerGlow);
     this.playerContainer.addChild(this.player);
     this.app.stage.addChild(this.playerContainer);
@@ -357,13 +363,29 @@ export default class Player {
     return false;
   }
 
+  _drawShieldBubble() {
+    const g = this.shieldBubble;
+    g.clear();
+    const r = this.size + 7;
+    g.lineStyle(1.5, 0x00ccff, 0.85);
+    g.drawCircle(0, 0, r);
+    g.lineStyle(1, 0x00ccff, 0.2);
+    g.drawCircle(0, 0, r + 3);
+  }
+
   updateGlow() {
     this.playerGlow.position.set(this.player.position.x, this.player.position.y);
 
-    // Flash glow during invulnerability
+    // Shield bubble follows player and shows only when shield > 0
+    this.shieldBubble.position.set(this.player.position.x, this.player.position.y);
+    this.shieldBubble.visible = this.shield > 0;
+
+    // Blink player sprite and boost glow during invulnerability
     if (this.invulnerable) {
-      this.playerGlow.alpha = 0.3 + Math.abs(Math.sin(Date.now() * 0.02)) * 0.4;
+      this.player.alpha = Math.floor(Date.now() / 90) % 2 === 0 ? 1 : 0.15;
+      this.playerGlow.alpha = 0.45 + Math.abs(Math.sin(Date.now() * 0.025)) * 0.45;
     } else {
+      this.player.alpha = 1;
       this.playerGlow.alpha = 0.17 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.18;
     }
   }

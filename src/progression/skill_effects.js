@@ -29,7 +29,7 @@ export function createDefaultSkillEffects() {
     droneTargeting: false,
     magnetRadiusBonus: 0,
     droneOverclockMultiplier: 1,
-    slowFieldMultiplier: 1,
+    freezeChance: 0,
     knockbackBonus: 0,
     enemyWeakenMultiplier: 1,
     chainPulseRadius: 0,
@@ -38,7 +38,7 @@ export function createDefaultSkillEffects() {
     dashShield: false,
     lowHpCreditBonus: 0,
     droneBountyBonus: false,
-    droneAppliesSlow: false,
+    droneAppliesFreeze: false,
   };
 }
 

@@ -167,7 +167,7 @@ const baseSkills = [
       id: "hit_guard_1",
       name: "Guarda em Trauma",
       description: "Garante invulnerabilidade extra após levar dano.",
-      effects: { postHitGuardMs: 500 },
+      effects: { postHitGuardMs: 2000 },
     },
     {
       id: "emergency_shield_1",
@@ -272,16 +272,16 @@ const baseSkills = [
     {
       id: "marking_swarm",
       name: "Enxame Marcador",
-      description: "+1 Drone. Os drones retardam os inimigos visados.",
-      effects: { droneAppliesSlow: true, droneCount: 1 },
+      description: "+1 Drone. Os drones congelam os inimigos visados.",
+      effects: { droneAppliesFreeze: true, droneCount: 1 },
     },
   ]),
   ...makeBranchSkills("control", [
     {
       id: "slow_field_1",
-      name: "Campo Indutor",
-      description: "Tiros tornam os inimigos lentos.",
-      effects: { slowFieldMultiplier: 0.92 },
+      name: "Campo Criogênico",
+      description: "+20% de chance de congelar inimigos com cada tiro.",
+      effects: { freezeChance: 0.20 },
     },
     {
       id: "knockback_1",
@@ -292,7 +292,7 @@ const baseSkills = [
     {
       id: "enemy_weaken_1",
       name: "Marca de Fraqueza",
-      description: "Inimigos abatidos com lentidão tomam mais dano.",
+      description: "Inimigos congelados tomam mais dano.",
       effects: { enemyWeakenMultiplier: 1.15 },
     },
     {

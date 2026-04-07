@@ -68,8 +68,9 @@ export function setupPixiMock() {
       beginFill()  { return this; }
       endFill()    { return this; }
       lineStyle()  { return this; }
-      moveTo()     { return this; }
-      lineTo()     { return this; }
+      moveTo()           { return this; }
+      lineTo()           { return this; }
+      bezierCurveTo()    { return this; }
       closePath()  { return this; }
       drawRect()   { return this; }
       drawRoundedRect() { return this; }

@@ -71,13 +71,13 @@ test('drones fire bullets', () => {
   assert.equal(droneSys.bullets[0].source, 'drone');
 });
 
-test('drones apply slow fusion when droneAppliesSlow is true', () => {
+test('drones apply freeze fusion when droneAppliesFreeze is true', () => {
   const droneSys = new DroneSystem({
     app,
     player,
-    skillEffects: { droneCount: 1, droneAppliesSlow: true },
+    skillEffects: { droneCount: 1, droneAppliesFreeze: true },
   });
-  
+
   const spawner = {
     spawns: [
       {
@@ -85,12 +85,12 @@ test('drones apply slow fusion when droneAppliesSlow is true', () => {
       }
     ]
   };
-  
+
   droneSys.update(spawner);
-  
+
   const bullet = droneSys.bullets[0];
-  assert.ok(bullet.controlEffects.slowFieldMultiplier);
-  assert.equal(bullet.controlEffects.slowFieldMultiplier, 0.6);
+  assert.ok(bullet.controlEffects.freezeChance);
+  assert.equal(bullet.controlEffects.freezeChance, 0.45);
 });
 
 test('drones use targeting correctly', () => {

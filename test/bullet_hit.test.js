@@ -57,7 +57,7 @@ test('bulletHit applies control effects to enemy on hit', () => {
   const controlBullet = {
     position: { x: 0, y: 0 },
     damage: 1,
-    controlEffects: { slowFieldMultiplier: 0.8, knockbackBonus: 10 },
+    controlEffects: { freezeChance: 0.8, knockbackBonus: 10 },
     controlDurationMultiplier: 1.2,
     destroy() { this.destroyed = true; },
   };
@@ -74,7 +74,7 @@ test('bulletHit applies control effects to enemy on hit', () => {
   bulletHit(controlBullet, [controlEnemy], 5, { points: 0 });
 
   assert.equal(controlApplied, true);
-  assert.equal(appliedEffects.effects.slowFieldMultiplier, 0.8);
+  assert.equal(appliedEffects.effects.freezeChance, 0.8);
   assert.equal(appliedEffects.duration, 1.2);
   // Knockback direction should be calculated
   assert.ok(appliedEffects.effects.knockbackDirection);
@@ -94,7 +94,7 @@ test('bulletHit chain pulse applies control to nearby enemies', () => {
   const chainBullet = {
     position: { x: 0, y: 0 },
     damage: 1,
-    controlEffects: { slowFieldMultiplier: 0.9, knockbackBonus: 0 },
+    controlEffects: { freezeChance: 0.9, knockbackBonus: 0 },
     chainPulseRadius: 50,
     controlDurationMultiplier: 1,
     destroy() { this.destroyed = true; },
@@ -111,6 +111,6 @@ test('bulletHit chain pulse applies control to nearby enemies', () => {
   // Near enemy should get chain control (no knockback)
   const nearResult = chainApplied.find(e => e.x === 30);
   assert.ok(nearResult);
-  assert.equal(nearResult.effects.slowFieldMultiplier, 0.9);
+  assert.equal(nearResult.effects.freezeChance, 0.9);
   assert.equal(nearResult.effects.knockbackBonus, undefined);
 });

@@ -27,7 +27,7 @@ export default class DroneSystem {
     
     this.magnetRadius = 350 + (this.skillEffects.magnetRadiusBonus || 0);
     this.droneTargeting = this.skillEffects.droneTargeting;
-    this.droneAppliesSlow = this.skillEffects.droneAppliesSlow;
+    this.droneAppliesFreeze = this.skillEffects.droneAppliesFreeze;
     
     this.container = new PIXI.Container();
     this.app.stage.addChild(this.container);
@@ -146,9 +146,9 @@ export default class DroneSystem {
     bullet.source = 'drone';
     bullet.isCrit = false;
     
-    // Fusion: Drone Applies Slow
-    if (this.droneAppliesSlow) {
-      bullet.controlEffects = { slowFieldMultiplier: 0.6 }; // Apply 60% slow
+    // Fusion: Drone Applies Freeze
+    if (this.droneAppliesFreeze) {
+      bullet.controlEffects = { freezeChance: 0.45 };
       bullet.controlDurationMultiplier = 1;
     }
     

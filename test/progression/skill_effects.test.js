@@ -34,7 +34,7 @@ test("default effects are safe no-upgrade values", () => {
     droneTargeting: false,
     magnetRadiusBonus: 0,
     droneOverclockMultiplier: 1,
-    slowFieldMultiplier: 1,
+    freezeChance: 0,
     knockbackBonus: 0,
     enemyWeakenMultiplier: 1,
     chainPulseRadius: 0,
@@ -43,7 +43,7 @@ test("default effects are safe no-upgrade values", () => {
     dashShield: false,
     lowHpCreditBonus: 0,
     droneBountyBonus: false,
-    droneAppliesSlow: false,
+    droneAppliesFreeze: false,
   });
 });
 
@@ -71,6 +71,6 @@ test("deriveSkillEffects safely combines additive, boolean, and multiplier effec
 
   assert.equal(effects.maxShield, 2);
   assert.equal(effects.dashShield, true);
-  assert.equal(Number(effects.slowFieldMultiplier.toFixed(3)), 0.92);
-  assert.equal(effects.droneAppliesSlow, true);
+  assert.equal(effects.freezeChance, 0.20);
+  assert.equal(effects.droneAppliesFreeze, true);
 });

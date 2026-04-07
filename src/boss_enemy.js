@@ -42,8 +42,7 @@ export default class BossEnemy extends Enemy {
     const dist = enemyPosition.distance(playerPosition);
     
     // Boss slowly moves towards player regardless, no complex AI state yet
-    const effectiveSpeed = this.speed * this.speedMultiplier;
-    const velocity = playerPosition.clone().subtract(enemyPosition).normalize().multiplyScalar(effectiveSpeed);
+    const velocity = playerPosition.clone().subtract(enemyPosition).normalize().multiplyScalar(this.speed);
 
     if (dist > playerSquare.width / 2 + this.enemyRadius / 2) {
       this.enemy.position.set(this.enemy.position.x + velocity.x, this.enemy.position.y + velocity.y);
@@ -162,6 +161,19 @@ export default class BossEnemy extends Enemy {
 
   update(player, spanwer, effects) {
     if (this.enemy.destroyed) return;
+
+    if (this.frozen) {
+      this.enemyLifeText.text = this.life;
+      this.freezeTimer -= 1;
+      if (this.freezeTimer <= 0) {
+        this.frozen = false;
+        this.enemy.tint = 0xffffff;
+        this.enemyLifeText.style.fill = 0xffffff;
+      } else {
+        return;
+      }
+    }
+
     this.updateControlTimers();
     this.updateBossBehavior(player);
     
