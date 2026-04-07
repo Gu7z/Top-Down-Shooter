@@ -23,23 +23,48 @@ const WAVES = {
   18: { count: 30, mix: ["sprinter", "atirador", "artilheiro"], hpMod: 1.15 },
   19: { count: 35, mix: ["cacador", "corredor", "sprinter", "atirador", "artilheiro"], hpMod: 1.15 },
   20: { isBoss: true, bossId: "supremo" },
+  // --- Beyond the Supremo ---
+  21: { count: 35, mix: ["corredor", "sprinter", "artilheiro", "infiltrador"], speedMod: 1.1, hpMod: 1.2 },
+  22: { count: 38, mix: ["sprinter", "infiltrador", "atirador", "artilheiro"], speedMod: 1.1, hpMod: 1.2 },
+  23: { count: 40, mix: ["titan", "corredor", "atirador", "infiltrador"], hpMod: 1.15 },
+  24: { count: 42, mix: ["sprinter", "infiltrador", "artilheiro", "espectre"], speedMod: 1.15, hpMod: 1.2 },
+  25: { isBoss: true, bossId: "predador" },
+  26: { count: 45, mix: ["titan", "infiltrador", "artilheiro", "devastador"], hpMod: 1.25 },
+  27: { count: 48, mix: ["corredor", "sprinter", "infiltrador", "espectre", "devastador"], speedMod: 1.2, hpMod: 1.25 },
+  28: { count: 50, mix: ["titan", "espectre", "artilheiro", "devastador"], speedMod: 1.1, hpMod: 1.3 },
+  29: { count: 55, mix: ["titan", "sprinter", "infiltrador", "espectre", "devastador"], speedMod: 1.2, hpMod: 1.35 },
+  30: { isBoss: true, bossId: "apocalipse" },
 };
 
 // Enemy base definitions maps to Enemy attributes
 const ENEMY_DEFS = {
-  "sentinela": { color: 0x0302fc, enemyRadius: 18, life: 4, speed: 0.5, value: 1, typeId: "sentinela", behaviorType: "melee" },
-  "cacador":   { color: 0x63009e, enemyRadius: 17, life: 3, speed: 1.0, value: 1, typeId: "cacador", behaviorType: "melee" },
-  "corredor":  { color: 0xfe0002, enemyRadius: 15, life: 1, speed: 1.9, value: 1, typeId: "corredor", behaviorType: "melee" },
-  "sprinter":  { color: 0xffffff, enemyRadius: 14, life: 1, speed: 2.3, value: 2, typeId: "sprinter", behaviorType: "melee" },
-  "atirador":  { color: 0xff8800, enemyRadius: 16, life: 3, speed: 0.6, value: 3, typeId: "atirador", behaviorType: "ranged" },
-  "artilheiro":{ color: 0xffdd00, enemyRadius: 20, life: 6, speed: 0.3, value: 5, typeId: "artilheiro", behaviorType: "ranged" },
+  "sentinela":  { color: 0x0302fc, enemyRadius: 18, life: 4,  speed: 0.50, value: 1, typeId: "sentinela",  behaviorType: "melee"  },
+  "cacador":    { color: 0x63009e, enemyRadius: 17, life: 3,  speed: 1.00, value: 1, typeId: "cacador",    behaviorType: "melee"  },
+  "corredor":   { color: 0xfe0002, enemyRadius: 15, life: 1,  speed: 1.90, value: 1, typeId: "corredor",   behaviorType: "melee"  },
+  "sprinter":   { color: 0xffffff, enemyRadius: 14, life: 1,  speed: 2.30, value: 2, typeId: "sprinter",   behaviorType: "melee"  },
+  "atirador":   { color: 0xff8800, enemyRadius: 16, life: 3,  speed: 0.60, value: 3, typeId: "atirador",   behaviorType: "ranged" },
+  "artilheiro": { color: 0xffdd00, enemyRadius: 20, life: 6,  speed: 0.30, value: 5, typeId: "artilheiro", behaviorType: "ranged" },
+  // --- New enemy types (waves 21-30) ---
+  // Infiltrador: fast ranged assassin, low HP, precise single shot
+  "infiltrador":{ color: 0x00ffcc, enemyRadius: 13, life: 2,  speed: 1.80, value: 3, typeId: "infiltrador",behaviorType: "ranged" },
+  // Titan: slow melee brute, very high HP (>10 → heavy contact)
+  "titan":      { color: 0x0066ff, enemyRadius: 22, life: 12, speed: 0.35, value: 6, typeId: "titan",      behaviorType: "melee"  },
+  // Espectre: medium ranged, fires 2-bullet split every 3s
+  "espectre":   { color: 0x88ff00, enemyRadius: 15, life: 3,  speed: 1.00, value: 4, typeId: "espectre",   behaviorType: "ranged" },
+  // Devastador: heavy slow ranged, fires 5-bullet wide arc
+  "devastador": { color: 0xff4400, enemyRadius: 23, life: 9,  speed: 0.28, value: 7, typeId: "devastador", behaviorType: "ranged" },
 };
 
 const BOSS_DEFS = {
-  "guardiao":   { color: 0xffc0cb, enemyRadius: 30, life: 30, speed: 0.8, value: 20, typeId: "boss_guardiao" },
-  "destruidor": { color: 0xff00ff, enemyRadius: 35, life: 50, speed: 0.6, value: 40, typeId: "boss_destruidor" },
-  "colosso":    { color: 0xff2222, enemyRadius: 40, life: 80, speed: 0.5, value: 80, typeId: "boss_colosso" },
-  "supremo":    { color: 0x880000, enemyRadius: 50, life: 120,speed: 0.5, value: 150,typeId: "boss_supremo" },
+  "guardiao":   { color: 0xffc0cb, enemyRadius: 30, life: 30,  speed: 0.8, value: 20,  typeId: "boss_guardiao"   },
+  "destruidor": { color: 0xff00ff, enemyRadius: 35, life: 50,  speed: 0.6, value: 40,  typeId: "boss_destruidor" },
+  "colosso":    { color: 0xff2222, enemyRadius: 40, life: 80,  speed: 0.5, value: 80,  typeId: "boss_colosso"    },
+  "supremo":    { color: 0x880000, enemyRadius: 50, life: 120, speed: 0.5, value: 150, typeId: "boss_supremo"    },
+  // --- New bosses (waves 25 and 30) ---
+  // Predador: fast aggressive hunter, burst + wide arc + spin
+  "predador":   { color: 0x00ff88, enemyRadius: 45, life: 180, speed: 1.1, value: 200, typeId: "boss_predador"   },
+  // Apocalipse: final boss, all attack patterns combined at peak aggression
+  "apocalipse": { color: 0xff0066, enemyRadius: 55, life: 280, speed: 0.8, value: 400, typeId: "boss_apocalipse" },
 };
 
 export default class WaveManager {
@@ -174,11 +199,11 @@ export default class WaveManager {
         // Wave over
         const isCompletedBoss = WAVES[this.currentWave]?.isBoss;
         
-        // Final victory logic if wave 20
-        if (this.currentWave === 20) {
-          player.points += 500; // Big bonus
-          
-          this.renderBanner(`E M I N Ê N C I A   S U P E R A D A`, true);
+        // Final victory logic if wave 30
+        if (this.currentWave === 30) {
+          player.points += 1000; // Big bonus
+
+          this.renderBanner(`A P O C A L I P S E   D E R R O T A D O`, true);
           this.state = "ENDGAME"; // halt progression gently, then call finish Game
           setTimeout(() => {
              this.finishGame("victory");

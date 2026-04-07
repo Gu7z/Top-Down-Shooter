@@ -254,7 +254,10 @@ export default class Enemy {
     // Shooting mechanics
     this.shootCooldown -= 1;
     if (this.shootCooldown <= 0 && this.enemyBullets) {
-      this.shootCooldown = this.typeId === "artilheiro" ? 260 : 180; // ~4.3s for artilheiro, 3s for atirador
+      if (this.typeId === "artilheiro" || this.typeId === "devastador") this.shootCooldown = 280;
+      else if (this.typeId === "infiltrador") this.shootCooldown = 100;
+      else if (this.typeId === "espectre") this.shootCooldown = 200;
+      else this.shootCooldown = 180; // atirador default ~3s
       this.fireBullet(playerPosition);
     }
   }
@@ -281,25 +284,40 @@ export default class Enemy {
         const spreadRad = i * 0.25;
         const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(spreadRad).add(new Victor(enemyPos.x, enemyPos.y));
         if (BulletClass) {
-           this.enemyBullets.push(new BulletClass({
-             app: this.app,
-             position: enemyPos,
-             targetPosition: targetPos,
-             color: this.color
-           }));
+          this.enemyBullets.push(new BulletClass({ app: this.app, position: enemyPos, targetPosition: targetPos, color: this.color }));
         }
+      }
+    } else if (this.typeId === "devastador") {
+      // 5 projectiles in a wide arc
+      for (let i = -2; i <= 2; i++) {
+        const spreadRad = i * 0.3;
+        const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(spreadRad).add(new Victor(enemyPos.x, enemyPos.y));
+        if (BulletClass) {
+          this.enemyBullets.push(new BulletClass({ app: this.app, position: enemyPos, targetPosition: targetPos, color: this.color }));
+        }
+      }
+    } else if (this.typeId === "espectre") {
+      // 2 tight-split projectiles
+      for (let i of [-1, 1]) {
+        const spreadRad = i * 0.15;
+        const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(spreadRad).add(new Victor(enemyPos.x, enemyPos.y));
+        if (BulletClass) {
+          this.enemyBullets.push(new BulletClass({ app: this.app, position: enemyPos, targetPosition: targetPos, color: this.color }));
+        }
+      }
+    } else if (this.typeId === "infiltrador") {
+      // Single precise bullet, minimal inaccuracy
+      const inaccuracy = (Math.random() - 0.5) * 0.04;
+      const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(inaccuracy).add(new Victor(enemyPos.x, enemyPos.y));
+      if (BulletClass) {
+        this.enemyBullets.push(new BulletClass({ app: this.app, position: enemyPos, targetPosition: targetPos, color: this.color }));
       }
     } else {
       // Single bullet with slight inaccuracy
       const inaccuracy = (Math.random() - 0.5) * 0.1; // ±0.05 rad
       const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(inaccuracy).add(new Victor(enemyPos.x, enemyPos.y));
       if (BulletClass) {
-        this.enemyBullets.push(new BulletClass({
-          app: this.app,
-          position: enemyPos,
-          targetPosition: targetPos,
-          color: this.color
-        }));
+        this.enemyBullets.push(new BulletClass({ app: this.app, position: enemyPos, targetPosition: targetPos, color: this.color }));
       }
     }
   }

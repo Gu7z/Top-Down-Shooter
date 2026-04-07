@@ -29,6 +29,17 @@ export default class BossEnemy extends Enemy {
       this.attackTimers.burst = 120;
       this.attackTimers.arc = 200;
       this.attackTimers.spin = 400;
+    } else if (name.includes("predador")) {
+      // Fast hunter: rapid burst + wide arc + spin
+      this.attackTimers.burst = 90;
+      this.attackTimers.arc = 150;
+      this.attackTimers.spin = 350;
+    } else if (name.includes("apocalipse")) {
+      // Final boss: all patterns at peak aggression
+      this.attackTimers.burst = 80;
+      this.attackTimers.arc = 130;
+      this.attackTimers.spin = 300;
+      this.attackTimers.cross = 110;
     }
     
     // Boss does not strafe like basic ranged. Boss holds center or slowly tracks.
@@ -114,6 +125,36 @@ export default class BossEnemy extends Enemy {
       if (this.attackTimers.spin <= 0) {
         this.fireSpin();
         this.attackTimers.spin = 400;
+      }
+    } else if (name.includes("predador")) {
+      if (this.attackTimers.burst <= 0) {
+        this.fireBurst(playerPosition, 5);
+        this.attackTimers.burst = 90;
+      }
+      if (this.attackTimers.arc <= 0) {
+        this.fireArc(playerPosition, 7);
+        this.attackTimers.arc = 150;
+      }
+      if (this.attackTimers.spin <= 0) {
+        this.fireSpin();
+        this.attackTimers.spin = 350;
+      }
+    } else if (name.includes("apocalipse")) {
+      if (this.attackTimers.burst <= 0) {
+        this.fireBurst(playerPosition, 7);
+        this.attackTimers.burst = 80;
+      }
+      if (this.attackTimers.arc <= 0) {
+        this.fireArc(playerPosition, 9);
+        this.attackTimers.arc = 130;
+      }
+      if (this.attackTimers.spin <= 0) {
+        this.fireSpin();
+        this.attackTimers.spin = 300;
+      }
+      if (this.attackTimers.cross <= 0) {
+        this.fireCross();
+        this.attackTimers.cross = 110;
       }
     }
   }
