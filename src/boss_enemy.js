@@ -41,6 +41,22 @@ export default class BossEnemy extends Enemy {
     const playerPosition = new Victor(playerSquare.position.x, playerSquare.position.y);
     const dist = enemyPosition.distance(playerPosition);
     
+    // Apply knockback velocity with friction
+    if (this.knockbackVelocity.x !== 0 || this.knockbackVelocity.y !== 0) {
+      this.enemy.position.set(
+        this.enemy.position.x + this.knockbackVelocity.x,
+        this.enemy.position.y + this.knockbackVelocity.y
+      );
+      this.knockbackVelocity.x *= 0.82;
+      this.knockbackVelocity.y *= 0.82;
+      if (Math.abs(this.knockbackVelocity.x) < 0.1 && Math.abs(this.knockbackVelocity.y) < 0.1) {
+        this.knockbackVelocity.x = 0;
+        this.knockbackVelocity.y = 0;
+      }
+      this.enemyLifeText.position.set(this.enemy.position.x, this.enemy.position.y);
+      return;
+    }
+
     // Boss slowly moves towards player regardless, no complex AI state yet
     const velocity = playerPosition.clone().subtract(enemyPosition).normalize().multiplyScalar(this.speed);
 

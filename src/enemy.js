@@ -20,6 +20,7 @@ export default class Enemy {
     this.damageMultiplier = 1;
     this.controlTimers = [];
     this.contactCooldown = 0;
+    this.knockbackVelocity = { x: 0, y: 0 };
 
     // AI State for ranged enemies
     this.aiState = "aproximar"; // aproximar, strafe, recuar
@@ -193,20 +194,8 @@ export default class Enemy {
     const nx = dx / len;
     const ny = dy / len;
 
-    const playerKb = 120;
-    const enemyKb  = 200;
-
-    const W = this.app.screen.width;
-    const H = this.app.screen.height;
-    const margin = 40;
-
-    player.player.x = Math.max(margin, Math.min(W - margin, player.player.x + nx * playerKb));
-    player.player.y = Math.max(margin, Math.min(H - margin, player.player.y + ny * playerKb));
-
-    const ex = Math.max(-margin, Math.min(W + margin, this.enemy.position.x - nx * enemyKb));
-    const ey = Math.max(-margin, Math.min(H + margin, this.enemy.position.y - ny * enemyKb));
-    this.enemy.position.set(ex, ey);
-    this.enemyLifeText.position.set(ex, ey);
+    this.knockbackVelocity.x = -nx * 36;
+    this.knockbackVelocity.y = -ny * 36;
   }
 
   updateRanged(player, spanwer, effects) {
