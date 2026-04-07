@@ -85,6 +85,21 @@ test('bullets with critChance = 1 always crit and apply multiplier', () => {
 
 // ── Control Effects Pass-through ──────────────────────────────────
 
+test('bullets do not freeze enemies when no freeze skill is active', () => {
+  const noControlShooting = new Shooting({
+    app,
+    player,
+    playerSize: 20,
+    keys: {},
+    skillEffects: { freezeChance: 0 },
+  });
+
+  noControlShooting.fire();
+  const bullet = noControlShooting.bullets[0];
+
+  assert.equal(bullet.controlEffects.freezeChance, 0);
+});
+
 test('bullets carry control effects and chain pulse radius', () => {
   const controlShooting = new Shooting({
     app,
@@ -105,7 +120,7 @@ test('bullets carry control effects and chain pulse radius', () => {
 
   assert.equal(bullet.controlEffects.knockbackBonus, 20);
   assert.equal(bullet.controlEffects.enemyWeakenMultiplier, 1.5);
-  assert.equal(bullet.controlEffects.freezeChance, 0.15 + 0.25); // base 0.15 + skill 0.25
+  assert.equal(bullet.controlEffects.freezeChance, 0.25);
   assert.equal(bullet.chainPulseRadius, 100);
   assert.equal(bullet.controlDurationMultiplier, 1.3);
 });
