@@ -30,7 +30,7 @@ export default class Score {
     // Title
     createLabel({
       container:    this.scoreContainer,
-      text:         "NEURAL  RANKING",
+      text:         "RANKING  NEURAL",
       x,
       y:            58,
       fontSize:     50,
