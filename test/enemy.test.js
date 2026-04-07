@@ -7,7 +7,12 @@ setupPixiMock();
 const app = createAppMock();
 const container = new PIXI.Container();
 const enemy = new Enemy({ app, enemyRadius: 10, speed:1, color:0xff0000, life:2, value:1, container });
-const player = { player: new PIXI.Sprite(), lifes:1, points:0 };
+const player = { 
+  player: new PIXI.Sprite(), 
+  lifes: 1, 
+  points: 0,
+  collidesWithCircle(cx, cy, r) { return true; } // mock
+};
 const spawner = { resetCalled:false, reset(){this.resetCalled=true;}, spawns: [enemy] };
 player.player.width = 20;
 player.player.position.set(enemy.enemy.position.x, enemy.enemy.position.y);

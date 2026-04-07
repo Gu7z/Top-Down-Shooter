@@ -324,6 +324,7 @@ export default class Hud {
 
   // ── Game-over modal ────────────────────────────────────────────
   renderGameOverMenu(clear) {
+    this.app.stage.addChild(this.hudContainer);
     const cx = this.app.screen.width  / 2;
     const cy = this.app.screen.height / 2;
 

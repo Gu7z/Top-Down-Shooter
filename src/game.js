@@ -200,11 +200,7 @@ export default class Game {
         }
         
         // Bullet collision with player
-        const bp = bullet.bullet.position;
-        const pp = this.player.player.position;
-        const dist = Math.hypot(bp.x - pp.x, bp.y - pp.y);
-        
-        if (dist < bullet.radius + this.player.size / 2) {
+        if (this.player.collidesWithCircle(bullet.bullet.position.x, bullet.bullet.position.y, bullet.radius)) {
            this.player.takeDamage(1, this.effects);
            bullet.destroy();
            this.enemyBullets.splice(i, 1);

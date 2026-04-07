@@ -269,11 +269,10 @@ export default class Enemy {
 
   goToPlayer(player, spanwer, effects) {
     const playerSquare = player.player;
-
     const enemyPosition = new Victor(this.enemy.position.x, this.enemy.position.y);
     const playerPosition = new Victor(playerSquare.position.x, playerSquare.position.y);
 
-    const isHittingPlayer = enemyPosition.distance(playerPosition) < playerSquare.width / 2 + this.enemyRadius / 2;
+    const isHittingPlayer = player.collidesWithCircle(this.enemy.position.x, this.enemy.position.y, this.enemyRadius);
     if (isHittingPlayer) {
       this.removePlayerLife(player, spanwer, effects);
       return;

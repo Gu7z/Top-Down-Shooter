@@ -9,7 +9,7 @@ export default class DroneSystem {
     this.runStats = runStats;
     this.effects = effects;
     
-    this.droneCount = this.skillEffects.droneCount || 1; // Temporarily force 1 drone for debugging
+    this.droneCount = this.skillEffects.droneCount || 0;
     this.drones = [];
     this.bullets = [];
     
