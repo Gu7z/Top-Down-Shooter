@@ -8,10 +8,11 @@ import {
 } from "./ui_system.js";
 
 export default class RunSummary {
-  constructor({ app, username, summary, onBackToMenu }) {
+  constructor({ app, username, summary, reason = "manual", onBackToMenu }) {
     this.app = app;
     this.username = username;
     this.summary = summary;
+    this.reason = reason;
     this.onBackToMenu = onBackToMenu;
     this.container = new PIXI.Container();
 
@@ -46,7 +47,7 @@ export default class RunSummary {
 
     createLabel({
       container:     this.container,
-      text:          "SÚMULA DA RUN",
+      text:          this.reason === "victory" ? "EMINÊNCIA SUPERADA" : "SÚMULA DA RUN",
       x:             cx,
       y:             cardTop + 57,
       fontSize:      48,

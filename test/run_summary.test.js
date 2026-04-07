@@ -30,3 +30,26 @@ test('run summary renders stats and returns to menu', () => {
   buttons.at(-1).eventHandlers.pointerdown();
   assert.equal(returned, true);
 });
+
+test('run summary shows victory title when final wave is cleared', () => {
+  const app = createAppMock();
+  const screen = new RunSummary({
+    app,
+    username: 'player',
+    reason: 'victory',
+    summary: {
+      score: 100,
+      credits: { total: 42, breakdown: [] },
+      accuracyPercent: 80,
+      shotsFired: 10,
+      shotsHit: 8,
+      timeSurvivedSeconds: 60,
+      killsByType: {},
+      bossKills: 4,
+      highlights: [],
+    },
+  });
+
+  const title = screen.container.children.find((child) => child.text === 'EMINÊNCIA SUPERADA');
+  assert.ok(title);
+});
