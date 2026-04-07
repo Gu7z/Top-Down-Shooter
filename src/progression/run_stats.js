@@ -18,6 +18,7 @@ export function createRunStats({ now = Date.now } = {}) {
     shotsHit: 0,
     killsByType: {},
     bossKills: 0,
+    wavesCompleted: 0,
   };
 
   function recordShotFired(amount = 1) {
@@ -33,6 +34,10 @@ export function createRunStats({ now = Date.now } = {}) {
     if (isBoss) stats.bossKills += 1;
   }
 
+  function recordWaveCompleted(wave) {
+    stats.wavesCompleted = Math.max(stats.wavesCompleted, wave);
+  }
+
   function snapshot({ score = 0, now: snapshotNow = now() } = {}) {
     const timeSurvivedSeconds = Math.max(0, Math.floor((snapshotNow - startTime) / 1000));
     return {
@@ -43,6 +48,7 @@ export function createRunStats({ now = Date.now } = {}) {
       accuracyPercent: accuracyPercent(stats),
       killsByType: { ...stats.killsByType },
       bossKills: stats.bossKills,
+      wavesCompleted: stats.wavesCompleted,
     };
   }
 
@@ -50,6 +56,7 @@ export function createRunStats({ now = Date.now } = {}) {
     recordShotFired,
     recordShotHit,
     recordKill,
+    recordWaveCompleted,
     snapshot,
   };
 }
@@ -60,6 +67,7 @@ export function calculateCredits(stats, effects = {}) {
   const shotsHit = safeCount(stats.shotsHit);
   const bossKills = safeCount(stats.bossKills);
   const timeSurvivedSeconds = safeCount(stats.timeSurvivedSeconds);
+  const wavesCompleted = safeCount(stats.wavesCompleted);
   const kills = totalKills(stats.killsByType);
   const accuracy = accuracyPercent({ shotsFired, shotsHit });
   const creditMultiplier = effects.creditMultiplier || 1;
@@ -67,14 +75,16 @@ export function calculateCredits(stats, effects = {}) {
   const streakCreditBonus = effects.streakCreditBonus || 0;
   const lowHpCreditBonus = stats.survivedLowHp ? (effects.lowHpCreditBonus || 0) : 0;
 
-  const scoreCredits = Math.floor(score / 5);
-  const killCredits = kills * 2 + (kills >= 20 ? streakCreditBonus : 0);
-  const accuracyCredits = shotsFired >= 10 && accuracy >= 75 ? 12 : 0;
-  const bossCredits = bossKills * (20 + bossCreditBonus);
-  const survivalCredits = Math.floor(timeSurvivedSeconds / 15) * 3;
+  const scoreCredits = Math.floor(score / 10);
+  const killCredits = kills * 1 + (kills >= 20 ? streakCreditBonus : 0);
+  const accuracyCredits = shotsFired >= 10 && accuracy >= 75 ? 8 : 0;
+  const bossCredits = bossKills * (15 + bossCreditBonus);
+  const survivalCredits = Math.floor(timeSurvivedSeconds / 20) * 2;
+  const waveCredits = wavesCompleted * 3;
   const lowHpCredits = lowHpCreditBonus;
+  
   const preMultiplier =
-    scoreCredits + killCredits + accuracyCredits + bossCredits + survivalCredits + lowHpCredits;
+    scoreCredits + killCredits + accuracyCredits + bossCredits + survivalCredits + waveCredits + lowHpCredits;
   const total = Math.floor(preMultiplier * creditMultiplier);
 
   return {
@@ -85,6 +95,7 @@ export function calculateCredits(stats, effects = {}) {
       { label: "Precisão", amount: accuracyCredits },
       { label: "Recompensa de chefes", amount: bossCredits },
       { label: "Sobrevivência", amount: survivalCredits },
+      { label: "Ondas concluídas", amount: waveCredits },
       { label: "Sobrevivência (HP Baixo)", amount: lowHpCredits },
       { label: "Multiplicador financeiro", amount: total - preMultiplier },
     ],

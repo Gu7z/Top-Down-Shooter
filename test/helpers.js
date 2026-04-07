@@ -73,6 +73,7 @@ export function setupPixiMock() {
       closePath()  { return this; }
       drawRect()   { return this; }
       drawRoundedRect() { return this; }
+      drawPolygon() { return this; }
       drawEllipse(){ return this; }
       drawCircle() { return this; }
       arc()        { return this; }

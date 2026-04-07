@@ -8,7 +8,7 @@ const app = createAppMock();
 const container = new PIXI.Container();
 const enemy = new Enemy({ app, enemyRadius: 10, speed:1, color:0xff0000, life:2, value:1, container });
 const player = { player: new PIXI.Sprite(), lifes:1, points:0 };
-const spawner = { resetCalled:false, reset(){this.resetCalled=true;} };
+const spawner = { resetCalled:false, reset(){this.resetCalled=true;}, spawns: [enemy] };
 player.player.width = 20;
 player.player.position.set(enemy.enemy.position.x, enemy.enemy.position.y);
 
@@ -190,6 +190,6 @@ test('removePlayerLife uses player.takeDamage when available', () => {
     container,
   });
 
-  testEnemy.removePlayerLife(takeDamagePlayer, { reset() {} });
+  testEnemy.removePlayerLife(takeDamagePlayer, { spawns: [testEnemy] });
   assert.equal(takeDamagePlayer.takeDamageCalled, true);
 });

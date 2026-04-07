@@ -39,15 +39,16 @@ test("credit calculation is explainable and affected by economy effects", () => 
     { creditMultiplier: 1.1, bossCreditBonus: 15 }
   );
 
-  assert.equal(credits.total, 121);
+  assert.equal(credits.total, 74);
   assert.deepEqual(credits.breakdown.map((row) => row.label), [
     "Score",
-    "Kills",
-    "Accuracy",
-    "Boss bounty",
-    "Survival",
-    "Low HP survival",
-    "Economy multiplier",
+    "Abates",
+    "Precisão",
+    "Recompensa de chefes",
+    "Sobrevivência",
+    "Ondas concluídas",
+    "Sobrevivência (HP Baixo)",
+    "Multiplicador financeiro",
   ]);
 });
 

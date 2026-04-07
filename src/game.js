@@ -11,6 +11,14 @@ import { createSkillTreeState } from "./progression/skill_tree_state.js";
 import { deriveSkillEffects } from "./progression/skill_effects.js";
 import { createRunStats, createRunSummary } from "./progression/run_stats.js";
 
+import EnemyBullet from "./enemy_bullet.js";
+import WaveManager from "./wave_manager.js";
+
+// Make it available globally for Enemy class without needing to alter deep tree constructor parameters excessively across 6 classes
+if (typeof window !== "undefined") {
+  window.EnemyBulletClass = EnemyBullet;
+}
+
 export default class Game {
   constructor({ app, username }) {
     this.app = app;
@@ -32,7 +40,18 @@ export default class Game {
       runStats: this.runStats,
     });
     this.enemySpawner = new Spawner({ app, player: this.player });
+    this.enemyBullets = [];
+    
     this.hud = new Hud({ app, player: this.player });
+    
+    this.waveManager = new WaveManager({
+      app,
+      spawnerContainer: this.enemySpawner.spawnerContainer,
+      enemyBullets: this.enemyBullets,
+      renderBanner: (text, persist) => this.hud.showBanner(text, persist),
+      updateBossHud: (bossRef, hp, maxHp, color, name) => this.hud.updateBossBar(bossRef, hp, maxHp, color, name),
+      finishGame: (reason) => this.finishRun({ reason })
+    });
     this.hud.openSettings = () => {
       if (settingsScreen) return;
       this.app.stage.removeChild(this.hud.hudContainer);
@@ -130,6 +149,8 @@ export default class Game {
       app.stage.removeChild(this.player.shooting.shootingContainer);
       app.stage.removeChild(this.enemySpawner.spawnerContainer);
       app.stage.removeChild(this.hud.hudContainer);
+      this.enemyBullets.forEach(b => b.destroy());
+      this.enemyBullets = [];
     };
     this.finishRun = ({ reason = "manual" } = {}) => {
       if (this.runFinished) return;
@@ -166,10 +187,35 @@ export default class Game {
     this.tick = () => {
       this.hud.update(this.clear);
       this.player.update(keys);
-      this.enemySpawner.update(this.player);
-      this.enemySpawner.spawns.forEach((enemy) => {
-        enemy.update(this.player, this.enemySpawner, this.effects);
-      });
+      // Removed this.enemySpawner.update() because WaveManager manages spawning now
+      this.waveManager.update(this.player, this.enemySpawner, this.effects);
+      
+      for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+        const bullet = this.enemyBullets[i];
+        bullet.update();
+        if (bullet.isOutOfBounds()) {
+           bullet.destroy();
+           this.enemyBullets.splice(i, 1);
+           continue;
+        }
+        
+        // Bullet collision with player
+        const bp = bullet.bullet.position;
+        const pp = this.player.player.position;
+        const dist = Math.hypot(bp.x - pp.x, bp.y - pp.y);
+        
+        if (dist < bullet.radius + this.player.size / 2) {
+           this.player.takeDamage(1, this.effects);
+           bullet.destroy();
+           this.enemyBullets.splice(i, 1);
+           continue;
+        }
+        
+        if (bullet.destroyed) {
+           this.enemyBullets.splice(i, 1);
+        }
+      }
+      
       this.player.shooting.update(shooting, this.enemySpawner, this.player);
       this.droneSystem.update(this.enemySpawner);
     };

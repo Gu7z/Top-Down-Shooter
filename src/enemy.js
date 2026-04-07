@@ -1,7 +1,7 @@
 import Victor from "victor";
 
 export default class Enemy {
-  constructor({ app, enemyRadius, speed, color, life, value, container, typeId = "unknown", isBoss = false }) {
+  constructor({ app, enemyRadius, speed, color, life, value, container, typeId = "unknown", isBoss = false, behaviorType = "melee", enemyBullets = null }) {
     this.app = app;
     this.baseSpeed = speed;
     this.speed = speed;
@@ -10,13 +10,22 @@ export default class Enemy {
     this.enemyRadius = enemyRadius;
     this.typeId = typeId;
     this.isBoss = isBoss;
+    this.behaviorType = behaviorType; // "melee" or "ranged"
+    this.enemyBullets = enemyBullets; // Reference to global enemy bullets array
+    this.color = color;
 
     // Control effect state
     this.speedMultiplier = 1;
     this.damageMultiplier = 1;
     this.controlTimers = [];
 
-    const textColor = [0xffffff, 0xffc0cb].includes(color) ? 0x000000 : 0xffffff;
+    // AI State for ranged enemies
+    this.aiState = "aproximar"; // aproximar, strafe, recuar
+    this.aiTimer = 0;
+    this.strafeDirection = Math.random() > 0.5 ? 1 : -1;
+    this.shootCooldown = 0;
+
+    const textColor = [0xffffff, 0xffc0cb, 0xffdd00].includes(color) ? 0x000000 : 0xffffff;
     this.enemy = new PIXI.Graphics();
     this.enemy.beginFill(color, 1);
     this.enemy.drawCircle(0, 0, enemyRadius);
@@ -53,16 +62,18 @@ export default class Enemy {
     switch (edge) {
       case 0:
         spawnPoint.x = width * Math.random();
+        spawnPoint.y = -50;
         break;
       case 1:
-        spawnPoint.x = width;
+        spawnPoint.x = width + 50;
         spawnPoint.y = height * Math.random();
         break;
       case 2:
         spawnPoint.x = width * Math.random();
-        spawnPoint.y = height;
+        spawnPoint.y = height + 50;
         break;
       case 3:
+        spawnPoint.x = -50;
         spawnPoint.y = height * Math.random();
         break;
       default:
@@ -78,7 +89,7 @@ export default class Enemy {
     const baseDuration = 60; // ~1 second at 60fps
     const duration = Math.ceil(baseDuration * durationMultiplier);
 
-    // Slow field: reduce speed
+    // Slow field
     if (controlEffects.slowFieldMultiplier && controlEffects.slowFieldMultiplier < 1) {
       this.speedMultiplier *= controlEffects.slowFieldMultiplier;
       this.controlTimers.push({
@@ -88,7 +99,7 @@ export default class Enemy {
       });
     }
 
-    // Enemy weaken: increase damage taken
+    // Enemy weaken
     if (controlEffects.enemyWeakenMultiplier && controlEffects.enemyWeakenMultiplier > 1) {
       this.damageMultiplier *= controlEffects.enemyWeakenMultiplier;
       this.controlTimers.push({
@@ -98,7 +109,7 @@ export default class Enemy {
       });
     }
 
-    // Knockback: push enemy away from bullet impact
+    // Knockback
     if (controlEffects.knockbackBonus && controlEffects.knockbackBonus > 0 && controlEffects.knockbackDirection) {
       const kb = controlEffects.knockbackBonus;
       const dir = controlEffects.knockbackDirection;
@@ -119,7 +130,6 @@ export default class Enemy {
     this.controlTimers = this.controlTimers.filter((entry) => {
       entry.timer -= 1;
       if (entry.timer <= 0) {
-        // Reverse the effect
         if (entry.type === "slow") {
           this.speedMultiplier /= entry.value;
         } else if (entry.type === "weaken") {
@@ -134,7 +144,6 @@ export default class Enemy {
   removePlayerLife(player, spanwer, effects) {
     const damaged = player.takeDamage?.(1, effects);
     if (damaged === undefined) {
-      // Fallback for players without takeDamage (e.g., old tests)
       player.lifes -= 1;
     }
     
@@ -151,16 +160,122 @@ export default class Enemy {
     }
   }
 
+  updateRanged(player, spanwer, effects) {
+    const playerSquare = player.player;
+    const enemyPosition = new Victor(this.enemy.position.x, this.enemy.position.y);
+    const playerPosition = new Victor(playerSquare.position.x, playerSquare.position.y);
+    const dist = enemyPosition.distance(playerPosition);
+
+    if (dist < playerSquare.width / 2) {
+      this.removePlayerLife(player, spanwer, effects);
+      return;
+    }
+
+    // AI decision cycle every ~30 frames
+    this.aiTimer -= 1;
+    if (this.aiTimer <= 0) {
+      this.aiTimer = 30 + Math.random() * 10;
+      if (dist < 150) {
+        this.aiState = "recuar";
+      } else if (dist >= 150 && dist <= 300) {
+        this.aiState = "strafe";
+        if (Math.random() > 0.8) {
+          this.strafeDirection *= -1; // Sometimes change strafe direction
+        }
+      } else {
+        this.aiState = "aproximar";
+      }
+    }
+
+    // Movement execution
+    const effectiveSpeed = this.speed * this.speedMultiplier;
+    let velocity;
+
+    const distanceVec = playerPosition.clone().subtract(enemyPosition);
+    distanceVec.normalize();
+
+    if (this.aiState === "recuar") {
+      velocity = distanceVec.clone().invert().multiplyScalar(effectiveSpeed);
+    } else if (this.aiState === "strafe") {
+      // Orthogonal vector for strafing
+      velocity = new Victor(-distanceVec.y * this.strafeDirection, distanceVec.x * this.strafeDirection).multiplyScalar(effectiveSpeed * 0.8);
+      
+      // Slight pull towards player so it doesn't drift off screen completely
+      velocity.add(distanceVec.clone().multiplyScalar(effectiveSpeed * 0.15));
+    } else {
+      // "aproximar"
+      velocity = distanceVec.clone().multiplyScalar(effectiveSpeed);
+    }
+
+    // Add tiny random variation so movement isn't perfectly rigid
+    velocity.rotateDeg((Math.random() - 0.5) * 15);
+
+    this.enemy.position.set(this.enemy.position.x + velocity.x, this.enemy.position.y + velocity.y);
+    this.enemyLifeText.position.set(this.enemy.position.x, this.enemy.position.y);
+    this.enemyLifeText.text = this.life;
+
+    // Shooting mechanics
+    this.shootCooldown -= 1;
+    if (this.shootCooldown <= 0 && this.enemyBullets) {
+      this.shootCooldown = this.typeId === "artilheiro" ? 260 : 180; // ~4.3s for artilheiro, 3s for atirador
+      this.fireBullet(playerPosition);
+    }
+  }
+
+  fireBullet(playerPosition) {
+    if (!this.enemyBullets) return;
+
+    // Fire sound via Pixi Sound if we want
+    // (Optional: add a muffled laser sound later)
+
+    const enemyPos = { x: this.enemy.position.x, y: this.enemy.position.y };
+    
+    // Import EnemyBullet directly here to avoid circular dep issues. Wait, I'll pass a bullet class instance or just create it.
+    // Better yet: spawner creates the bullet, enemy just triggers an event. Or enemy dynamically imports/requires it.
+    // I can just pass the bullet constructor to Enemy or use a global.
+    let BulletClass;
+    if (typeof window !== "undefined" && window.EnemyBulletClass) {
+      BulletClass = window.EnemyBulletClass;
+    }
+    
+    if (this.typeId === "artilheiro") {
+      // 3 projectiles in an arc
+      for (let i = -1; i <= 1; i++) {
+        const spreadRad = i * 0.25;
+        const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(spreadRad).add(new Victor(enemyPos.x, enemyPos.y));
+        if (BulletClass) {
+           this.enemyBullets.push(new BulletClass({
+             app: this.app,
+             position: enemyPos,
+             targetPosition: targetPos,
+             color: this.color
+           }));
+        }
+      }
+    } else {
+      // Single bullet with slight inaccuracy
+      const inaccuracy = (Math.random() - 0.5) * 0.1; // ±0.05 rad
+      const targetPos = playerPosition.clone().subtract(new Victor(enemyPos.x, enemyPos.y)).rotate(inaccuracy).add(new Victor(enemyPos.x, enemyPos.y));
+      if (BulletClass) {
+        this.enemyBullets.push(new BulletClass({
+          app: this.app,
+          position: enemyPos,
+          targetPosition: targetPos,
+          color: this.color
+        }));
+      }
+    }
+  }
+
   goToPlayer(player, spanwer, effects) {
     const playerSquare = player.player;
 
     const enemyPosition = new Victor(this.enemy.position.x, this.enemy.position.y);
     const playerPosition = new Victor(playerSquare.position.x, playerSquare.position.y);
 
-    const isHittingPlayer = enemyPosition.distance(playerPosition) < playerSquare.width / 2;
+    const isHittingPlayer = enemyPosition.distance(playerPosition) < playerSquare.width / 2 + this.enemyRadius / 2;
     if (isHittingPlayer) {
       this.removePlayerLife(player, spanwer, effects);
-
       return;
     }
 
@@ -178,7 +293,6 @@ export default class Enemy {
   }
 
   kill(enemies, indexEnemy, player, effects, damage = 1) {
-    // Apply weaken multiplier to incoming damage
     const effectiveDamage = Math.ceil(damage * this.damageMultiplier);
 
     if (this.life > effectiveDamage) {
@@ -186,6 +300,7 @@ export default class Enemy {
       return;
     }
 
+    this.life = 0;
     if (!enemies) return;
 
     const scoreMultiplier = player.skillEffects?.scoreMultiplier || 1;
@@ -215,6 +330,11 @@ export default class Enemy {
   update(player, spanwer, effects) {
     if (this.enemy.destroyed) return;
     this.updateControlTimers();
-    this.goToPlayer(player, spanwer, effects);
+    
+    if (this.behaviorType === "ranged") {
+      this.updateRanged(player, spanwer, effects);
+    } else {
+      this.goToPlayer(player, spanwer, effects);
+    }
   }
 }

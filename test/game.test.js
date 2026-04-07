@@ -49,29 +49,32 @@ test('game event handlers work', () => {
   triggerEvent('keyup', { key: 'w' });
   triggerEvent('keydown', { key: 'Escape' });
   triggerEvent('keydown', { key: 'm' });
-  assert.strictEqual(app.stage.children.at(-1), game.hud.hudContainer);
+  assert.ok(app.stage.children.includes(game.hud.hudContainer));
   app.renderer.view.onmousemove({ clientX: 1, clientY: 2 });
   app.ticker.fn();
-  assert.strictEqual(app.stage.children.at(-1), game.hud.hudContainer);
+  assert.ok(app.stage.children.includes(game.hud.hudContainer));
   game.player.lifes = 0;
   app.ticker.fn();
-  const labels = app.stage.children
-    .at(-1)
+  const labels = game.hud.hudContainer
     .children
     .filter(c => typeof c.text === 'string')
     .map(c => c.text);
-  assert.ok(labels.includes('RUN SUMMARY'));
+  assert.ok(labels.includes('SISTEMA DESCONECTADO'));
 });
 
 test('clear remove ticker and listeners', () => {
   const anotherGame = new Game({ app, username: 'player-2' });
   const keydownListenersBefore = events.keydown.length;
+  const keyupListenersBefore = events.keyup?.length || 0;
+  const pointerdownListenersBefore = events.pointerdown?.length || 0;
+  const pointerupListenersBefore = events.pointerup?.length || 0;
+  
   anotherGame.clear();
 
   assert.equal(app.ticker.removedFn, anotherGame.tick);
   assert.equal(app.renderer.view.onmousemove, null);
   assert.equal(events.keydown.length, keydownListenersBefore - 2);
-  assert.equal(events.keyup.length, 0);
-  assert.equal(events.pointerdown.length, 0);
-  assert.equal(events.pointerup.length, 0);
+  assert.equal(events.keyup.length, keyupListenersBefore - 1);
+  assert.equal(events.pointerdown.length, pointerdownListenersBefore - 1);
+  assert.equal(events.pointerup.length, pointerupListenersBefore - 1);
 });

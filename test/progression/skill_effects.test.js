@@ -64,13 +64,13 @@ test("deriveSkillEffects safely combines additive, boolean, and multiplier effec
   const effects = deriveSkillEffects([
     "core",
     "shield_1",
-    "fusion_mobility_survival",
+    "aegis_dash",
     "slow_field_1",
-    "fusion_tech_control",
+    "marking_swarm",
   ]);
 
   assert.equal(effects.maxShield, 2);
   assert.equal(effects.dashShield, true);
-  assert.equal(Number(effects.slowFieldMultiplier.toFixed(3)), 0.828);
+  assert.equal(Number(effects.slowFieldMultiplier.toFixed(3)), 0.92);
   assert.equal(effects.droneAppliesSlow, true);
 });

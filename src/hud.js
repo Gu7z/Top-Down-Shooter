@@ -75,7 +75,12 @@ export default class Hud {
       const shieldX = this.app.screen.width - pad - pW - pad - shieldW / 2;
       const shieldY = pad + pH / 2;
       this.makeStatPanel(shieldX, shieldY, shieldW, pH);
-      this.textShield = createLabel({
+      
+      const cx = this.app.screen.width / 2;
+      const cy = this.app.screen.height / 2;
+      this.buildBossBar(cx);
+      this.buildBanner(cx, cy);
+      this.textScore = createLabel({
         container:    this.hudContainer,
         text:         `SLD  ${this.player.shield || 0}`,
         x:            shieldX,
@@ -194,6 +199,109 @@ export default class Hud {
   }
 
   // ── Death check ───────────────────────────────────────────────
+  buildBossBar(cx) {
+    this.bossBarContainer = new PIXI.Container();
+    this.bossBarContainer.visible = false;
+
+    // Background
+    this.bossBarBg = new PIXI.Graphics();
+    this.bossBarBg.beginFill(0x000000, 0.4);
+    this.bossBarBg.lineStyle(1, 0x444444, 1);
+    this.bossBarBg.drawRect(cx - 300, 20, 600, 16);
+    this.bossBarBg.endFill();
+    this.bossBarContainer.addChild(this.bossBarBg);
+
+    // Fill
+    this.bossBarFill = new PIXI.Graphics();
+    this.bossBarContainer.addChild(this.bossBarFill);
+
+    // Text name
+    this.bossNameObj = createLabel({
+      container: this.bossBarContainer,
+      text: "BOSS",
+      x: cx,
+      y: 10,
+      fontSize: 12,
+      color: 0xffffff,
+      bold: true,
+      letterSpacing: 2,
+    });
+
+    this.hudContainer.addChild(this.bossBarContainer);
+  }
+
+  updateBossBar(bossRef, hp, maxHp, color, name) {
+    if (!bossRef) {
+      this.bossBarContainer.visible = false;
+      return;
+    }
+
+    this.bossBarContainer.visible = true;
+    this.bossNameObj.text = name;
+
+    const ratio = Math.max(0, hp / maxHp);
+    const cx = this.app.screen.width / 2;
+
+    this.bossBarFill.clear();
+    this.bossBarFill.beginFill(color, 0.9);
+    this.bossBarFill.drawRect(cx - 298, 22, (600 - 4) * ratio, 12);
+    this.bossBarFill.endFill();
+  }
+
+  buildBanner(cx, cy) {
+    this.bannerText = createLabel({
+      container: this.hudContainer,
+      text: "W A V E   1",
+      x: cx,
+      y: cy - 100,
+      fontSize: 42,
+      color: 0xffffff,
+      bold: true,
+      glow: true,
+    });
+    this.bannerText.alpha = 0;
+    this.bannerState = "IDLE";
+    this.bannerTimer = 0;
+    this.bannerPersist = false;
+  }
+
+  showBanner(text, persist = false) {
+    this.bannerText.text = text;
+    if (this.bannerText.haloWrapper) this.bannerText.haloWrapper.text = text;
+    this.bannerPersist = persist;
+    this.bannerState = "IN";
+    this.bannerAlpha = 0;
+  }
+
+  updateBanner() {
+    if (this.bannerState === "IDLE") return;
+
+    if (this.bannerState === "IN") {
+      this.bannerAlpha += 0.05;
+      if (this.bannerAlpha >= 1) {
+        this.bannerAlpha = 1;
+        if (!this.bannerPersist) {
+           this.bannerState = "HOLD";
+           this.bannerTimer = 60; // 1s
+        }
+      }
+    } else if (this.bannerState === "HOLD") {
+      this.bannerTimer -= 1;
+      if (this.bannerTimer <= 0) {
+        this.bannerState = "OUT";
+      }
+    } else if (this.bannerState === "OUT") {
+      this.bannerAlpha -= 0.03;
+      if (this.bannerAlpha <= 0) {
+        this.bannerAlpha = 0;
+        this.bannerState = "IDLE";
+      }
+    }
+
+    this.bannerText.alpha = this.bannerAlpha;
+    if (this.bannerText.haloWrapper) this.bannerText.haloWrapper.alpha = this.bannerAlpha * 0.16;
+  }
+
   endgameCheck(clear) {
     if (this.player.lifes < 1) {
       this.textEnd.visible = true;
@@ -271,6 +379,7 @@ export default class Hud {
 
   // ── Tick ───────────────────────────────────────────────────────
   update(clear) {
+    this.updateBanner();
     this.textPoints.text = `PTS  ${this.player.points}`;
     this.textLifes.text  = `HP   ${this.player.lifes}`;
     if (this.textShield) {
