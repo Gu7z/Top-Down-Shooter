@@ -96,11 +96,11 @@ export default class Game {
     };
 
     this.handleKeyDown = (e) => {
-      keys[e.key] = true;
+      keys[e.key.toLowerCase()] = true;
     };
 
     this.handleKeyUp = (e) => {
-      keys[e.key] = false;
+      keys[e.key.toLowerCase()] = false;
     };
 
     this.handleSystemKeys = (e) => {

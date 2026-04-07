@@ -220,6 +220,14 @@ export default class Player {
     if (this.dashTimer <= 0) {
       this.isDashing = false;
     }
+
+    // Clamp to screen bounds so dash can't leave the play area.
+    // player.x/y is the center (anchor 0.5), so clamp to [halfW, screenW - halfW].
+    const { width, height } = this.app.screen;
+    const halfW = this.player.width / 2;
+    const halfH = this.player.height / 2;
+    this.player.x = Math.max(halfW, Math.min(width - halfW, this.player.x));
+    this.player.y = Math.max(halfH, Math.min(height - halfH, this.player.y));
   }
 
   updateShieldRegen() {
