@@ -1,5 +1,4 @@
 import Menu from "./menu.js";
-import sendScore from "./utils/send_score.js";
 import {
   UISkin,
   createCard,
@@ -310,7 +309,6 @@ export default class Hud {
       this.dead = true;
       this.deathSound.play();
       this.app.stop();
-      sendScore({ name: this.player.username, points: this.player.points });
       if (this._onRunEnded) {
         this._onRunEnded({ reason: "death" });
         return;

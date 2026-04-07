@@ -36,7 +36,7 @@ test('skill tree button opens the skill tree screen', () => {
     .filter((child) => typeof child.text === 'string')
     .map((child) => child.text);
 
-  assert.ok(labels.some((text) => text.includes('SKILL TREE')));
+  assert.ok(labels.some((text) => text.includes('ÁRVORE')));
   localMenu.showSkillTree();
   assert.notEqual(localApp.stage.children.at(-1), localMenu.menuContainer);
 });

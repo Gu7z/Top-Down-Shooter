@@ -208,6 +208,7 @@ export function createLabel({
 export function createPillButton({
   container, x, y, text,
   width = 280, height = 56,
+  fontSize = 18, letterSpacing = 3,
   primary = false, danger = false, onClick,
 }) {
   const c = 8;
@@ -239,10 +240,10 @@ export function createPillButton({
 
   const label = createLabel({
     container, text, x, y,
-    fontSize: 18,
+    fontSize,
     color: textColor,
     bold: true,
-    letterSpacing: 3,
+    letterSpacing,
   });
 
   bg.on("pointerdown", onClick);

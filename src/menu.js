@@ -1,6 +1,5 @@
 import Controls from "./controls.js";
 import Game from "./game.js";
-import Score from "./score.js";
 import Settings from "./settings.js";
 import SkillTree from "./skill_tree.js";
 import {
@@ -38,7 +37,7 @@ export default class Menu {
       x:           cx,
       y:           cy,
       width:       780,
-      height:      640,
+      height:      530,
       chamfer:     16,
       bracketSize: 22,
     });
@@ -74,7 +73,8 @@ export default class Menu {
 
   // ── Title + glitch targets ─────────────────────────────────────
   buildTitle() {
-    const { centerX: cx, centerY: cy } = this;
+    const cx = this.centerX;
+    const cy = this.centerY + 46;
     const titleY = cy - 224;
 
     // Glitch layer 1 — magenta offset (invisible until animation fires)
@@ -164,9 +164,9 @@ export default class Menu {
     });
   }
 
-  // ── Input field ────────────────────────────────────────────────
   buildInput() {
-    const { centerX: cx, centerY: cy } = this;
+    const cx = this.centerX;
+    const cy = this.centerY + 46;
 
     const input = new PIXI.TextInput({
       input: {
@@ -211,55 +211,53 @@ export default class Menu {
 
   // ── Buttons ────────────────────────────────────────────────────
   buildButtons() {
-    const { centerX: cx, centerY: cy } = this;
-    const startY = cy + 36;
-    const gap = 61;
+    const cx = this.centerX;
+    const cy = this.centerY + 46;
+    const startY = cy + 44;
+    const gapY = 72;
+    const offsetX = 180;
+    const btnWidth = 320;
+    const btnHeight = 56;
 
+    // Row 1
     this.playButton = createPillButton({
       container: this.menuContainer,
-      x: cx, y: startY,
-      text:    "▶   INICIAR  RUN",
+      x: cx - offsetX, y: startY,
+      text:    "▶  INICIAR RUN",
       primary: true,
-      width:   340,
-      height:  62,
+      width:   btnWidth,
+      height:  btnHeight,
       onClick: () => { if (this.username) this.play(); },
     });
-
     this.playButton.setEnabled(Boolean(this.username));
 
     createPillButton({
       container: this.menuContainer,
-      x: cx, y: startY + gap,
+      x: cx + offsetX, y: startY,
       text:   "ÁRVORE DE HABILIDADES",
-      width:  340,
-      height: 56,
+      width:  btnWidth,
+      height: btnHeight,
+      fontSize: 16,
+      letterSpacing: 2,
       onClick: () => this.showSkillTree(),
     });
 
+    // Row 2
     createPillButton({
       container: this.menuContainer,
-      x: cx, y: startY + gap * 2,
-      text:   "RANKING  GLOBAL",
-      width:  340,
-      height: 56,
-      onClick: () => this.showScore(),
-    });
-
-    createPillButton({
-      container: this.menuContainer,
-      x: cx, y: startY + gap * 3,
+      x: cx - offsetX, y: startY + gapY,
       text:   "CONTROLES",
-      width:  340,
-      height: 56,
+      width:  btnWidth,
+      height: btnHeight,
       onClick: () => this.showControls(),
     });
 
     createPillButton({
       container: this.menuContainer,
-      x: cx, y: startY + gap * 4,
+      x: cx + offsetX, y: startY + gapY,
       text:   "⚙  CONFIGURAÇÕES",
-      width:  340,
-      height: 56,
+      width:  btnWidth,
+      height: btnHeight,
       onClick: () => this.showSettings(),
     });
   }
@@ -267,7 +265,7 @@ export default class Menu {
   // ── Glitch title animation ─────────────────────────────────────
   startGlitch() {
     const cx     = this.centerX;
-    const titleY = this.centerY - 224;
+    const titleY = (this.centerY + 46) - 224;
     let   tick   = 0;
 
     this._ticker = () => {
@@ -321,10 +319,7 @@ export default class Menu {
     new Controls({ app: this.app, menu: this });
   }
 
-  showScore() {
-    this.hide();
-    new Score({ app: this.app, menu: this });
-  }
+
 
   showSkillTree() {
     this.hide();
