@@ -193,17 +193,20 @@ export default class Enemy {
     const nx = dx / len;
     const ny = dy / len;
 
-    const playerKb = 90;
-    const enemyKb  = 50;
+    const playerKb = 120;
+    const enemyKb  = 200;
 
-    player.player.x += nx * playerKb;
-    player.player.y += ny * playerKb;
+    const W = this.app.screen.width;
+    const H = this.app.screen.height;
+    const margin = 40;
 
-    this.enemy.position.set(
-      this.enemy.position.x - nx * enemyKb,
-      this.enemy.position.y - ny * enemyKb
-    );
-    this.enemyLifeText.position.set(this.enemy.position.x, this.enemy.position.y);
+    player.player.x = Math.max(margin, Math.min(W - margin, player.player.x + nx * playerKb));
+    player.player.y = Math.max(margin, Math.min(H - margin, player.player.y + ny * playerKb));
+
+    const ex = Math.max(-margin, Math.min(W + margin, this.enemy.position.x - nx * enemyKb));
+    const ey = Math.max(-margin, Math.min(H + margin, this.enemy.position.y - ny * enemyKb));
+    this.enemy.position.set(ex, ey);
+    this.enemyLifeText.position.set(ex, ey);
   }
 
   updateRanged(player, spanwer, effects) {
