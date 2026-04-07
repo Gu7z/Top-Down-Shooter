@@ -14,6 +14,44 @@ export default class Player {
     this.username = username;
     this.playerContainer = new PIXI.Container();
 
+    // Shield regen state
+    this.shieldRegenTimer = 0;
+    this.shieldRegenCooldown = this.skillEffects.shieldRegenSeconds > 0
+      ? this.skillEffects.shieldRegenSeconds * 60
+      : 0;
+
+    // Post-hit guard state
+    this.invulnerable = false;
+    this.invulnerableTimer = 0;
+
+    // Emergency shield state
+    this.emergencyShieldUsed = false;
+
+    // Low HP tracking for credit bonus
+    this.survivedLowHp = false;
+
+    // Dash state
+    this.dashEnabled = this.skillEffects.dashEnabled;
+    this.dashSpeed = 12;
+    this.dashDuration = 8; // frames
+    this.dashCooldownBase = 90; // frames (~1.5s at 60fps)
+    this.dashCooldownMultiplier = this.skillEffects.dashCooldownMultiplier;
+    this.dashInvulnerabilityMs = this.skillEffects.dashInvulnerabilityMs;
+    this.isDashing = false;
+    this.dashTimer = 0;
+    this.dashCooldownTimer = 0;
+    this.dashDirection = { x: 0, y: 0 };
+    this.dashReloadPrimed = false;
+
+    // Dash shield fusion
+    this.dashShieldEnabled = this.skillEffects.dashShield;
+
+    // Dash reload fusion
+    this.dashReloadEnabled = this.skillEffects.dashReload;
+
+    // Strafe control
+    this.strafeControlBonus = this.skillEffects.strafeControlBonus;
+
     const middleWidth = app.screen.width / 2;
     const middleHeight = app.screen.height / 2;
 
@@ -51,6 +89,143 @@ export default class Player {
     this.mouseY = y;
   };
 
+  takeDamage(amount = 1, effects = null) {
+    if (this.invulnerable) return false;
+
+    // Shield absorbs damage first
+    if (this.shield > 0) {
+      this.shield -= 1;
+      this.shieldRegenTimer = this.shieldRegenCooldown;
+      if (effects) {
+        effects.explosion(this.player.position.x, this.player.position.y, 0x00ffff, 12);
+      }
+      this.applyPostHitGuard();
+      return true;
+    }
+
+    // HP damage
+    this.lifes -= amount;
+
+    // Track low HP survival
+    if (this.lifes === 1) {
+      this.survivedLowHp = true;
+    }
+
+    // Emergency shield: at 1 HP, grant 1 shield once per run
+    if (this.lifes === 1 && this.skillEffects.emergencyShield && !this.emergencyShieldUsed) {
+      this.emergencyShieldUsed = true;
+      this.shield = 1;
+    }
+
+    this.shieldRegenTimer = this.shieldRegenCooldown;
+    this.applyPostHitGuard();
+    return true;
+  }
+
+  applyPostHitGuard() {
+    const guardMs = this.skillEffects.postHitGuardMs;
+    if (guardMs > 0) {
+      this.invulnerable = true;
+      this.invulnerableTimer = Math.ceil((guardMs / 1000) * 60);
+    }
+  }
+
+  tryDash(keys) {
+    if (!this.dashEnabled) return;
+    if (this.dashCooldownTimer > 0) return;
+    if (this.isDashing) return;
+
+    // Determine dash direction from movement keys
+    let dx = 0;
+    let dy = 0;
+    if (keys.w) dy -= 1;
+    if (keys.s) dy += 1;
+    if (keys.a) dx -= 1;
+    if (keys.d) dx += 1;
+
+    // If no direction, dash towards mouse
+    if (dx === 0 && dy === 0) {
+      const angle = Math.atan2(
+        this.mouseY - this.player.position.y,
+        this.mouseX - this.player.position.x
+      );
+      dx = Math.cos(angle);
+      dy = Math.sin(angle);
+    } else {
+      const length = Math.hypot(dx, dy);
+      dx /= length;
+      dy /= length;
+    }
+
+    this.isDashing = true;
+    this.dashTimer = this.dashDuration;
+    this.dashCooldownTimer = Math.ceil(this.dashCooldownBase * this.dashCooldownMultiplier);
+    this.dashDirection = { x: dx, y: dy };
+
+    // Dash invulnerability
+    if (this.dashInvulnerabilityMs > 0) {
+      this.invulnerable = true;
+      this.invulnerableTimer = Math.max(
+        this.invulnerableTimer,
+        Math.ceil((this.dashInvulnerabilityMs / 1000) * 60)
+      );
+    }
+
+    // Dash shield fusion: gain 1 temporary shield
+    if (this.dashShieldEnabled && this.shield < this.skillEffects.maxShield + 1) {
+      this.shield = Math.min(this.shield + 1, this.skillEffects.maxShield + 1);
+    }
+
+    // Dash reload fusion: prime next shot
+    if (this.dashReloadEnabled) {
+      this.dashReloadPrimed = true;
+    }
+  }
+
+  updateDash() {
+    if (this.dashCooldownTimer > 0) {
+      this.dashCooldownTimer -= 1;
+    }
+
+    if (!this.isDashing) return;
+
+    this.dashTimer -= 1;
+    const moveX = this.dashDirection.x * this.dashSpeed;
+    const moveY = this.dashDirection.y * this.dashSpeed;
+    this.player.position.set(
+      this.player.position.x + moveX,
+      this.player.position.y + moveY
+    );
+
+    if (this.dashTimer <= 0) {
+      this.isDashing = false;
+    }
+  }
+
+  updateShieldRegen() {
+    if (this.shieldRegenCooldown <= 0) return;
+    if (this.shield >= this.skillEffects.maxShield) return;
+
+    if (this.shieldRegenTimer > 0) {
+      this.shieldRegenTimer -= 1;
+      return;
+    }
+
+    // Regen 1 shield when timer expires
+    this.shield = Math.min(this.shield + 1, this.skillEffects.maxShield);
+    this.shieldRegenTimer = this.shieldRegenCooldown;
+  }
+
+  updateInvulnerability() {
+    if (!this.invulnerable) return;
+
+    this.invulnerableTimer -= 1;
+    if (this.invulnerableTimer <= 0) {
+      this.invulnerable = false;
+      this.invulnerableTimer = 0;
+    }
+  }
+
   outOfBounds(key) {
     const playerYBoundarie = this.player.y + this.player.height;
     const playerXBoundarie = this.player.x + this.player.width;
@@ -76,22 +251,29 @@ export default class Player {
   }
 
   movePlayer = (keys) => {
-    if (keys.w) {
-      if (this.outOfBounds("w")) return;
-      this.player.y -= this.velocity;
+    // During dash, movement is handled by updateDash
+    if (this.isDashing) return;
+
+    let dx = 0;
+    let dy = 0;
+
+    if (keys.w && !this.outOfBounds("w")) dy -= 1;
+    if (keys.s && !this.outOfBounds("s")) dy += 1;
+    if (keys.a && !this.outOfBounds("a")) dx -= 1;
+    if (keys.d && !this.outOfBounds("d")) dx += 1;
+
+    // Normalize diagonal movement with strafe control bonus
+    if (dx !== 0 && dy !== 0) {
+      // Without strafe bonus: normalize to ~0.707 each axis
+      // With full strafe bonus (1.0): no penalty, each axis stays at 1.0
+      const normalFactor = 1 / Math.SQRT2;
+      const strafeFactor = normalFactor + (1 - normalFactor) * this.strafeControlBonus;
+      dx *= strafeFactor;
+      dy *= strafeFactor;
     }
-    if (keys.a) {
-      if (this.outOfBounds("a")) return;
-      this.player.x -= this.velocity;
-    }
-    if (keys.s) {
-      if (this.outOfBounds("s")) return;
-      this.player.y += this.velocity;
-    }
-    if (keys.d) {
-      if (this.outOfBounds("d")) return;
-      this.player.x += this.velocity;
-    }
+
+    this.player.x += dx * this.velocity;
+    this.player.y += dy * this.velocity;
   };
 
   lookTo = () => {
@@ -102,12 +284,21 @@ export default class Player {
 
   updateGlow() {
     this.playerGlow.position.set(this.player.position.x, this.player.position.y);
-    this.playerGlow.alpha = 0.17 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.18;
+
+    // Flash glow during invulnerability
+    if (this.invulnerable) {
+      this.playerGlow.alpha = 0.3 + Math.abs(Math.sin(Date.now() * 0.02)) * 0.4;
+    } else {
+      this.playerGlow.alpha = 0.17 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.18;
+    }
   }
 
   update(keys) {
     this.lookTo();
     this.movePlayer(keys);
+    this.updateDash();
+    this.updateShieldRegen();
+    this.updateInvulnerability();
     this.updateGlow();
   }
 }

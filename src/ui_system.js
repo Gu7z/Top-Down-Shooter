@@ -160,7 +160,8 @@ export function createLabel({
       stroke: color,
       strokeThickness: Math.max(8, Math.round(fontSize * 0.24)),
     });
-    halo.anchor.set(anchor);
+    if (typeof anchor === "object") halo.anchor.set(anchor.x, anchor.y);
+    else halo.anchor.set(anchor);
     halo.position.set(x, y);
     halo.alpha = 0.16;
     container.addChild(halo);
@@ -175,7 +176,8 @@ export function createLabel({
     stroke: UISkin.palette.ink,
     strokeThickness: fontSize > 40 ? 4 : 2,
   });
-  label.anchor.set(anchor);
+  if (typeof anchor === "object") label.anchor.set(anchor.x, anchor.y);
+  else label.anchor.set(anchor);
   label.position.set(x, y);
   container.addChild(label);
 

@@ -50,3 +50,62 @@ test('shooting applies firepower effects and records shots', () => {
   assert.equal(boostedShooting.bullets[0].velocity.x, 5);
   assert.equal(runStats.shots, 2);
 });
+
+// ── Critical Hit Tests ──────────────────────────────────────────
+
+test('bullets carry crit metadata with critChance = 0 (no crits)', () => {
+  const noCritShooting = new Shooting({
+    app,
+    player,
+    playerSize: 20,
+    keys: {},
+    skillEffects: { critChance: 0, critMultiplier: 2 },
+  });
+
+  noCritShooting.fire();
+  const bullet = noCritShooting.bullets[0];
+  assert.equal(bullet.isCrit, false);
+  assert.equal(bullet.damage, 1);
+});
+
+test('bullets with critChance = 1 always crit and apply multiplier', () => {
+  const alwaysCritShooting = new Shooting({
+    app,
+    player,
+    playerSize: 20,
+    keys: {},
+    skillEffects: { critChance: 1, critMultiplier: 3, bulletDamageBonus: 1 },
+  });
+
+  alwaysCritShooting.fire();
+  const bullet = alwaysCritShooting.bullets[0];
+  assert.equal(bullet.isCrit, true);
+  assert.equal(bullet.damage, 6); // ceil((1+1) * 3)
+});
+
+// ── Control Effects Pass-through ──────────────────────────────────
+
+test('bullets carry control effects and chain pulse radius', () => {
+  const controlShooting = new Shooting({
+    app,
+    player,
+    playerSize: 20,
+    keys: {},
+    skillEffects: {
+      knockbackBonus: 20,
+      enemyWeakenMultiplier: 1.5,
+      slowFieldMultiplier: 0.8,
+      chainPulseRadius: 100,
+      controlDurationMultiplier: 1.3,
+    },
+  });
+
+  controlShooting.fire();
+  const bullet = controlShooting.bullets[0];
+
+  assert.equal(bullet.controlEffects.knockbackBonus, 20);
+  assert.equal(bullet.controlEffects.enemyWeakenMultiplier, 1.5);
+  assert.equal(bullet.controlEffects.slowFieldMultiplier, 0.8);
+  assert.equal(bullet.chainPulseRadius, 100);
+  assert.equal(bullet.controlDurationMultiplier, 1.3);
+});

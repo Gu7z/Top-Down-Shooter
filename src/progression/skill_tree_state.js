@@ -199,6 +199,7 @@ export function createSkillTreeState({
     getPurchasedIds,
     has,
     canPurchase,
+    getCost,
     purchase,
     refundCascade,
     getVisibleSkillIds,

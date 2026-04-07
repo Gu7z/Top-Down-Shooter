@@ -62,7 +62,7 @@ export default class Menu {
 
     createLabel({
       container: this.menuContainer,
-      text: "SYS:ONLINE  //  BUILD:1.0.0  //  PRESS ESC TO PAUSE",
+      text: "SYS:ONLINE  //  BUILD:1.0.0  //  ESC PARA PAUSAR",
       x: W / 2,
       y: H - 14,
       fontSize: 11,
@@ -230,7 +230,7 @@ export default class Menu {
     createPillButton({
       container: this.menuContainer,
       x: cx, y: startY + gap,
-      text:   "SKILL TREE",
+      text:   "ÁRVORE DE HABILIDADES",
       width:  340,
       height: 56,
       onClick: () => this.showSkillTree(),

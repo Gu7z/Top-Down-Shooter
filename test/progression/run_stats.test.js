@@ -46,6 +46,7 @@ test("credit calculation is explainable and affected by economy effects", () => 
     "Accuracy",
     "Boss bounty",
     "Survival",
+    "Low HP survival",
     "Economy multiplier",
   ]);
 });
@@ -67,4 +68,34 @@ test("summary includes achievement-style highlights", () => {
   assert.ok(summary.highlights.includes("BOSS DOWN"));
   assert.ok(summary.highlights.includes("LONG SURVIVAL"));
   assert.equal(summary.credits.total > 0, true);
+});
+
+test("lowHpCreditBonus is awarded when player survived with low HP", () => {
+  const withBonus = calculateCredits(
+    {
+      score: 50,
+      timeSurvivedSeconds: 30,
+      shotsFired: 5,
+      shotsHit: 3,
+      killsByType: { runner: 3 },
+      bossKills: 0,
+      survivedLowHp: true,
+    },
+    { lowHpCreditBonus: 20 }
+  );
+
+  const withoutBonus = calculateCredits(
+    {
+      score: 50,
+      timeSurvivedSeconds: 30,
+      shotsFired: 5,
+      shotsHit: 3,
+      killsByType: { runner: 3 },
+      bossKills: 0,
+      survivedLowHp: false,
+    },
+    { lowHpCreditBonus: 20 }
+  );
+
+  assert.equal(withBonus.total - withoutBonus.total, 20);
 });

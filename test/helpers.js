@@ -72,8 +72,10 @@ export function setupPixiMock() {
       lineTo()     { return this; }
       closePath()  { return this; }
       drawRect()   { return this; }
+      drawRoundedRect() { return this; }
       drawEllipse(){ return this; }
       drawCircle() { return this; }
+      arc()        { return this; }
       clear()      { return this; }
       on(event, fn)  { this.eventHandlers[event] = fn; return this; }
       off(event) {
@@ -92,6 +94,9 @@ export function setupPixiMock() {
         this.alpha = 1;
       }
       destroy() { this.destroyed = true; }
+    },
+    Rectangle: class {
+      constructor(x = 0, y = 0, w = 0, h = 0) { this.x = x; this.y = y; this.width = w; this.height = h; }
     },
     Texture: { from: () => ({}), WHITE: {} },
     settings: {},

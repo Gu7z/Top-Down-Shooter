@@ -6,6 +6,7 @@ import Effects from "./effects.js";
 import { audio } from "./audio.js";
 import Settings from "./settings.js";
 import RunSummary from "./run_summary.js";
+import DroneSystem from "./drone.js";
 import { createSkillTreeState } from "./progression/skill_tree_state.js";
 import { deriveSkillEffects } from "./progression/skill_effects.js";
 import { createRunStats, createRunSummary } from "./progression/run_stats.js";
@@ -47,6 +48,14 @@ export default class Game {
     };
     this.app.stage.addChild(this.hud.hudContainer);
 
+    this.droneSystem = new DroneSystem({
+      app,
+      player: this.player,
+      skillEffects: this.skillEffects,
+      runStats: this.runStats,
+      effects: this.effects,
+    });
+
     this.player.shooting.registerEffects(this.effects);
 
     this.handleMouseMove = (e) => {
@@ -71,7 +80,7 @@ export default class Game {
     };
 
     this.handleSystemKeys = (e) => {
-      const usedKeys = ["Escape", "m"];
+      const usedKeys = ["Escape", "m", "Shift"];
       if (!usedKeys.includes(e.key)) return;
 
       switch (e.key) {
@@ -98,6 +107,10 @@ export default class Game {
           audio.toggleMute();
           break;
 
+        case "Shift":
+          this.player.tryDash(keys);
+          break;
+
         default:
           break;
       }
@@ -122,11 +135,13 @@ export default class Game {
       if (this.runFinished) return;
       this.runFinished = true;
 
-      const summary = createRunSummary(
-        this.runStats.snapshot({
+      const snapshot = this.runStats.snapshot({
           score: this.player.points,
           now: Date.now(),
-        }),
+        });
+      snapshot.survivedLowHp = this.player.survivedLowHp || false;
+      const summary = createRunSummary(
+        snapshot,
         this.skillEffects
       );
       this.skillState.addCredits(summary.credits.total);
@@ -156,6 +171,7 @@ export default class Game {
         enemy.update(this.player, this.enemySpawner, this.effects);
       });
       this.player.shooting.update(shooting, this.enemySpawner, this.player);
+      this.droneSystem.update(this.enemySpawner);
     };
 
     this.ticker = app.ticker.add(this.tick);

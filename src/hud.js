@@ -67,6 +67,26 @@ export default class Hud {
       letterSpacing: 2,
     });
 
+    // Shield — top center-right (only if player has shield capacity)
+    const hasShield = (this.player.shield !== undefined && this.player.shield !== null) ||
+      (this.player.skillEffects?.maxShield > 0);
+    if (hasShield) {
+      const shieldW = 160;
+      const shieldX = this.app.screen.width - pad - pW - pad - shieldW / 2;
+      const shieldY = pad + pH / 2;
+      this.makeStatPanel(shieldX, shieldY, shieldW, pH);
+      this.textShield = createLabel({
+        container:    this.hudContainer,
+        text:         `SLD  ${this.player.shield || 0}`,
+        x:            shieldX,
+        y:            shieldY,
+        fontSize:     17,
+        color:        UISkin.palette.accent,
+        bold:         true,
+        letterSpacing: 2,
+      });
+    }
+
     // Lives — top right
     const hpX = this.app.screen.width - pad - pW / 2;
     const hpY = pad + pH / 2;
@@ -90,7 +110,7 @@ export default class Hud {
 
     this.textPaused = createLabel({
       container:    this.hudContainer,
-      text:         "//  PAUSED  //",
+      text:         "//  PAUSADO  //",
       x:            cx,
       y:            cy - 40,
       fontSize:     58,
@@ -132,7 +152,7 @@ export default class Hud {
 
     this.textEnd = createLabel({
       container:    this.hudContainer,
-      text:         "RUN  TERMINATED",
+      text:         "SISTEMA DESCONECTADO",
       x:            cx,
       y:            cy - 94,
       fontSize:     50,
@@ -253,6 +273,9 @@ export default class Hud {
   update(clear) {
     this.textPoints.text = `PTS  ${this.player.points}`;
     this.textLifes.text  = `HP   ${this.player.lifes}`;
+    if (this.textShield) {
+      this.textShield.text = `SLD  ${this.player.shield || 0}`;
+    }
     this.endgameCheck(clear);
   }
 }

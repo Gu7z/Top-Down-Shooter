@@ -99,7 +99,14 @@ export default class Spawner {
   }
 
   reset() {
-    this.spawns.forEach((spawn) => spawn.kill());
+    this.spawns.forEach((spawn) => {
+      if (spawn.forceKill) {
+        spawn.forceKill();
+      } else {
+        spawn.enemy.visible = false;
+        spawn.enemy.destroy?.();
+      }
+    });
     this.spawns = [];
   }
 

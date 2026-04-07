@@ -3,12 +3,18 @@ import Victor from "victor";
 export default class Enemy {
   constructor({ app, enemyRadius, speed, color, life, value, container, typeId = "unknown", isBoss = false }) {
     this.app = app;
+    this.baseSpeed = speed;
     this.speed = speed;
     this.life = life;
     this.value = value;
     this.enemyRadius = enemyRadius;
     this.typeId = typeId;
     this.isBoss = isBoss;
+
+    // Control effect state
+    this.speedMultiplier = 1;
+    this.damageMultiplier = 1;
+    this.controlTimers = [];
 
     const textColor = [0xffffff, 0xffc0cb].includes(color) ? 0x000000 : 0xffffff;
     this.enemy = new PIXI.Graphics();
@@ -66,9 +72,78 @@ export default class Enemy {
     return spawnPoint;
   }
 
+  applyControlEffects(controlEffects, durationMultiplier = 1) {
+    if (!controlEffects) return;
+
+    const baseDuration = 60; // ~1 second at 60fps
+    const duration = Math.ceil(baseDuration * durationMultiplier);
+
+    // Slow field: reduce speed
+    if (controlEffects.slowFieldMultiplier && controlEffects.slowFieldMultiplier < 1) {
+      this.speedMultiplier *= controlEffects.slowFieldMultiplier;
+      this.controlTimers.push({
+        type: "slow",
+        timer: duration,
+        value: controlEffects.slowFieldMultiplier,
+      });
+    }
+
+    // Enemy weaken: increase damage taken
+    if (controlEffects.enemyWeakenMultiplier && controlEffects.enemyWeakenMultiplier > 1) {
+      this.damageMultiplier *= controlEffects.enemyWeakenMultiplier;
+      this.controlTimers.push({
+        type: "weaken",
+        timer: duration,
+        value: controlEffects.enemyWeakenMultiplier,
+      });
+    }
+
+    // Knockback: push enemy away from bullet impact
+    if (controlEffects.knockbackBonus && controlEffects.knockbackBonus > 0 && controlEffects.knockbackDirection) {
+      const kb = controlEffects.knockbackBonus;
+      const dir = controlEffects.knockbackDirection;
+      this.enemy.position.set(
+        this.enemy.position.x + dir.x * kb,
+        this.enemy.position.y + dir.y * kb
+      );
+      this.enemyLifeText.position.set(
+        this.enemyLifeText.position.x + dir.x * kb,
+        this.enemyLifeText.position.y + dir.y * kb
+      );
+    }
+  }
+
+  updateControlTimers() {
+    if (this.controlTimers.length === 0) return;
+
+    this.controlTimers = this.controlTimers.filter((entry) => {
+      entry.timer -= 1;
+      if (entry.timer <= 0) {
+        // Reverse the effect
+        if (entry.type === "slow") {
+          this.speedMultiplier /= entry.value;
+        } else if (entry.type === "weaken") {
+          this.damageMultiplier /= entry.value;
+        }
+        return false;
+      }
+      return true;
+    });
+  }
+
   removePlayerLife(player, spanwer, effects) {
-    player.lifes -= 1;
-    spanwer.reset();
+    const damaged = player.takeDamage?.(1, effects);
+    if (damaged === undefined) {
+      // Fallback for players without takeDamage (e.g., old tests)
+      player.lifes -= 1;
+    }
+    
+    this.forceKill();
+    const index = spanwer.spawns.indexOf(this);
+    if (index > -1) {
+      spanwer.spawns.splice(index, 1);
+    }
+
     if (effects) {
       effects.shake(8);
       effects.explosion(player.player.position.x, player.player.position.y, 0xff2d55, 24);
@@ -90,7 +165,8 @@ export default class Enemy {
     }
 
     const distance = playerPosition.subtract(enemyPosition);
-    const velocity = distance.normalize().multiplyScalar(this.speed);
+    const effectiveSpeed = this.speed * this.speedMultiplier;
+    const velocity = distance.normalize().multiplyScalar(effectiveSpeed);
 
     const newX = this.enemy.position.x + velocity.x;
     const newY = this.enemy.position.y + velocity.y;
@@ -102,8 +178,11 @@ export default class Enemy {
   }
 
   kill(enemies, indexEnemy, player, effects, damage = 1) {
-    if (this.life > damage) {
-      this.life -= damage;
+    // Apply weaken multiplier to incoming damage
+    const effectiveDamage = Math.ceil(damage * this.damageMultiplier);
+
+    if (this.life > effectiveDamage) {
+      this.life -= effectiveDamage;
       return;
     }
 
@@ -126,8 +205,16 @@ export default class Enemy {
     enemies.splice(indexEnemy, 1);
   }
 
+  forceKill() {
+    this.enemy.visible = false;
+    this.enemyLifeText.visible = false;
+    this.enemy.destroy();
+    this.enemyLifeText.destroy();
+  }
+
   update(player, spanwer, effects) {
     if (this.enemy.destroyed) return;
+    this.updateControlTimers();
     this.goToPlayer(player, spanwer, effects);
   }
 }

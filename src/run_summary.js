@@ -38,7 +38,7 @@ export default class RunSummary {
 
     createLabel({
       container: this.container,
-      text: "RUN SUMMARY",
+      text: "SÚMULA DA RUN",
       x: cx,
       y: cy - 238,
       fontSize: 48,
@@ -107,7 +107,7 @@ export default class RunSummary {
 
     createLabel({
       container: this.container,
-      text: "KILLS POR TIPO",
+      text: "ABATES POR INIMIGO",
       x: rightX,
       y: startY,
       fontSize: 18,
@@ -139,7 +139,7 @@ export default class RunSummary {
 
     createLabel({
       container: this.container,
-      text: "HIGHLIGHTS",
+      text: "DESTAQUES",
       x: cx,
       y: cy + 90,
       fontSize: 18,

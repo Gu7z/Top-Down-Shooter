@@ -16,6 +16,9 @@ export default class Shooting {
     this.bulletDamage = 1 + this.skillEffects.bulletDamageBonus;
     this.extraProjectiles = this.skillEffects.extraProjectiles;
     this.spreadRadians = this.skillEffects.spreadRadians;
+    this.critChance = this.skillEffects.critChance;
+    this.critMultiplier = this.skillEffects.critMultiplier;
+    this.controlDurationMultiplier = this.skillEffects.controlDurationMultiplier;
     this.keys = keys;
     this.shooting = false;
     this.shootInterval = 0.3;
@@ -63,8 +66,19 @@ export default class Shooting {
 
     projectileAngles.forEach((projectileAngle) => {
       const bullet = new PIXI.Graphics();
-      bullet.beginFill(0x41f7ff, 1);
-      bullet.drawCircle(0, 0, this.bulletRadius);
+
+      // Roll for critical hit
+      const isCrit = this.critChance > 0 && Math.random() < this.critChance;
+      let damage = this.bulletDamage;
+      let bulletColor = 0x41f7ff;
+
+      if (isCrit) {
+        damage = Math.ceil(damage * this.critMultiplier);
+        bulletColor = 0xff4d4d; // Red for crit
+      }
+
+      bullet.beginFill(bulletColor, 1);
+      bullet.drawCircle(0, 0, isCrit ? this.bulletRadius * 1.3 : this.bulletRadius);
       bullet.endFill();
 
       const moveFromCenterToTip = new Victor(Math.cos(projectileAngle), Math.sin(projectileAngle)).multiplyScalar(this.playerSize);
@@ -72,19 +86,23 @@ export default class Shooting {
       const initialY = this.player.position.y + moveFromCenterToTip.y;
       bullet.position.set(initialX, initialY);
       bullet.velocity = new Victor(Math.cos(projectileAngle), Math.sin(projectileAngle)).multiplyScalar(this.bulletSpeed);
-      bullet.damage = this.bulletDamage;
+      bullet.damage = damage;
+      bullet.isCrit = isCrit;
       bullet.controlEffects = {
         knockbackBonus: this.skillEffects.knockbackBonus,
         enemyWeakenMultiplier: this.skillEffects.enemyWeakenMultiplier,
         slowFieldMultiplier: this.skillEffects.slowFieldMultiplier,
       };
+      bullet.controlDurationMultiplier = this.controlDurationMultiplier;
+      bullet.chainPulseRadius = this.skillEffects.chainPulseRadius;
 
       this.bullets.push(bullet);
       this.shootingContainer.addChild(bullet);
       this.runStats?.recordShotFired?.();
 
       if (this.effects) {
-        this.effects.explosion(initialX, initialY, 0x8be9fd, 6);
+        const explosionColor = isCrit ? 0xff4d4d : 0x8be9fd;
+        this.effects.explosion(initialX, initialY, explosionColor, isCrit ? 10 : 6);
       }
     });
 

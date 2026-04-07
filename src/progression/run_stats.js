@@ -65,25 +65,28 @@ export function calculateCredits(stats, effects = {}) {
   const creditMultiplier = effects.creditMultiplier || 1;
   const bossCreditBonus = effects.bossCreditBonus || 0;
   const streakCreditBonus = effects.streakCreditBonus || 0;
+  const lowHpCreditBonus = stats.survivedLowHp ? (effects.lowHpCreditBonus || 0) : 0;
 
   const scoreCredits = Math.floor(score / 5);
   const killCredits = kills * 2 + (kills >= 20 ? streakCreditBonus : 0);
   const accuracyCredits = shotsFired >= 10 && accuracy >= 75 ? 12 : 0;
   const bossCredits = bossKills * (20 + bossCreditBonus);
   const survivalCredits = Math.floor(timeSurvivedSeconds / 15) * 3;
+  const lowHpCredits = lowHpCreditBonus;
   const preMultiplier =
-    scoreCredits + killCredits + accuracyCredits + bossCredits + survivalCredits;
+    scoreCredits + killCredits + accuracyCredits + bossCredits + survivalCredits + lowHpCredits;
   const total = Math.floor(preMultiplier * creditMultiplier);
 
   return {
     total,
     breakdown: [
       { label: "Score", amount: scoreCredits },
-      { label: "Kills", amount: killCredits },
-      { label: "Accuracy", amount: accuracyCredits },
-      { label: "Boss bounty", amount: bossCredits },
-      { label: "Survival", amount: survivalCredits },
-      { label: "Economy multiplier", amount: total - preMultiplier },
+      { label: "Abates", amount: killCredits },
+      { label: "Precisão", amount: accuracyCredits },
+      { label: "Recompensa de chefes", amount: bossCredits },
+      { label: "Sobrevivência", amount: survivalCredits },
+      { label: "Sobrevivência (HP Baixo)", amount: lowHpCredits },
+      { label: "Multiplicador financeiro", amount: total - preMultiplier },
     ],
   };
 }
