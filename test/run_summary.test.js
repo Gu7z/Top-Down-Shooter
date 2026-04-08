@@ -113,3 +113,35 @@ test('run summary destroy removes the container from stage', () => {
 
   assert.equal(app.stage.children.includes(screen.container), false);
 });
+
+test('kill list scroll registers wheel handler when list overflows and clears it on destroy', () => {
+  const app = createAppMock();
+  const killsByType = {};
+  'abcdefghijkl'.split('').forEach((k, i) => { killsByType[k] = i + 1; });
+
+  const screen = new RunSummary({
+    app,
+    username: 'tester',
+    onBackToMenu: () => {},
+    summary: { score: 0, credits: { total: 0 }, accuracyPercent: 0, shotsHit: 0, shotsFired: 0, timeSurvivedSeconds: 0, bossKills: 0, killsByType, highlights: [] },
+  });
+
+  assert.ok(screen._wheelHandler, 'wheel handler must be registered when list overflows');
+  assert.ok(app.view.eventListeners.wheel, 'wheel listener must be on app.view');
+
+  screen.destroy();
+  assert.equal(screen._wheelHandler, null, 'wheel handler must be cleared on destroy');
+});
+
+test('kill list scroll: no wheel handler when list fits within visible area', () => {
+  const app = createAppMock();
+  const screen = new RunSummary({
+    app,
+    username: 'tester',
+    onBackToMenu: () => {},
+    summary: { score: 0, credits: { total: 0 }, accuracyPercent: 0, shotsHit: 0, shotsFired: 0, timeSurvivedSeconds: 0, bossKills: 0, killsByType: { sentinela: 3 }, highlights: [] },
+  });
+
+  assert.equal(screen._wheelHandler, undefined, 'no wheel handler needed when list fits');
+  screen.destroy();
+});

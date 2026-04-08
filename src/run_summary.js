@@ -156,8 +156,9 @@ export default class RunSummary {
 
     const killMask = new PIXI.Graphics();
     killMask.beginFill(0xffffff, 1);
-    killMask.drawRect(cx, killListTop, halfW + 20, visibleH);
+    killMask.drawRect(0, 0, halfW + 20, visibleH);
     killMask.endFill();
+    killMask.position.set(cx, killListTop);
     this.container.addChild(killMask);
     this.container.addChild(killScroll);
     killScroll.mask = killMask;
@@ -170,34 +171,27 @@ export default class RunSummary {
       const thumbH      = Math.max(16, Math.round(visibleH * (visibleH / totalH)));
       const thumbTravel = visibleH - thumbH;
 
-      // Track
+      // Track — drawn at local (0,0), positioned via container
       const track = new PIXI.Graphics();
       track.beginFill(UISkin.palette.textSecondary, 0.2);
-      track.drawRect(scrollbarX, killListTop, trackW, visibleH);
+      track.drawRect(0, 0, trackW, visibleH);
       track.endFill();
+      track.position.set(scrollbarX, killListTop);
       this.container.addChild(track);
 
-      // Thumb
+      // Thumb — drawn at local (0,0), y updated on scroll
       const thumb = new PIXI.Graphics();
       thumb.beginFill(UISkin.palette.accent, 0.7);
-      thumb.drawRect(scrollbarX - 1, killListTop, thumbW, thumbH);
+      thumb.drawRect(0, 0, thumbW, thumbH);
       thumb.endFill();
+      thumb.position.set(scrollbarX - 1, killListTop);
       this.container.addChild(thumb);
 
-      // Bottom fade — signals more content below
-      const fade = new PIXI.Graphics();
-      const fadeH = 32;
-      fade.beginFill(UISkin.palette.void ?? 0x070314, 0.85);
-      fade.drawRect(cx, killListBottom - fadeH, halfW + 12, fadeH);
-      fade.endFill();
-      this.container.addChild(fade);
 
       const updateThumb = () => {
-        const scrolled = killListTop - killScroll.y; // 0 → (totalH - visibleH)
+        const scrolled = killListTop - killScroll.y;
         const ratio    = scrolled / (totalH - visibleH);
-        thumb.y        = Math.round(ratio * thumbTravel);
-        // Hide fade when scrolled to bottom
-        fade.alpha = ratio >= 0.98 ? 0 : 1;
+        thumb.y        = killListTop + Math.round(ratio * thumbTravel);
       };
 
       this._wheelHandler = (e) => {
