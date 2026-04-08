@@ -50,6 +50,10 @@ export default class Player {
     // Dash reload fusion
     this.dashReloadEnabled = this.skillEffects.dashReload;
 
+    // In-run upgrade state
+    this.runUpgradeEffects = null;
+    this.onEnemyKilledAt = null;
+
     // Strafe control
     this.strafeControlBonus = this.skillEffects.strafeControlBonus;
 
@@ -389,6 +393,10 @@ export default class Player {
       this.player.alpha = 1;
       this.playerGlow.alpha = 0.17 + Math.abs(Math.sin(Date.now() * 0.008)) * 0.18;
     }
+  }
+
+  setRunUpgradeEffects(effects) {
+    this.runUpgradeEffects = effects;
   }
 
   update(keys) {
