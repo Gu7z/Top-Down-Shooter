@@ -371,6 +371,11 @@ export default class Enemy {
     this.enemy.visible = false;
     this.enemyLifeText.visible = false;
     enemies.splice(indexEnemy, 1);
+
+    // Viral core: notify game to spawn toxic cloud at kill position
+    if (player.runUpgradeEffects?.viralCoreRadius > 0) {
+      player.onEnemyKilledAt?.(this.enemy.position.x, this.enemy.position.y);
+    }
   }
 
   forceKill() {
