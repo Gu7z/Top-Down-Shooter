@@ -147,13 +147,38 @@ export function createAppMock() {
     ticker: {
       fn: null,
       removedFn: null,
-      add(fn) { this.fn = fn; return {}; },
-      remove(fn) { this.removedFn = fn; },
+      callbacks: [],
+      add(fn) {
+        this.fn = fn;
+        this.callbacks.push(fn);
+        return {};
+      },
+      remove(fn) {
+        this.removedFn = fn;
+        this.callbacks = this.callbacks.filter((callback) => callback !== fn);
+        this.fn = this.callbacks[this.callbacks.length - 1] || null;
+      },
+      step() {
+        [...this.callbacks].forEach((callback) => callback());
+      },
+      stepFrames(count = 1) {
+        for (let i = 0; i < count; i += 1) this.step();
+      },
     },
     screen: { width: 800, height: 600 },
     setInterval() { return { clear() {} }; },
     setTimeout() { return { clear() {} }; },
-    renderer: { view: { onmousemove: null } },
+    renderer: {
+      view: {
+        onmousemove: null,
+        eventListeners: {},
+        addEventListener(event, fn) { this.eventListeners[event] = fn; },
+        removeEventListener(event, fn) {
+          if (this.eventListeners[event] === fn) delete this.eventListeners[event];
+        },
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600 }),
+      },
+    },
     view: {
       eventListeners: {},
       addEventListener(event, fn) { this.eventListeners[event] = fn; },

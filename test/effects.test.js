@@ -126,6 +126,40 @@ test("tick updates shake, particles, and pulses", () => {
   assert.deepEqual(calls, ["shake", "particles", "pulses"]);
 });
 
+test("chainLightning creates one visual bolt particle per target", () => {
+  const app = createEffectsApp();
+  const effects = new Effects({ app });
+
+  effects.chainLightning(10, 20, [
+    { x: 40, y: 50 },
+    { x: 80, y: 90 },
+  ]);
+
+  assert.equal(effects.effectsContainer.children.length, 2);
+  assert.equal(effects.particles.length, 2);
+  assert.equal(effects.particles[0].gravity, 0);
+  assert.equal(effects.particles[0].maxLife, 35);
+});
+
+test("screenPulse animates ring and flash to completion and invokes callback", () => {
+  const app = createEffectsApp();
+  const effects = new Effects({ app });
+  let completed = 0;
+
+  effects.screenPulse(0xff00ff, () => {
+    completed += 1;
+  });
+
+  const ring = effects.effectsContainer.children[0];
+  const flash = effects.effectsContainer.children[1];
+
+  app.ticker.stepFrames(20);
+
+  assert.equal(ring.destroyed, true);
+  assert.equal(flash.destroyed, true);
+  assert.equal(completed, 1);
+});
+
 test("destroy unregisters ticker and destroys effect containers", () => {
   const app = createEffectsApp();
   const effects = new Effects({ app });

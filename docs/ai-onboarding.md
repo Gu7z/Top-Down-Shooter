@@ -13,7 +13,7 @@ This repository is a simple yet complete demo of a top-down shooter built with *
 ## Core systems & entry points
 - **Game coordinator** (`src/game.js`): wires the app stage, HUD, wave manager, player, drones, skill effects, and settings. Hooks input listeners for toggling pause/mute/dash and manages cleanup.
 - **Player, shooting, and bullets** (`src/player.js`, `src/shooting.js`, `src/enemy_bullet.js`): handle movement, aiming, firing, and interactions with enemies. The player keeps a `points` counter that feeds `run_stats`.
-- **Enemies and spawning** (`src/enemy.js`, `src/boss_enemy.js`, `src/spanwer.js`): define enemy types, spawn logic, and bullet behaviors. `WaveManager` owns the high-level timeline and calls the spawner container.
+- **Enemies and spawning** (`src/enemy.js`, `src/boss_enemy.js`, `src/spanwer.js`): define enemy types, spawn logic, and bullet behaviors. Bosses use `BossEnemy` movement profiles with identity-specific spacing/orbit/burst behavior, while `WaveManager` owns the high-level timeline and calls the spawner container.
 - **HUD & effects** (`src/hud.js`, `src/effects.js`): draw health bars, boss information, banners, run summaries, and manage visual feedback (camera shake, sprites) so UI and gameplay remain coordinated.
 - **Progression & skill tree** (`src/progression/*`): the skill tree state, skill effects, and run stats + summary functions live here. They persist player credits between runs and change how enemies/player behave once bought.
 - **Utility/public assets** (`public/`): contains static assets like background imagery, sound placeholders, and fonts that the Snowpack dev server serves.
@@ -31,6 +31,8 @@ This repository is a simple yet complete demo of a top-down shooter built with *
 - Install with `npm install` (Snowpack, c8, dotenv plug-ins).
 - Run locally via `npm start` (starts `snowpack dev --polyfill-node` and serves `public/` via `localhost:8080` by default). Use `npm run build` before deploying to generate optimized assets under `build/`.
 - Execute tests with `npm test`. The script uses the Node test runner plus `c8` for coverage reporting. Review the coverage badge in `README.md` afterwards.
+- Make tests prove meaningful behavior, not just line execution. A unit test can be valid and still be insufficient if the real feature depends on other layers being wired together.
+- Real example from this codebase: it is not enough to test `run_upgrade_data.js` and `run_upgrade_state.js` in isolation if `Game._showUpgradeScreen()`, `player.setRunUpgradeEffects()`, `viralClouds`, or `_triggerRetaliationPulse()` are broken. In that case the upgrade exists on paper, but the actual `upgrade screen + state + game loop + effect application` flow still fails for integration reasons.
 - Keep live reload in mind: Snowpack rebuilds modules on save, but changes to `public/` often require refreshing the browser.
 
 ## Contribution cues for AI agents

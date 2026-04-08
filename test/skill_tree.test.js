@@ -139,3 +139,50 @@ test('skill tree ignores wheel before scroll content is available', () => {
   assert.equal(screen.scrollY, 0);
   assert.equal(prevented, false);
 });
+
+test('skill tree scrolls inside the content viewport and clamps the offset', () => {
+  const screen = new SkillTree({
+    app: createSkillTreeAppMock(),
+    skillState: createStateStub(),
+    onBack: () => {},
+  });
+  let prevented = false;
+
+  screen.contentTotalH = 900;
+  screen.scrollBaseY = 140;
+  screen.scrollContent.y = screen.scrollBaseY;
+
+  screen.onWheel({
+    clientY: 240,
+    deltaY: 120,
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(prevented, true);
+  assert.ok(screen.scrollY < 0);
+  assert.equal(screen.scrollContent.y, screen.scrollBaseY + screen.scrollY);
+});
+
+test('skill tree prevents context menu and back button destroys the screen', () => {
+  const app = createSkillTreeAppMock();
+  let backCalls = 0;
+  const screen = new SkillTree({
+    app,
+    skillState: createStateStub(),
+    onBack: () => { backCalls += 1; },
+  });
+  let prevented = false;
+
+  screen.onContextMenu({
+    preventDefault() { prevented = true; },
+  });
+
+  const backButton = screen.hudLayer.children.find((child) => child.eventHandlers?.pointerdown);
+  backButton.eventHandlers.pointerdown();
+
+  assert.equal(prevented, true);
+  assert.equal(backCalls, 1);
+  assert.equal(screen.container.destroyed, true);
+  assert.equal(app.renderer.view.eventListeners.contextmenu, undefined);
+  assert.equal(app.renderer.view.eventListeners.wheel, undefined);
+});
