@@ -84,7 +84,7 @@ test("boss constructor seeds attack timers for each boss type", () => {
   });
 
   assert.equal(makeBoss("boss_guardiao").attackTimers.burst, 180);
-  assert.equal(makeBoss("boss_sniper").attackTimers.snipe, 120);
+  assert.equal(makeBoss("boss_sniper").attackTimers.snipe, 150);
   assert.equal(makeBoss("boss_colosso").attackTimers.cross, 150);
   assert.equal(makeBoss("boss_supremo").attackTimers.arc, 200);
   assert.equal(makeBoss("boss_predador").attackTimers.spin, 350);
@@ -420,6 +420,32 @@ test("sniper closes distance when the player is too far away", () => {
   assert.ok(Math.abs(yDelta) < 0.5);
 });
 
+test("sniper keeps the same shot cadence below half health", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 4,
+    value: 10,
+    typeId: "boss_sniper",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(360, 140);
+  boss.enemy.position.set(500, 140);
+  boss.enemyLifeText.position.set(500, 140);
+  boss.maxLife = 10;
+  boss.attackTimers.snipe = 150;
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  assert.equal(boss.attackTimers.snipe, 149);
+});
+
 test("sniper fires a predictive shot using the current sniper bullet speed", () => {
   const app = createAppMock();
   const boss = new BossEnemy({
@@ -548,7 +574,7 @@ test("boss behavior triggers and resets timers for all named patterns", () => {
     {
       typeId: "boss_sniper",
       expectedCalls: [["snipe"]],
-      expectedTimers: { snipe: 120 },
+      expectedTimers: { snipe: 150 },
     },
     {
       typeId: "boss_colosso",

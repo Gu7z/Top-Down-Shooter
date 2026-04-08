@@ -1,7 +1,7 @@
 import Victor from "victor";
 import Enemy from "./enemy.js";
 
-const SNIPER_SNIPE_COOLDOWN = 120;
+const SNIPER_SNIPE_COOLDOWN = 150;
 const SNIPER_BULLET_SPEED = 6.0;
 const SNIPER_VELOCITY_SMOOTHING = 0.3;
 const SNIPER_DIRECTION_FLIP_SMOOTHING = 0.16;
@@ -490,7 +490,7 @@ export default class BossEnemy extends Enemy {
       }
     }
 
-    // HP based pacing - fires faster at lower health and some bosses tighten their movement profile.
+    // HP based pacing - bosses can tighten cadence at low health, but sniper keeps a fixed shot rhythm.
     const maxLife = Math.max(1, this.maxLife || 0);
     const healthRatio = Math.max(0, this.life) / maxLife;
     const velocity = this._computeMovementVector(playerPosition, enemyPosition, healthRatio);
@@ -505,8 +505,9 @@ export default class BossEnemy extends Enemy {
     }
 
     this.enemyLifeText.text = this.life;
-    
-    const fireSpeedMod = healthRatio < 0.5 ? 1.4 : 1; 
+
+    const name = this.typeId.toLowerCase();
+    const fireSpeedMod = name.includes("sniper") ? 1 : healthRatio < 0.5 ? 1.4 : 1;
 
     // Handle Attack Patterns
     this.attackTimers.burst -= 1 * fireSpeedMod;
@@ -514,8 +515,6 @@ export default class BossEnemy extends Enemy {
     this.attackTimers.spin -= 1 * fireSpeedMod;
     this.attackTimers.cross -= 1 * fireSpeedMod;
     this.attackTimers.snipe -= 1 * fireSpeedMod;
-
-    const name = this.typeId.toLowerCase();
 
     if (name.includes("guardiao")) {
       if (this.attackTimers.burst <= 0) {
