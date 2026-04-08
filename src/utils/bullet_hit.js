@@ -67,6 +67,35 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
         effects.shake(shakeAmount);
       }
 
+      // Chain lightning proc
+      const upgEffects = player.runUpgradeEffects;
+      if (upgEffects && upgEffects.chainLightningChance > 0 && Math.random() < upgEffects.chainLightningChance) {
+        const chainTargets = [];
+        const enemiesForChain = [...enemiesSnapshot].filter(e => e !== enemy && !e.enemy?.destroyed);
+        enemiesForChain.sort((a, b) => {
+          const da = Math.hypot(a.enemy.position.x - enemy.enemy.position.x, a.enemy.position.y - enemy.enemy.position.y);
+          const db = Math.hypot(b.enemy.position.x - enemy.enemy.position.x, b.enemy.position.y - enemy.enemy.position.y);
+          return da - db;
+        });
+        for (const nearby of enemiesForChain) {
+          if (chainTargets.length >= upgEffects.chainLightningTargets) break;
+          const dist = Math.hypot(
+            nearby.enemy.position.x - enemy.enemy.position.x,
+            nearby.enemy.position.y - enemy.enemy.position.y,
+          );
+          if (dist <= upgEffects.chainLightningRange) {
+            const nearbyIdx = enemies.indexOf(nearby);
+            if (nearbyIdx !== -1) {
+              nearby.kill(enemies, nearbyIdx, player, effects, upgEffects.chainLightningDamage);
+              chainTargets.push({ x: nearby.enemy.position.x, y: nearby.enemy.position.y });
+            }
+          }
+        }
+        if (chainTargets.length > 0 && effects?.chainLightning) {
+          effects.chainLightning(enemy.enemy.position.x, enemy.enemy.position.y, chainTargets);
+        }
+      }
+
       bullet.visible = false;
       bullet.destroy();
 

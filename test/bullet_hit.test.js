@@ -181,3 +181,74 @@ test('bulletHit applies visual effects and drone bounty bonus', () => {
     ['shake', 4.0],
   ]);
 });
+
+test('bulletHit triggers chain lightning when proc succeeds', () => {
+  const chainHit = [];
+  const sourceBullet = {
+    position: { x: 0, y: 0 },
+    damage: 1,
+    destroy() { this.destroyed = true; },
+  };
+  const hitEnemy = {
+    enemy: { position: { x: 0, y: 0 }, destroyed: false },
+    enemyRadius: 5,
+    kill() {},
+  };
+  const nearEnemy = {
+    enemy: { position: { x: 80, y: 0 }, destroyed: false },
+    enemyRadius: 5,
+    kill(enemies, idx, player, effects, damage) { chainHit.push(damage); },
+  };
+  const farEnemy = {
+    enemy: { position: { x: 300, y: 0 }, destroyed: false },
+    enemyRadius: 5,
+    kill() {},
+  };
+  const playerWithUpgrade = {
+    points: 0,
+    runUpgradeEffects: {
+      chainLightningChance: 1.0,
+      chainLightningTargets: 2,
+      chainLightningRange: 100,
+      chainLightningDamage: 2,
+    },
+  };
+  const mockEffects = {
+    pulse() {}, explosion() {}, shake() {}, chainLightning() {},
+  };
+
+  bulletHit(sourceBullet, [hitEnemy, nearEnemy, farEnemy], 5, playerWithUpgrade, mockEffects);
+
+  assert.equal(chainHit.length, 1, 'only nearEnemy is in range');
+  assert.equal(chainHit[0], 2, 'chain damage = chainLightningDamage');
+});
+
+test('bulletHit does not trigger chain lightning when chance fails', () => {
+  let chainCalled = false;
+  const bullet = {
+    position: { x: 0, y: 0 },
+    damage: 1,
+    destroy() { this.destroyed = true; },
+  };
+  const hitEnemy = {
+    enemy: { position: { x: 0, y: 0 } },
+    enemyRadius: 5,
+    kill() {},
+  };
+  const nearEnemy = {
+    enemy: { position: { x: 50, y: 0 }, destroyed: false },
+    enemyRadius: 5,
+    kill() { chainCalled = true; },
+  };
+  const player = {
+    points: 0,
+    runUpgradeEffects: {
+      chainLightningChance: 0.0,
+      chainLightningTargets: 2,
+      chainLightningRange: 100,
+      chainLightningDamage: 1,
+    },
+  };
+  bulletHit(bullet, [hitEnemy, nearEnemy], 5, player, { pulse() {}, explosion() {}, shake() {}, chainLightning() {} });
+  assert.equal(chainCalled, false);
+});
