@@ -256,3 +256,141 @@ test('game tick removes out-of-bounds, colliding, and destroyed enemy bullets', 
   assert.equal(collidingBullet.destroyCalls, 1);
   assert.equal(destroyedBullet.destroyCalls, 0);
 });
+
+test('retaliation pulse animate ticker does not throw when ring is destroyed mid-animation', () => {
+  const { app: localApp, game: localGame } = createGameHarness('pulse-crash');
+
+  // Capture the animate fn added by _triggerRetaliationPulse (not the main tick)
+  let capturedAnimate = null;
+  const originalAdd = localApp.ticker.add.bind(localApp.ticker);
+  localApp.ticker.add = (fn) => {
+    capturedAnimate = fn;
+    return originalAdd(fn);
+  };
+
+  // Give the upgrade state a retaliation pulse effect
+  localGame.upgradeState._cachedEffects.retaliationPulseRadius = 200;
+  localGame.upgradeState._cachedEffects.retaliationPulseDamage = 2;
+  localGame.upgradeState._cachedEffects.retaliationPulseStunMs = 200;
+
+  localGame._triggerRetaliationPulse();
+
+  assert.ok(capturedAnimate, 'animate fn should have been added to ticker');
+
+  // Simulate game teardown destroying the effects container (e.g. player dies)
+  localGame.effects.effectsContainer.destroy({ children: true });
+
+  // Calling the animate fn after ring destruction must not throw
+  assert.doesNotThrow(() => capturedAnimate());
+
+  // And the animate fn must have removed itself from the ticker
+  assert.equal(localApp.ticker.removedFn, capturedAnimate);
+});
+
+// ── Render hierarchy ─────────────────────────────────────────────────────────
+
+function stageIndex(app, container) {
+  return app.stage.children.indexOf(container);
+}
+
+test('render hierarchy: game world is below HUD at startup', () => {
+  const { app: localApp, game: localGame } = createGameHarness('hierarchy-init');
+
+  const hudIdx      = stageIndex(localApp, localGame.hud.hudContainer);
+  const bgIdx       = stageIndex(localApp, localGame.effects.backgroundContainer);
+  const effectsIdx  = stageIndex(localApp, localGame.effects.effectsContainer);
+  const playerIdx   = stageIndex(localApp, localGame.player.playerContainer);
+  const bulletsIdx  = stageIndex(localApp, localGame.player.shooting.shootingContainer);
+  const enemiesIdx  = stageIndex(localApp, localGame.enemySpawner.spawnerContainer);
+  const droneIdx    = stageIndex(localApp, localGame.droneSystem.container);
+
+  assert.ok(hudIdx !== -1, 'hudContainer must be on stage');
+
+  // Background is the bottommost layer
+  assert.ok(bgIdx < effectsIdx,  'background must be below effects');
+  assert.ok(bgIdx < playerIdx,   'background must be below player');
+  assert.ok(bgIdx < enemiesIdx,  'background must be below enemies');
+
+  // Game world entities are below HUD
+  assert.ok(effectsIdx  < hudIdx, 'effects must be below HUD');
+  assert.ok(playerIdx   < hudIdx, 'player must be below HUD');
+  assert.ok(bulletsIdx  < hudIdx, 'player bullets must be below HUD');
+  assert.ok(enemiesIdx  < hudIdx, 'enemies must be below HUD');
+  assert.ok(droneIdx    < hudIdx, 'drones must be below HUD');
+
+  localGame.clear();
+});
+
+test('render hierarchy: settings screen is above HUD when open', () => {
+  const { app: localApp, game: localGame } = createGameHarness('hierarchy-settings');
+
+  // Open settings via the pause button (same as the existing settings test)
+  localGame.hud.pauseSettingsBtn.bg.eventHandlers.pointerdown();
+
+  // HUD is removed from stage while settings is open
+  assert.equal(stageIndex(localApp, localGame.hud.hudContainer), -1, 'HUD should be off stage while settings is open');
+
+  // Settings container is the topmost child
+  const settingsContainer = localApp.stage.children.at(-1);
+  assert.ok(settingsContainer !== localGame.hud.hudContainer, 'topmost layer should not be HUD');
+  assert.ok(stageIndex(localApp, localGame.effects.backgroundContainer) < localApp.stage.children.length - 1, 'background is below settings');
+
+  localGame.clear();
+});
+
+test('render hierarchy: HUD is restored above game world after settings closes', () => {
+  const { app: localApp, game: localGame } = createGameHarness('hierarchy-settings-close');
+
+  localGame.hud.pauseSettingsBtn.bg.eventHandlers.pointerdown();
+  localGame.handleSystemKeys({ key: 'Escape' }); // close settings
+
+  const hudIdx     = stageIndex(localApp, localGame.hud.hudContainer);
+  const playerIdx  = stageIndex(localApp, localGame.player.playerContainer);
+  const enemiesIdx = stageIndex(localApp, localGame.enemySpawner.spawnerContainer);
+
+  assert.ok(hudIdx !== -1, 'HUD must be back on stage after settings close');
+  assert.ok(playerIdx  < hudIdx, 'player must be below HUD after settings close');
+  assert.ok(enemiesIdx < hudIdx, 'enemies must be below HUD after settings close');
+
+  localGame.clear();
+});
+
+test('render hierarchy: upgrade screen is above HUD and game world when shown', () => {
+  const { app: localApp, game: localGame } = createGameHarness('hierarchy-upgrade');
+
+  // Manually invoke _build to show the upgrade screen without triggering animation teardown
+  localGame.upgradeScreen._build(
+    localGame.upgradeState.getCardsToShow(),
+    () => {},
+  );
+
+  const upgradeIdx  = stageIndex(localApp, localGame.upgradeScreen.container);
+  const hudIdx      = stageIndex(localApp, localGame.hud.hudContainer);
+  const playerIdx   = stageIndex(localApp, localGame.player.playerContainer);
+  const bulletsIdx  = stageIndex(localApp, localGame.player.shooting.shootingContainer);
+  const droneIdx    = stageIndex(localApp, localGame.droneSystem.container);
+
+  assert.ok(upgradeIdx !== -1, 'upgrade screen must be on stage');
+  assert.ok(upgradeIdx > hudIdx,     'upgrade screen must be above HUD');
+  assert.ok(upgradeIdx > playerIdx,  'upgrade screen must be above player');
+  assert.ok(upgradeIdx > bulletsIdx, 'upgrade screen must be above player bullets');
+  assert.ok(upgradeIdx > droneIdx,   'upgrade screen must be above drones');
+
+  localGame.clear();
+});
+
+test('render hierarchy: player bullets stay below HUD after shooting', () => {
+  const { app: localApp, game: localGame } = createGameHarness('hierarchy-shooting');
+
+  // Simulate several shots
+  const keys = {};
+  localGame.player.shooting.update(true, localGame.enemySpawner, localGame.player);
+  localGame.player.shooting.update(true, localGame.enemySpawner, localGame.player);
+
+  const bulletsIdx = stageIndex(localApp, localGame.player.shooting.shootingContainer);
+  const hudIdx     = stageIndex(localApp, localGame.hud.hudContainer);
+
+  assert.ok(bulletsIdx < hudIdx, 'player bullets must remain below HUD after shooting');
+
+  localGame.clear();
+});

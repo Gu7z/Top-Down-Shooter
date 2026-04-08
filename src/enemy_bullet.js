@@ -91,13 +91,8 @@ export default class EnemyBullet {
     this.bullet.destroy();
     this.trailTimers.forEach((timer) => timer.clear());
     this.trailTimers.clear();
-    
-    // Drop leftover trail graphics after a short grace period.
-    this.destroyTimer = this.app.setTimeout(() => {
-      if (!this.trailContainer.destroyed) {
-        this.trailContainer.destroy({ children: true });
-      }
-      this.destroyTimer = null;
-    }, 1);
+    if (!this.trailContainer.destroyed) {
+      this.trailContainer.destroy({ children: true });
+    }
   }
 }

@@ -3,11 +3,11 @@ import { UPGRADE_REGISTRY } from './run_upgrade_data.js';
 const DEFAULT_EFFECTS = {
   chainLightningChance: 0,
   chainLightningTargets: 2,
-  chainLightningRange: 100,
   chainLightningDamage: 1,
   viralCoreRadius: 0,
   viralCoreDamagePerTick: 0,
   viralCoreDuration: 0,
+  viralCoreSlow: 0,
   retaliationPulseRadius: 0,
   retaliationPulseDamage: 0,
   retaliationPulseStunMs: 0,

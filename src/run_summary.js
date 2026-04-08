@@ -132,12 +132,20 @@ export default class RunSummary {
       letterSpacing: 2,
     });
 
-    Object.entries(summary.killsByType).forEach(([type, count], index) => {
+    const killListTop    = startY + 36;
+    const killListBottom = cardBottom - 230;
+    const visibleH       = killListBottom - killListTop;
+    const itemH          = 28;
+    const entries        = Object.entries(summary.killsByType);
+
+    const killScroll = new PIXI.Container();
+    killScroll.position.set(0, killListTop);
+    entries.forEach(([type, count], index) => {
       createLabel({
-        container:     this.container,
+        container:     killScroll,
         text:          `${type.toUpperCase()}: ${count}`,
         x:             rightX,
-        y:             startY + 36 + index * 28,
+        y:             index * itemH,
         fontSize:      15,
         color:         UISkin.palette.textPrimary,
         anchor:        1,
@@ -145,6 +153,60 @@ export default class RunSummary {
         letterSpacing: 1,
       });
     });
+
+    const killMask = new PIXI.Graphics();
+    killMask.beginFill(0xffffff, 1);
+    killMask.drawRect(cx, killListTop, halfW + 20, visibleH);
+    killMask.endFill();
+    this.container.addChild(killMask);
+    this.container.addChild(killScroll);
+    killScroll.mask = killMask;
+
+    const totalH = entries.length * itemH;
+    if (totalH > visibleH) {
+      const scrollbarX  = rightX + 8;
+      const trackW      = 2;
+      const thumbW      = 4;
+      const thumbH      = Math.max(16, Math.round(visibleH * (visibleH / totalH)));
+      const thumbTravel = visibleH - thumbH;
+
+      // Track
+      const track = new PIXI.Graphics();
+      track.beginFill(UISkin.palette.textSecondary, 0.2);
+      track.drawRect(scrollbarX, killListTop, trackW, visibleH);
+      track.endFill();
+      this.container.addChild(track);
+
+      // Thumb
+      const thumb = new PIXI.Graphics();
+      thumb.beginFill(UISkin.palette.accent, 0.7);
+      thumb.drawRect(scrollbarX - 1, killListTop, thumbW, thumbH);
+      thumb.endFill();
+      this.container.addChild(thumb);
+
+      // Bottom fade — signals more content below
+      const fade = new PIXI.Graphics();
+      const fadeH = 32;
+      fade.beginFill(UISkin.palette.void ?? 0x070314, 0.85);
+      fade.drawRect(cx, killListBottom - fadeH, halfW + 12, fadeH);
+      fade.endFill();
+      this.container.addChild(fade);
+
+      const updateThumb = () => {
+        const scrolled = killListTop - killScroll.y; // 0 → (totalH - visibleH)
+        const ratio    = scrolled / (totalH - visibleH);
+        thumb.y        = Math.round(ratio * thumbTravel);
+        // Hide fade when scrolled to bottom
+        fade.alpha = ratio >= 0.98 ? 0 : 1;
+      };
+
+      this._wheelHandler = (e) => {
+        const minY = killListTop - (totalH - visibleH);
+        killScroll.y = Math.max(minY, Math.min(killListTop, killScroll.y - e.deltaY * 0.4));
+        updateThumb();
+      };
+      this.app.view.addEventListener('wheel', this._wheelHandler);
+    }
   }
 
   buildHighlights(cx, cardBottom, halfW) {
@@ -198,6 +260,10 @@ export default class RunSummary {
   }
 
   destroy() {
+    if (this._wheelHandler) {
+      this.app.view.removeEventListener('wheel', this._wheelHandler);
+      this._wheelHandler = null;
+    }
     this.app.stage.removeChild(this.container);
   }
 }

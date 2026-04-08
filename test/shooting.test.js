@@ -179,3 +179,14 @@ test('shoot timer recursively reschedules and setter updates fire velocity', () 
   assert.equal(timers.length, 2);
   assert.equal(timedShooting.fireVelocity, 2);
 });
+
+test('shootingContainer is on stage before any shot is fired', () => {
+  const freshApp = createAppMock();
+  const freshShooting = new Shooting({ app: freshApp, player, playerSize: 20, keys: {} });
+
+  assert.ok(
+    freshApp.stage.children.includes(freshShooting.shootingContainer),
+    'shootingContainer must be added to stage in constructor, not deferred to first fire()',
+  );
+  assert.equal(freshShooting.bullets.length, 0, 'no bullets should exist before fire()');
+});

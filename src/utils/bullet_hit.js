@@ -71,7 +71,15 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
       const upgEffects = player.runUpgradeEffects;
       if (upgEffects && upgEffects.chainLightningChance > 0 && Math.random() < upgEffects.chainLightningChance) {
         const chainTargets = [];
-        const enemiesForChain = [...enemiesSnapshot].filter(e => e !== enemy && !e.enemy?.destroyed);
+        const screen = effects?.app?.screen;
+        const enemiesForChain = [...enemiesSnapshot].filter(e => {
+          if (e === enemy || e.enemy?.destroyed) return false;
+          if (screen) {
+            const { x, y } = e.enemy.position;
+            if (x < 0 || x > screen.width || y < 0 || y > screen.height) return false;
+          }
+          return true;
+        });
         enemiesForChain.sort((a, b) => {
           const da = Math.hypot(a.enemy.position.x - enemy.enemy.position.x, a.enemy.position.y - enemy.enemy.position.y);
           const db = Math.hypot(b.enemy.position.x - enemy.enemy.position.x, b.enemy.position.y - enemy.enemy.position.y);
@@ -79,16 +87,10 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
         });
         for (const nearby of enemiesForChain) {
           if (chainTargets.length >= upgEffects.chainLightningTargets) break;
-          const dist = Math.hypot(
-            nearby.enemy.position.x - enemy.enemy.position.x,
-            nearby.enemy.position.y - enemy.enemy.position.y,
-          );
-          if (dist <= upgEffects.chainLightningRange) {
-            const nearbyIdx = enemies.indexOf(nearby);
-            if (nearbyIdx !== -1) {
-              nearby.kill(enemies, nearbyIdx, player, effects, upgEffects.chainLightningDamage);
-              chainTargets.push({ x: nearby.enemy.position.x, y: nearby.enemy.position.y });
-            }
+          const nearbyIdx = enemies.indexOf(nearby);
+          if (nearbyIdx !== -1) {
+            nearby.kill(enemies, nearbyIdx, player, effects, upgEffects.chainLightningDamage);
+            chainTargets.push({ x: nearby.enemy.position.x, y: nearby.enemy.position.y });
           }
         }
         if (chainTargets.length > 0 && effects?.chainLightning) {

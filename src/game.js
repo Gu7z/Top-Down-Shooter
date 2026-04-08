@@ -75,9 +75,10 @@ export default class Game {
         x, y,
         radius: eff.viralCoreRadius,
         damagePerTick: eff.viralCoreDamagePerTick,
+        slowFactor: eff.viralCoreSlow ?? 0,
         framesLeft: eff.viralCoreDuration,
         totalFrames: eff.viralCoreDuration,
-        tickTimer: 60,
+        tickTimer: 30,
         visual,
       });
     };
@@ -117,6 +118,9 @@ export default class Game {
       runStats: this.runStats,
       effects: this.effects,
     });
+    // Re-add HUD after DroneSystem so it stays above drones; overlays (upgrade screen,
+    // settings) will be added on top of this when shown.
+    this.app.stage.addChild(this.hud.hudContainer);
 
     this.player.shooting.registerEffects(this.effects);
 
@@ -254,7 +258,7 @@ export default class Game {
         cloud.framesLeft--;
         cloud.tickTimer--;
         if (cloud.tickTimer <= 0) {
-          cloud.tickTimer = 60;
+          cloud.tickTimer = 30;
           const dmg = Math.ceil(cloud.damagePerTick);
           for (let j = this.enemySpawner.spawns.length - 1; j >= 0; j--) {
             const spawn = this.enemySpawner.spawns[j];
@@ -272,6 +276,17 @@ export default class Game {
           cloud.visual?.destroy();
           this.viralClouds.splice(i, 1);
         }
+      }
+
+      // Viral slow — recalculado todo frame para restaurar velocidade automaticamente
+      for (const spawn of this.enemySpawner.spawns) {
+        if (!spawn.enemy || spawn.enemy.destroyed) continue;
+        let maxSlow = 0;
+        for (const cloud of this.viralClouds) {
+          const dist = Math.hypot(spawn.enemy.position.x - cloud.x, spawn.enemy.position.y - cloud.y);
+          if (dist <= cloud.radius) maxSlow = Math.max(maxSlow, cloud.slowFactor);
+        }
+        spawn.enemy.speed = spawn.enemy.baseSpeed * (1 - maxSlow);
       }
 
       for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
@@ -332,21 +347,44 @@ export default class Game {
           spawn.freezeTimer = stunFrames;
         }
       }
-      if (isFullScreen) {
-        this.effects.screenPulse(0xFF00FF);
-      } else {
+      {
+        const { width: W, height: H } = this.app.screen;
+        const maxRadius = isFullScreen
+          ? Math.max(
+              Math.hypot(px, py),
+              Math.hypot(W - px, py),
+              Math.hypot(px, H - py),
+              Math.hypot(W - px, H - py),
+            )
+          : eff.retaliationPulseRadius;
         const ring = new PIXI.Graphics();
-        ring.lineStyle(3, 0xFF00FF, 1);
-        ring.drawCircle(px, py, eff.retaliationPulseRadius);
+        ring.position.set(px, py);
         this.effects.effectsContainer.addChild(ring);
-        let life = 18;
-        const fade = () => {
-          life--;
-          ring.alpha = Math.max(0, life / 18);
-          ring.scale.set(1 + (18 - life) * 0.03);
-          if (life <= 0) { this.app.ticker.remove(fade); ring.destroy(); }
+        const totalFrames = 50;
+        let frame = 0;
+        const animate = () => {
+          if (ring.destroyed) { this.app.ticker.remove(animate); return; }
+          frame++;
+          const t = frame / totalFrames;
+          const eased = 1 - Math.pow(1 - t, 2);
+          const currentRadius = maxRadius * eased;
+          const alpha = 1 - t;
+          ring.clear();
+          ring.lineStyle(4 - t * 2, 0xFF00FF, alpha);
+          ring.drawCircle(0, 0, currentRadius);
+          for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
+            const b = this.enemyBullets[i];
+            if (Math.hypot(b.bullet.position.x - px, b.bullet.position.y - py) <= currentRadius) {
+              b.destroy();
+              this.enemyBullets.splice(i, 1);
+            }
+          }
+          if (frame >= totalFrames) {
+            this.app.ticker.remove(animate);
+            if (!ring.destroyed) ring.destroy();
+          }
         };
-        this.app.ticker.add(fade);
+        this.app.ticker.add(animate);
       }
     };
 

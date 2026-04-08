@@ -55,9 +55,6 @@ export default class DroneSystem {
   update(enemySpawner) {
     if (this.droneCount === 0) return;
     
-    // Ensure the container is always rendered correctly on top
-    this.app.stage.addChild(this.container);
-    
     this.orbitAngle -= this.orbitSpeed; // Orbit counter-clockwise
     
     const px = this.player.player.position.x;

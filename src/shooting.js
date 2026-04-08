@@ -23,6 +23,7 @@ export default class Shooting {
     this.shooting = false;
     this.shootInterval = 0.3;
     this.shootingContainer = new PIXI.Container();
+    this.app.stage.addChild(this.shootingContainer);
     this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
     this.interval = undefined;
     this.effects = effects;
@@ -109,8 +110,6 @@ export default class Shooting {
     if (this.effects) {
       this.effects.shake(1.4);
     }
-
-    this.app.stage.addChild(this.shootingContainer);
   }
 
   set setFireVelocity(velocity) {

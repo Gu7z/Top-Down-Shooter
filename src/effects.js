@@ -130,27 +130,37 @@ export default class Effects {
   chainLightning(fromX, fromY, targets) {
     for (const target of targets) {
       const bolt = new PIXI.Graphics();
-      const segments = 5;
+      const segments = 8;
       const points = [{ x: fromX, y: fromY }];
       for (let i = 1; i < segments; i++) {
         const t = i / segments;
         points.push({
-          x: fromX + (target.x - fromX) * t + (Math.random() - 0.5) * 18,
-          y: fromY + (target.y - fromY) * t + (Math.random() - 0.5) * 18,
+          x: fromX + (target.x - fromX) * t + (Math.random() - 0.5) * 30,
+          y: fromY + (target.y - fromY) * t + (Math.random() - 0.5) * 30,
         });
       }
       points.push({ x: target.x, y: target.y });
 
-      bolt.lineStyle(1.5, 0x00FFFF, 1);
-      bolt.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) bolt.lineTo(points[i].x, points[i].y);
+      const drawPath = (style) => {
+        bolt.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) bolt.lineTo(points[i].x, points[i].y);
+      };
 
-      bolt.lineStyle(0.5, 0xAAFFFF, 0.6);
-      bolt.moveTo(points[0].x - 1, points[0].y - 1);
-      for (let i = 1; i < points.length; i++) bolt.lineTo(points[i].x - 1, points[i].y - 1);
+      // Outer glow
+      bolt.lineStyle(10, 0x00FFFF, 0.2);
+      drawPath();
+      // Mid glow
+      bolt.lineStyle(5, 0x00FFFF, 0.5);
+      drawPath();
+      // Main bolt
+      bolt.lineStyle(2.5, 0x00FFFF, 1);
+      drawPath();
+      // White hot core
+      bolt.lineStyle(1, 0xFFFFFF, 0.9);
+      drawPath();
 
       this.effectsContainer.addChild(bolt);
-      this.particles.push({ sprite: bolt, vx: 0, vy: 0, life: 10, maxLife: 10, gravity: 0 });
+      this.particles.push({ sprite: bolt, vx: 0, vy: 0, life: 35, maxLife: 35, gravity: 0 });
     }
   }
 
