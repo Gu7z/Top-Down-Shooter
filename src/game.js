@@ -201,7 +201,7 @@ export default class Game {
       app.stage.removeChild(this.hud.hudContainer);
       this.enemyBullets.forEach(b => b.destroy());
       this.enemyBullets = [];
-      this.viralClouds.forEach(c => c.visual?.destroy());
+      this.viralClouds.forEach(c => { if (c.visual && !c.visual.destroyed) c.visual.destroy(); });
       this.viralClouds = [];
     };
     this.finishRun = ({ reason = "manual" } = {}) => {
