@@ -255,6 +255,7 @@ export class RunUpgradeScreen {
       const vy = Math.sin(angle) * speed;
       let life = 25;
       const ptick = () => {
+        if (p.destroyed) { this.app.ticker.remove(ptick); return; }
         p.position.x += vx;
         p.position.y += vy;
         life--;
