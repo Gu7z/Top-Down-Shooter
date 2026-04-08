@@ -70,13 +70,14 @@ const BOSS_DEFS = {
 const MAX_PROCEDURAL_ENEMY_COUNT = 90;
 
 export default class WaveManager {
-  constructor({ app, spawnerContainer, enemyBullets, renderBanner, updateBossHud, finishGame }) {
+  constructor({ app, spawnerContainer, enemyBullets, renderBanner, updateBossHud, finishGame, onBossDefeated }) {
     this.app = app;
     this.container = spawnerContainer;
     this.enemyBullets = enemyBullets;
     this.renderBanner = renderBanner; // callback(text, persist)
     this.updateBossHud = updateBossHud; // callback(bossRef, hp, maxHp, color, name)
     this.finishGame = finishGame;
+    this.onBossDefeated = onBossDefeated ?? null;
     
     this.currentWave = 1;
     this.enemiesToSpawn = [];
@@ -222,6 +223,9 @@ export default class WaveManager {
         // Track completed
         if (player.runStats) {
           player.runStats.recordWaveCompleted?.(this.currentWave);
+        }
+        if (isCompletedBoss) {
+          this.onBossDefeated?.();
         }
       }
     }
