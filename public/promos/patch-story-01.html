@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEON HUNT — Patch Story 01</title>
+    <style>
+      :root {
+        --bg: #090b14;
+        --panel: rgba(10, 14, 28, 0.92);
+        --panel-2: rgba(14, 19, 36, 0.92);
+        --ink: #020409;
+        --cyan: #35f2ff;
+        --cyan-soft: rgba(53, 242, 255, 0.18);
+        --violet: #8f6cff;
+        --violet-soft: rgba(143, 108, 255, 0.16);
+        --magenta: #ff4ef6;
+        --green: #35ff9c;
+        --green-soft: rgba(53, 255, 156, 0.18);
+        --text: #ebf7ff;
+        --muted: #7f9cbc;
+        --danger: #ff447f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 50% 18%, rgba(89, 59, 255, 0.28), transparent 28%),
+          radial-gradient(circle at 12% 78%, rgba(53, 242, 255, 0.16), transparent 24%),
+          radial-gradient(circle at 82% 88%, rgba(53, 255, 156, 0.12), transparent 22%),
+          linear-gradient(180deg, #05060b 0%, #090c15 38%, #06070c 100%);
+        font-family: "Arial Black", "Orbitron", "Segoe UI", sans-serif;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .story {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        color: var(--text);
+        background:
+          linear-gradient(180deg, rgba(6, 9, 18, 0.82) 0%, rgba(7, 10, 20, 0.92) 100%);
+      }
+
+      .story::before,
+      .story::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .story::before {
+        background:
+          repeating-linear-gradient(
+            to right,
+            transparent 0,
+            transparent 68px,
+            rgba(30, 75, 120, 0.18) 68px,
+            rgba(30, 75, 120, 0.18) 70px
+          ),
+          repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent 68px,
+            rgba(30, 75, 120, 0.16) 68px,
+            rgba(30, 75, 120, 0.16) 70px
+          );
+        opacity: 0.34;
+      }
+
+      .story::after {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 14%),
+          repeating-linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.045) 0,
+            rgba(255, 255, 255, 0.045) 2px,
+            transparent 2px,
+            transparent 8px
+          );
+        mix-blend-mode: screen;
+        opacity: 0.16;
+      }
+
+      .frame {
+        position: absolute;
+        inset: 38px;
+        border: 1px solid rgba(53, 242, 255, 0.16);
+        pointer-events: none;
+      }
+
+      .frame::before,
+      .frame::after,
+      .frame .corner-a,
+      .frame .corner-b {
+        content: "";
+        position: absolute;
+        width: 72px;
+        height: 72px;
+        border-color: rgba(53, 242, 255, 0.48);
+        border-style: solid;
+      }
+
+      .frame::before {
+        top: -1px;
+        left: -1px;
+        border-width: 2px 0 0 2px;
+      }
+
+      .frame::after {
+        top: -1px;
+        right: -1px;
+        border-width: 2px 2px 0 0;
+      }
+
+      .frame .corner-a {
+        bottom: -1px;
+        left: -1px;
+        border-width: 0 0 2px 2px;
+      }
+
+      .frame .corner-b {
+        bottom: -1px;
+        right: -1px;
+        border-width: 0 2px 2px 0;
+      }
+
+      .brand {
+        position: absolute;
+        top: 96px;
+        left: 82px;
+        right: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 28px;
+        color: var(--muted);
+      }
+
+      .brand .name {
+        color: var(--cyan);
+        text-shadow: 0 0 18px rgba(53, 242, 255, 0.28);
+      }
+
+      .headline-wrap {
+        position: absolute;
+        top: 176px;
+        left: 82px;
+        width: 74%;
+        z-index: 3;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 18px;
+        border: 1px solid rgba(53, 242, 255, 0.28);
+        background: rgba(7, 12, 24, 0.8);
+        color: var(--cyan);
+        font-size: 23px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        backdrop-filter: blur(8px);
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        background: var(--magenta);
+        box-shadow: 0 0 16px rgba(255, 78, 246, 0.85);
+      }
+
+      h1 {
+        margin: 26px 0 0;
+        font-size: 118px;
+        line-height: 0.9;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        max-width: 100%;
+        text-shadow:
+          0 0 36px rgba(143, 108, 255, 0.22),
+          0 0 18px rgba(53, 242, 255, 0.16);
+      }
+
+      .headline-accent {
+        display: block;
+        color: var(--cyan);
+      }
+
+      .subcopy {
+        margin-top: 26px;
+        width: 74%;
+        padding: 18px 22px 20px;
+        border: 1px solid rgba(53, 242, 255, 0.14);
+        background:
+          linear-gradient(180deg, rgba(7, 11, 21, 0.88) 0%, rgba(7, 11, 21, 0.62) 100%);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+          0 14px 38px rgba(0, 0, 0, 0.2);
+        font-family: "JetBrains Mono", "Courier New", monospace;
+        font-size: 26px;
+        line-height: 1.55;
+        color: #bfd5ea;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+      }
+
+      .subcopy strong {
+        color: var(--green);
+      }
+
+      .subcopy .highlight-cyan {
+        color: var(--cyan);
+      }
+
+      .hero {
+        position: absolute;
+        top: 350px;
+        right: -12px;
+        width: 1020px;
+        height: 930px;
+        z-index: 1;
+      }
+
+      .hero .glow {
+        position: absolute;
+        inset: 100px 120px 180px 220px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, rgba(143, 108, 255, 0.65) 0%, rgba(143, 108, 255, 0.15) 34%, transparent 68%);
+        filter: blur(42px);
+      }
+
+      .promo-panel {
+        position: absolute;
+        left: 74px;
+        right: 74px;
+        bottom: 252px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        z-index: 5;
+      }
+
+      .card {
+        position: relative;
+        min-height: 470px;
+        padding: 26px 28px 30px;
+        background:
+          linear-gradient(180deg, rgba(11, 16, 29, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
+        clip-path: polygon(24px 0, calc(100% - 24px) 0, 100% 24px, 100% calc(100% - 24px), calc(100% - 24px) 100%, 24px 100%, 0 calc(100% - 24px), 0 24px);
+        border: 1px solid rgba(53, 242, 255, 0.18);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+          0 16px 50px rgba(0, 0, 0, 0.48);
+      }
+
+      .card::before,
+      .card::after {
+        content: "";
+        position: absolute;
+        left: 28px;
+        right: 28px;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, currentColor 18%, currentColor 82%, transparent 100%);
+        opacity: 0.92;
+      }
+
+      .card.lightning {
+        color: var(--cyan);
+        transform: rotate(-6deg);
+      }
+
+      .card.viral {
+        color: var(--green);
+        transform: rotate(6deg);
+      }
+
+      .support-cards {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+      }
+
+      .mini-card {
+        position: absolute;
+        width: 244px;
+        min-height: 238px;
+        padding: 16px 18px 18px;
+        background:
+          linear-gradient(180deg, rgba(11, 16, 29, 0.96) 0%, rgba(8, 12, 22, 0.96) 100%);
+        clip-path: polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+          0 16px 44px rgba(0, 0, 0, 0.42);
+        opacity: 0.92;
+      }
+
+      .mini-card::before {
+        content: "";
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent 0%, currentColor 18%, currentColor 82%, transparent 100%);
+        opacity: 0.88;
+      }
+
+      .mini-card.hunter {
+        left: 2px;
+        bottom: 564px;
+        color: #ff9d2f;
+        transform: rotate(-13deg);
+      }
+
+      .mini-card.retaliation {
+        right: -4px;
+        bottom: 556px;
+        color: var(--magenta);
+        transform: rotate(13deg);
+      }
+
+      .mini-card .card-kicker {
+        font-size: 13px;
+        letter-spacing: 0.22em;
+      }
+
+      .mini-card .icon-box {
+        margin-top: 0;
+        height: 76px;
+      }
+
+      .mini-card h3 {
+        margin: 12px 0 12px;
+        font-size: 20px;
+        line-height: 1.02;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .card .frame-corners,
+      .card .frame-corners::before,
+      .card .frame-corners::after,
+      .card .frame-corners span {
+        content: "";
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border-color: currentColor;
+        border-style: solid;
+        opacity: 0.84;
+      }
+
+      .card .frame-corners {
+        top: 18px;
+        left: 18px;
+        border-width: 2px 0 0 2px;
+      }
+
+      .card .frame-corners::before {
+        top: 0;
+        right: -934px;
+        border-width: 2px 2px 0 0;
+      }
+
+      .card .frame-corners::after {
+        bottom: -418px;
+        left: 0;
+        border-width: 0 0 2px 2px;
+      }
+
+      .card .frame-corners span {
+        bottom: -418px;
+        right: -934px;
+        border-width: 0 2px 2px 0;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .card-kicker {
+        font-size: 16px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: rgba(235, 247, 255, 0.72);
+      }
+
+      .card-tier {
+        display: flex;
+        gap: 10px;
+      }
+
+      .card-tier i {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: currentColor;
+        box-shadow: 0 0 12px currentColor;
+      }
+
+      .icon-box {
+        margin-top: 18px;
+        height: 126px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background:
+          radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02), transparent 56%),
+          rgba(5, 10, 18, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card h2 {
+        margin: 20px 0 10px;
+        font-size: 44px;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .card p {
+        margin: 0;
+        font-family: "JetBrains Mono", "Courier New", monospace;
+        font-size: 22px;
+        line-height: 1.55;
+        color: #d6e4f0;
+      }
+
+      .card p strong {
+        color: #fff;
+      }
+
+      .ship-wrap {
+        position: absolute;
+        left: 50%;
+        bottom: 138px;
+        width: 280px;
+        transform: translateX(-50%);
+        z-index: 4;
+      }
+
+      .ship-wrap::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 70px;
+        width: 26px;
+        height: 240px;
+        transform: translateX(-50%);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.0) 0%, rgba(53, 242, 255, 0.72) 44%, rgba(143, 108, 255, 0.0) 100%);
+        filter: blur(8px);
+      }
+
+      .ship-wrap img {
+        display: block;
+        width: 100%;
+        filter:
+          drop-shadow(0 0 26px rgba(53, 242, 255, 0.36))
+          drop-shadow(0 0 8px rgba(255, 255, 255, 0.22));
+        transform: rotate(-90deg);
+      }
+
+      .divider-line {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        bottom: 214px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(53, 242, 255, 0.3) 18%, rgba(53, 242, 255, 0.3) 82%, transparent 100%);
+        z-index: 4;
+      }
+
+      .fx {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .lightning-streak {
+        position: absolute;
+        left: 120px;
+        top: 1110px;
+        width: 250px;
+        height: 14px;
+        background: linear-gradient(90deg, rgba(53, 242, 255, 0) 0%, rgba(53, 242, 255, 1) 18%, rgba(255, 255, 255, 0.96) 48%, rgba(53, 242, 255, 0) 100%);
+        transform: rotate(-24deg);
+        box-shadow: 0 0 18px rgba(53, 242, 255, 0.7);
+      }
+
+      .toxic-cloud {
+        position: absolute;
+        right: 118px;
+        top: 1130px;
+        width: 220px;
+        height: 138px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 50%, rgba(53, 255, 156, 0.68) 0%, rgba(53, 255, 156, 0.18) 42%, rgba(53, 255, 156, 0) 72%);
+        filter: blur(10px);
+      }
+
+      .boss-svg,
+      .icon-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="story">
+      <div class="frame">
+        <span class="corner-a"></span>
+        <span class="corner-b"></span>
+      </div>
+
+      <div class="brand">
+        <span class="name">NEON HUNT</span>
+        <span>PATCH // STORY 01</span>
+      </div>
+
+      <section class="headline-wrap">
+        <div class="eyebrow">PATCH NOTE EM DESTAQUE</div>
+        <h1>
+          NOVO BOSS
+          <span class="headline-accent">+ UPGRADES</span>
+          DE RUN
+        </h1>
+        <div class="subcopy">
+          Enfrente o <strong>Sniper</strong>, escolha <strong class="highlight-cyan">cartinhas de upgrade</strong> no meio da run e monte builds
+          com mais dano, controle de tela e novas sinergias.
+        </div>
+      </section>
+
+      <section class="hero">
+        <div class="glow"></div>
+        <svg class="boss-svg" viewBox="0 0 1020 930" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="bossCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="16%" stop-color="#ffe3ff" />
+              <stop offset="32%" stop-color="#b9a4ff" />
+              <stop offset="56%" stop-color="#845fff" />
+              <stop offset="100%" stop-color="#371878" stop-opacity="0.15" />
+            </radialGradient>
+            <radialGradient id="bossGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#d2c7ff" stop-opacity="0.95" />
+              <stop offset="35%" stop-color="#8f6cff" stop-opacity="0.55" />
+              <stop offset="100%" stop-color="#8f6cff" stop-opacity="0" />
+            </radialGradient>
+            <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="12" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <circle cx="612" cy="330" r="206" fill="url(#bossGlow)" />
+          <g filter="url(#softGlow)">
+            <path d="M460 348 L292 284 L412 214 L494 248 Z" fill="#120f24" stroke="#8f6cff" stroke-width="3"/>
+            <path d="M766 348 L934 284 L814 214 L732 248 Z" fill="#120f24" stroke="#8f6cff" stroke-width="3"/>
+            <path d="M462 438 L302 520 L422 574 L500 532 Z" fill="#120f24" stroke="#35f2ff" stroke-width="3"/>
+            <path d="M764 438 L924 520 L804 574 L726 532 Z" fill="#120f24" stroke="#35f2ff" stroke-width="3"/>
+          </g>
+
+          <circle cx="612" cy="330" r="112" fill="#0b0f1f" stroke="#d4caff" stroke-width="2"/>
+          <circle cx="612" cy="330" r="88" fill="url(#bossCore)" />
+          <circle cx="612" cy="330" r="48" fill="#ffffff" fill-opacity="0.92" />
+          <circle cx="612" cy="330" r="30" fill="#ff4ef6" />
+
+          <circle cx="612" cy="330" r="142" fill="none" stroke="#8f6cff" stroke-opacity="0.7" stroke-width="5" />
+          <circle cx="612" cy="330" r="174" fill="none" stroke="#35f2ff" stroke-opacity="0.28" stroke-width="2" stroke-dasharray="14 18" />
+
+          <line x1="612" y1="106" x2="612" y2="554" stroke="#bdaeff" stroke-width="2" stroke-opacity="0.58"/>
+          <line x1="388" y1="330" x2="836" y2="330" stroke="#bdaeff" stroke-width="2" stroke-opacity="0.58"/>
+          <line x1="468" y1="186" x2="756" y2="474" stroke="#35f2ff" stroke-width="1.5" stroke-opacity="0.22"/>
+          <line x1="756" y1="186" x2="468" y2="474" stroke="#35f2ff" stroke-width="1.5" stroke-opacity="0.22"/>
+
+          <path d="M806 94 Q734 154 692 232" fill="none" stroke="#ff4ef6" stroke-opacity="0.72" stroke-width="6"/>
+          <path d="M870 144 Q802 190 760 268" fill="none" stroke="#35f2ff" stroke-opacity="0.56" stroke-width="4"/>
+          <path d="M304 610 Q504 556 650 496" fill="none" stroke="#35f2ff" stroke-opacity="0.35" stroke-width="2"/>
+
+          <g transform="translate(634 518)">
+            <rect x="0" y="0" width="272" height="94" fill="rgba(7,12,24,0.94)" stroke="#35f2ff" stroke-opacity="0.42"/>
+            <text x="22" y="36" fill="#35f2ff" font-size="24" font-family="Arial Black, sans-serif" letter-spacing="3">LONG RANGE</text>
+            <text x="22" y="68" fill="#bfd5ea" font-size="17" font-family="Courier New, monospace">chefe novo da wave 10</text>
+          </g>
+        </svg>
+      </section>
+
+      <div class="fx">
+        <div class="lightning-streak"></div>
+        <div class="toxic-cloud"></div>
+      </div>
+
+      <div class="divider-line"></div>
+
+      <div class="support-cards" aria-hidden="true">
+        <article class="mini-card hunter">
+          <div class="card-kicker">Upgrade novo</div>
+          <h3>Caça-Titãs</h3>
+          <div class="icon-box">
+            <svg class="icon-svg" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <circle cx="108" cy="72" r="42" fill="none" stroke="#ff9d2f" stroke-width="6" stroke-opacity="0.75"/>
+                <circle cx="108" cy="72" r="20" fill="none" stroke="#ffd9a7" stroke-width="6"/>
+                <line x1="108" y1="18" x2="108" y2="48" stroke="#ffd9a7" stroke-width="6" stroke-linecap="round"/>
+                <line x1="108" y1="96" x2="108" y2="126" stroke="#ffd9a7" stroke-width="6" stroke-linecap="round"/>
+                <line x1="54" y1="72" x2="84" y2="72" stroke="#ffd9a7" stroke-width="6" stroke-linecap="round"/>
+                <line x1="132" y1="72" x2="162" y2="72" stroke="#ffd9a7" stroke-width="6" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+        </article>
+
+        <article class="mini-card retaliation">
+          <div class="card-kicker">Upgrade novo</div>
+          <h3>Pulso de Retaliação</h3>
+          <div class="icon-box">
+            <svg class="icon-svg" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <circle cx="110" cy="70" r="18" fill="none" stroke="#ffb0fb" stroke-width="6"/>
+                <circle cx="110" cy="70" r="42" fill="none" stroke="#ff4ef6" stroke-width="4" stroke-opacity="0.72"/>
+                <circle cx="110" cy="70" r="64" fill="none" stroke="#ff4ef6" stroke-width="3" stroke-opacity="0.32"/>
+                <path d="M110 8 L118 28 L140 30 L124 44 L128 66 L110 54 L92 66 L96 44 L80 30 L102 28 Z" fill="#ff4ef6" fill-opacity="0.9"/>
+              </g>
+            </svg>
+          </div>
+        </article>
+      </div>
+
+      <section class="promo-panel">
+        <article class="card lightning">
+          <div class="frame-corners"><span></span></div>
+          <div class="card-head">
+            <div class="card-kicker">Upgrade em destaque</div>
+            <div class="card-tier"><i></i><i></i><i></i></div>
+          </div>
+          <div class="icon-box">
+            <svg class="icon-svg" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <filter id="boltGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <g filter="url(#boltGlow)">
+                <path d="M108 18 L132 62 L114 66 L138 122 L94 74 L108 70 L88 18 Z" fill="none" stroke="#35f2ff" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M56 96 L80 82 L72 104" fill="none" stroke="#35f2ff" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
+                <path d="M160 42 L184 34 L172 58" fill="none" stroke="#35f2ff" stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </div>
+          <h2>Raio em Cadeia</h2>
+          <p>
+            Seus tiros passam a <strong>saltar entre inimigos</strong>, limpando grupos com mais velocidade e dando
+            muito mais impacto visual para a build.
+          </p>
+        </article>
+
+        <article class="card viral">
+          <div class="frame-corners"><span></span></div>
+          <div class="card-head">
+            <div class="card-kicker">Upgrade em destaque</div>
+            <div class="card-tier"><i></i><i></i><i></i></div>
+          </div>
+          <div class="icon-box">
+            <svg class="icon-svg" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <filter id="cloudGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="5" result="blur"/>
+                  <feMerge>
+                    <feMergeNode in="blur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <g filter="url(#cloudGlow)">
+                <circle cx="110" cy="70" r="20" fill="none" stroke="#35ff9c" stroke-width="5"/>
+                <circle cx="110" cy="70" r="38" fill="none" stroke="#35ff9c" stroke-opacity="0.62" stroke-width="3"/>
+                <circle cx="110" cy="70" r="56" fill="none" stroke="#35ff9c" stroke-opacity="0.24" stroke-width="2"/>
+                <circle cx="110" cy="26" r="8" fill="#35ff9c" fill-opacity="0.84"/>
+                <circle cx="152" cy="90" r="8" fill="#35ff9c" fill-opacity="0.76"/>
+                <circle cx="64" cy="88" r="8" fill="#35ff9c" fill-opacity="0.76"/>
+              </g>
+            </svg>
+          </div>
+          <h2>Núcleo Viral</h2>
+          <p>
+            Inimigos abatidos deixam uma <strong>nuvem tóxica</strong> que causa dano em área e desacelera quem entra,
+            criando zonas de controle durante a run.
+          </p>
+        </article>
+      </section>
+
+      <div class="ship-wrap">
+        <img src="/images/spaceship.png" alt="" />
+      </div>
+    </main>
+  </body>
+</html>

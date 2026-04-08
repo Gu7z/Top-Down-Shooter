@@ -1,5 +1,7 @@
 import Controls from "./controls.js";
 import Game from "./game.js";
+import PatchNotesModal from "./patch_notes/patch_notes_modal.js";
+import { shouldShowPatchNotes } from "./patch_notes/patch_notes_state.js";
 import Settings from "./settings.js";
 import SkillTree from "./skill_tree.js";
 import {
@@ -19,9 +21,15 @@ export default class Menu {
     this.centerY = app.screen.height / 2;
     this.username = localStorage.getItem("username") || "";
     this._ticker = null;
+    this.patchNotesModal = null;
+    this.input = null;
+    this.skillTreeButton = null;
+    this.controlsButton = null;
+    this.settingsButton = null;
 
     this.buildScene();
     this.app.stage.addChild(this.menuContainer);
+    this.maybeShowPatchNotes();
   }
 
   // ── Scene ──────────────────────────────────────────────────────
@@ -207,6 +215,7 @@ export default class Menu {
 
     this.menuContainer.addChild(input);
     input.focus();
+    this.input = input;
   }
 
   // ── Buttons ────────────────────────────────────────────────────
@@ -231,7 +240,7 @@ export default class Menu {
     });
     this.playButton.setEnabled(Boolean(this.username));
 
-    createPillButton({
+    this.skillTreeButton = createPillButton({
       container: this.menuContainer,
       x: cx + offsetX, y: startY,
       text:   "ÁRVORE DE HABILIDADES",
@@ -243,7 +252,7 @@ export default class Menu {
     });
 
     // Row 2
-    createPillButton({
+    this.controlsButton = createPillButton({
       container: this.menuContainer,
       x: cx - offsetX, y: startY + gapY,
       text:   "CONTROLES",
@@ -252,7 +261,7 @@ export default class Menu {
       onClick: () => this.showControls(),
     });
 
-    createPillButton({
+    this.settingsButton = createPillButton({
       container: this.menuContainer,
       x: cx + offsetX, y: startY + gapY,
       text:   "⚙  CONFIGURAÇÕES",
@@ -260,6 +269,29 @@ export default class Menu {
       height: btnHeight,
       onClick: () => this.showSettings(),
     });
+  }
+
+  maybeShowPatchNotes() {
+    if (!shouldShowPatchNotes()) return;
+    this.setMenuEnabled(false);
+    this.patchNotesModal = new PatchNotesModal({
+      app: this.app,
+      onConfirm: () => {
+        this.patchNotesModal = null;
+        this.setMenuEnabled(true);
+      },
+    });
+    this.patchNotesModal.show(this.menuContainer);
+  }
+
+  setMenuEnabled(enabled) {
+    this.playButton?.setEnabled(enabled && Boolean(this.username));
+    this.skillTreeButton?.setEnabled(enabled);
+    this.controlsButton?.setEnabled(enabled);
+    this.settingsButton?.setEnabled(enabled);
+    if (this.input) {
+      this.input.disabled = !enabled || !!this.username;
+    }
   }
 
   // ── Glitch title animation ─────────────────────────────────────
@@ -301,6 +333,8 @@ export default class Menu {
       this.app.ticker.remove(this._ticker);
       this._ticker = null;
     }
+    this.patchNotesModal?.destroy();
+    this.patchNotesModal = null;
     this.app.stage.removeChild(this.menuContainer);
   }
 
