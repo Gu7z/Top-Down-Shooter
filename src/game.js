@@ -11,6 +11,8 @@ import DroneSystem from "./drone.js";
 import { createSkillTreeState } from "./progression/skill_tree_state.js";
 import { deriveSkillEffects } from "./progression/skill_effects.js";
 import { createRunStats, createRunSummary } from "./progression/run_stats.js";
+import { RunUpgradeState } from './run_upgrades/run_upgrade_state.js';
+import { RunUpgradeScreen } from './run_upgrades/run_upgrade_screen.js';
 
 import EnemyBullet from "./enemy_bullet.js";
 import WaveManager from "./wave_manager.js";
@@ -32,6 +34,9 @@ export default class Game {
     this.skillState = createSkillTreeState();
     this.skillEffects = deriveSkillEffects(this.skillState.getPurchasedIds());
     this.runStats = createRunStats();
+    this.upgradeState = new RunUpgradeState();
+    this.upgradeScreen = new RunUpgradeScreen(app);
+    this.viralClouds = [];
     this.runFinished = false;
     this.player = new Player({
       app,
@@ -52,8 +57,31 @@ export default class Game {
       enemyBullets: this.enemyBullets,
       renderBanner: (text, persist) => this.hud.showBanner(text, persist),
       updateBossHud: (bossRef, hp, maxHp, color, name) => this.hud.updateBossBar(bossRef, hp, maxHp, color, name),
-      finishGame: (reason) => this.finishRun({ reason })
+      finishGame: (reason) => this.finishRun({ reason }),
+      onBossDefeated: () => this._showUpgradeScreen(),
     });
+    this.player.onEnemyKilledAt = (x, y) => {
+      const eff = this.upgradeState.getActiveEffects();
+      if (eff.viralCoreRadius <= 0) return;
+      const visual = new PIXI.Graphics();
+      visual.beginFill(0x00FF88, 0.18);
+      visual.drawCircle(0, 0, eff.viralCoreRadius);
+      visual.endFill();
+      visual.lineStyle(1.5, 0x00FF88, 0.7);
+      visual.drawCircle(0, 0, eff.viralCoreRadius);
+      visual.position.set(x, y);
+      this.effects.effectsContainer.addChild(visual);
+      this.viralClouds.push({
+        x, y,
+        radius: eff.viralCoreRadius,
+        damagePerTick: eff.viralCoreDamagePerTick,
+        framesLeft: eff.viralCoreDuration,
+        totalFrames: eff.viralCoreDuration,
+        tickTimer: 60,
+        visual,
+      });
+    };
+
     this.hud.openSettings = () => {
       if (settingsScreen) return;
       this.app.stage.removeChild(this.hud.hudContainer);
@@ -173,6 +201,8 @@ export default class Game {
       app.stage.removeChild(this.hud.hudContainer);
       this.enemyBullets.forEach(b => b.destroy());
       this.enemyBullets = [];
+      this.viralClouds.forEach(c => c.visual?.destroy());
+      this.viralClouds = [];
     };
     this.finishRun = ({ reason = "manual" } = {}) => {
       if (this.runFinished) return;
@@ -218,7 +248,32 @@ export default class Game {
       this.player.update(keys);
       // Removed this.enemySpawner.update() because WaveManager manages spawning now
       this.waveManager.update(this.player, this.enemySpawner, this.effects);
-      
+
+      for (let i = this.viralClouds.length - 1; i >= 0; i--) {
+        const cloud = this.viralClouds[i];
+        cloud.framesLeft--;
+        cloud.tickTimer--;
+        if (cloud.tickTimer <= 0) {
+          cloud.tickTimer = 60;
+          const dmg = Math.ceil(cloud.damagePerTick);
+          for (let j = this.enemySpawner.spawns.length - 1; j >= 0; j--) {
+            const spawn = this.enemySpawner.spawns[j];
+            const dist = Math.hypot(spawn.enemy.position.x - cloud.x, spawn.enemy.position.y - cloud.y);
+            if (dist <= cloud.radius) {
+              spawn.kill(this.enemySpawner.spawns, j, this.player, this.effects, dmg);
+            }
+          }
+        }
+        if (cloud.visual && !cloud.visual.destroyed) {
+          const progress = cloud.framesLeft / cloud.totalFrames;
+          cloud.visual.alpha = Math.max(0.05, Math.min(0.35, progress * 0.35));
+        }
+        if (cloud.framesLeft <= 0) {
+          cloud.visual?.destroy();
+          this.viralClouds.splice(i, 1);
+        }
+      }
+
       for (let i = this.enemyBullets.length - 1; i >= 0; i--) {
         const bullet = this.enemyBullets[i];
         bullet.update();
@@ -230,7 +285,8 @@ export default class Game {
         
         // Bullet collision with player
         if (this.player.collidesWithCircle(bullet.bullet.position.x, bullet.bullet.position.y, bullet.radius)) {
-           this.player.takeDamage(1, this.effects);
+           const damageTaken = this.player.takeDamage(1, this.effects);
+           if (damageTaken) this._triggerRetaliationPulse();
            bullet.destroy();
            this.enemyBullets.splice(i, 1);
            continue;
@@ -243,6 +299,55 @@ export default class Game {
       
       this.player.shooting.update(shooting, this.enemySpawner, this.player);
       this.droneSystem.update(this.enemySpawner);
+    };
+
+    this._showUpgradeScreen = () => {
+      if (!this.upgradeState.shouldShow()) return;
+      this.app.ticker.remove(this.tick);
+      this.upgradeScreen.show(this.upgradeState, (chosenIndex) => {
+        this.upgradeState.applyChoice(chosenIndex);
+        this.player.setRunUpgradeEffects(this.upgradeState.getActiveEffects());
+        this.app.ticker.add(this.tick);
+      });
+    };
+
+    this._triggerRetaliationPulse = () => {
+      const eff = this.upgradeState.getActiveEffects();
+      if (eff.retaliationPulseRadius === 0) return;
+      const { x: px, y: py } = this.player.player.position;
+      const isFullScreen = eff.retaliationPulseRadius === -1;
+      const targets = isFullScreen
+        ? [...this.enemySpawner.spawns]
+        : this.enemySpawner.spawns.filter(spawn =>
+            Math.hypot(spawn.enemy.position.x - px, spawn.enemy.position.y - py) <= eff.retaliationPulseRadius
+          );
+      const stunFrames = Math.ceil((eff.retaliationPulseStunMs / 1000) * 60);
+      for (let i = targets.length - 1; i >= 0; i--) {
+        const spawn = targets[i];
+        const idx = this.enemySpawner.spawns.indexOf(spawn);
+        if (idx === -1) continue;
+        spawn.kill(this.enemySpawner.spawns, idx, this.player, this.effects, eff.retaliationPulseDamage);
+        if (stunFrames > 0 && this.enemySpawner.spawns.includes(spawn)) {
+          spawn.frozen = true;
+          spawn.freezeTimer = stunFrames;
+        }
+      }
+      if (isFullScreen) {
+        this.effects.screenPulse(0xFF00FF);
+      } else {
+        const ring = new PIXI.Graphics();
+        ring.lineStyle(3, 0xFF00FF, 1);
+        ring.drawCircle(px, py, eff.retaliationPulseRadius);
+        this.effects.effectsContainer.addChild(ring);
+        let life = 18;
+        const fade = () => {
+          life--;
+          ring.alpha = Math.max(0, life / 18);
+          ring.scale.set(1 + (18 - life) * 0.03);
+          if (life <= 0) { this.app.ticker.remove(fade); ring.destroy(); }
+        };
+        this.app.ticker.add(fade);
+      }
     };
 
     this.ticker = app.ticker.add(this.tick);
