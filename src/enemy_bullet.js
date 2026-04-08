@@ -1,17 +1,62 @@
 import Victor from "victor";
 
 export default class EnemyBullet {
-  constructor({ app, position, targetPosition, color }) {
+  constructor({
+    app,
+    position,
+    targetPosition,
+    color,
+    speed = 1.4,
+    coreColor = color,
+    fillAlpha = 0.8,
+    ringColor = null,
+    ringWidth = 0,
+    ringAlpha = 1,
+    glowColor = null,
+    glowAlpha = 0,
+    glowScale = 1.6,
+    trailColor = color,
+    trailAlpha = 0.4,
+    trailScale = 0.8,
+  }) {
     this.app = app;
     this.radius = 4;
     this.color = color;
-    this.speed = 1.4;
+    this.speed = speed;
+    this.coreColor = coreColor;
+    this.fillAlpha = fillAlpha;
+    this.ringColor = ringColor;
+    this.ringWidth = ringWidth;
+    this.ringAlpha = ringAlpha;
+    this.glowColor = glowColor;
+    this.glowAlpha = glowAlpha;
+    this.glowScale = glowScale;
+    this.trailColor = trailColor;
+    this.trailAlpha = trailAlpha;
+    this.trailScale = trailScale;
 
-    this.bullet = new PIXI.Graphics();
-    this.bullet.beginFill(this.color, 0.8);
-    this.bullet.drawCircle(0, 0, this.radius);
-    this.bullet.endFill();
+    this.bullet = new PIXI.Container();
+    this.bullet.visible = true;
+
+    if (this.glowColor !== null && this.glowAlpha > 0) {
+      const glow = new PIXI.Graphics();
+      glow.beginFill(this.glowColor, 1);
+      glow.drawCircle(0, 0, this.radius * this.glowScale);
+      glow.endFill();
+      glow.alpha = this.glowAlpha;
+      this.bullet.addChild(glow);
+    }
+
+    const core = new PIXI.Graphics();
+    if (this.ringColor !== null && this.ringWidth > 0) {
+      core.lineStyle(this.ringWidth, this.ringColor, this.ringAlpha);
+    }
+    core.beginFill(this.coreColor, this.fillAlpha);
+    core.drawCircle(0, 0, this.radius);
+    core.endFill();
+    this.bullet.addChild(core);
     this.bullet.position.set(position.x, position.y);
+    this.app.stage.addChild(this.bullet);
     
     // Calculate direction and velocity
     const targetVector = new Victor(targetPosition.x, targetPosition.y);
@@ -46,9 +91,10 @@ export default class EnemyBullet {
     this.framesCount++;
     if (this.framesCount % 3 === 0) {
       const trail = new PIXI.Graphics();
-      trail.beginFill(this.color, 0.4);
-      trail.drawCircle(0, 0, this.radius * 0.8);
+      trail.beginFill(this.trailColor, 1);
+      trail.drawCircle(0, 0, this.radius * this.trailScale);
       trail.endFill();
+      trail.alpha = this.trailAlpha;
       trail.position.set(this.bullet.position.x, this.bullet.position.y);
       this.trailContainer.addChild(trail);
       
@@ -88,7 +134,8 @@ export default class EnemyBullet {
     if (this.destroyed) return;
     this.destroyed = true;
     this.bullet.visible = false;
-    this.bullet.destroy();
+    this.bullet.parent?.removeChild?.(this.bullet);
+    this.bullet.destroy({ children: true });
     this.trailTimers.forEach((timer) => timer.clear());
     this.trailTimers.clear();
     if (!this.trailContainer.destroyed) {

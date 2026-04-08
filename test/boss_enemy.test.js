@@ -84,7 +84,7 @@ test("boss constructor seeds attack timers for each boss type", () => {
   });
 
   assert.equal(makeBoss("boss_guardiao").attackTimers.burst, 180);
-  assert.equal(makeBoss("boss_destruidor").attackTimers.spin, 480);
+  assert.equal(makeBoss("boss_sniper").attackTimers.snipe, 120);
   assert.equal(makeBoss("boss_colosso").attackTimers.cross, 150);
   assert.equal(makeBoss("boss_supremo").attackTimers.arc, 200);
   assert.equal(makeBoss("boss_predador").attackTimers.spin, 350);
@@ -131,8 +131,8 @@ test("boss behavior triggers attack patterns for non-guard bosses", () => {
   });
   const playerSprite = new PIXI.Sprite();
   playerSprite.width = 20;
-  playerSprite.position.set(100, 0);
-  boss.enemy.position.set(0, 0);
+  playerSprite.position.set(180, 80);
+  boss.enemy.position.set(80, 80);
   boss.attackTimers = { burst: 0, arc: 0, spin: 0, cross: 0 };
   const calls = [];
   boss.fireBurst = (target, count) => calls.push(["burst", count]);
@@ -230,6 +230,314 @@ test("boss behavior resets tiny knockback velocity to zero", () => {
   assert.equal(boss.knockbackVelocity.y, 0);
 });
 
+test("boss enters the screen before using combat behavior", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_guardiao",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(400, 300);
+  boss.enemy.position.set(-40, 280);
+  boss.enemyLifeText.position.set(-40, 280);
+  boss.attackTimers.burst = 0;
+  let burstCalls = 0;
+  boss.fireBurst = () => { burstCalls += 1; };
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  assert.ok(boss.enemy.position.x > -40);
+  assert.ok(Math.abs(boss.enemy.position.y - 280) < 0.2);
+  assert.equal(burstCalls, 0);
+});
+
+test("guardiao prefers orbital movement at standoff range", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_guardiao",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(340, 120);
+  boss.enemy.position.set(120, 120);
+  boss.orbitDirection = 1;
+  const startX = boss.enemy.position.x;
+  const startY = boss.enemy.position.y;
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  const deltaX = boss.enemy.position.x - startX;
+  const deltaY = boss.enemy.position.y - startY;
+  assert.ok(Math.abs(deltaY) > 0.2);
+  assert.ok(Math.abs(deltaY) > Math.abs(deltaX));
+});
+
+test("active boss movement stays inside visible screen bounds", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 40,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_guardiao",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(60, 25);
+  boss.enemy.position.set(25, 25);
+  boss.enemyLifeText.position.set(25, 25);
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  assert.ok(boss.enemy.position.x >= boss.enemyRadius);
+  assert.ok(boss.enemy.position.y >= boss.enemyRadius);
+  assert.ok(boss.enemy.position.x <= app.screen.width - boss.enemyRadius);
+  assert.ok(boss.enemy.position.y <= app.screen.height - boss.enemyRadius);
+});
+
+test("sniper retreats to widen distance from the player", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_sniper",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(360, 140);
+  boss.enemy.position.set(500, 140);
+  boss.enemyLifeText.position.set(500, 140);
+  const startDistance = Math.hypot(
+    boss.enemy.position.x - playerSprite.position.x,
+    boss.enemy.position.y - playerSprite.position.y,
+  );
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  const endDistance = Math.hypot(
+    boss.enemy.position.x - playerSprite.position.x,
+    boss.enemy.position.y - playerSprite.position.y,
+  );
+  const xDelta = boss.enemy.position.x - 500;
+  const yDelta = boss.enemy.position.y - 140;
+  assert.ok(endDistance > startDistance);
+  assert.ok(xDelta > 1.4);
+  assert.ok(Math.abs(yDelta) < 0.2);
+});
+
+test("sniper burst reposition favors opening distance over strafing when pressured", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_sniper",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(360, 140);
+  boss.enemy.position.set(500, 140);
+  boss.enemyLifeText.position.set(500, 140);
+  boss.orbitDirection = 1;
+  boss.burstCooldown = 0;
+  const startX = boss.enemy.position.x;
+  const startY = boss.enemy.position.y;
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  const xDelta = boss.enemy.position.x - startX;
+  const yDelta = boss.enemy.position.y - startY;
+  const moved = Math.hypot(xDelta, yDelta);
+  assert.ok(moved > boss.speed * 2.7);
+  assert.ok(xDelta > 2.5);
+  assert.ok(Math.abs(yDelta) < 0.25);
+});
+
+test("sniper closes distance when the player is too far away", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_sniper",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(120, 140);
+  boss.enemy.position.set(680, 140);
+  boss.enemyLifeText.position.set(680, 140);
+  const startDistance = Math.hypot(
+    boss.enemy.position.x - playerSprite.position.x,
+    boss.enemy.position.y - playerSprite.position.y,
+  );
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  const endDistance = Math.hypot(
+    boss.enemy.position.x - playerSprite.position.x,
+    boss.enemy.position.y - playerSprite.position.y,
+  );
+  const xDelta = boss.enemy.position.x - 680;
+  const yDelta = boss.enemy.position.y - 140;
+  assert.ok(endDistance < startDistance);
+  assert.ok(xDelta < -1.1);
+  assert.ok(Math.abs(yDelta) < 0.5);
+});
+
+test("sniper fires a predictive shot using the current sniper bullet speed", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_sniper",
+  });
+  boss.enemy.position.set(620, 180);
+  boss.enemyLifeText.position.set(620, 180);
+  boss.playerVelocityEstimate = new Victor(30, 0);
+  const shots = [];
+  boss.createBullet = (targetPos, options) => {
+    shots.push({ targetPos, options });
+  };
+
+  boss.fireSniperShot(new Victor(250, 180));
+
+  assert.equal(shots.length, 1);
+  assert.ok(Math.abs(shots[0].targetPos.x - 370) < 0.001);
+  assert.equal(shots[0].targetPos.y, 180);
+  assert.equal(shots[0].options.speed, 6.0);
+  assert.equal(shots[0].options.coreColor, 0xffffff);
+  assert.equal(shots[0].options.ringColor, 0xff66ff);
+  assert.equal(shots[0].options.glowColor, 0xff66ff);
+  assert.equal(shots[0].options.trailColor, 0xf0d8ff);
+});
+
+test("sniper predictive shot clamps extreme lead to the visible screen", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_sniper",
+  });
+  boss.enemy.position.set(120, 180);
+  boss.enemyLifeText.position.set(120, 180);
+  boss.playerVelocityEstimate = new Victor(5, 0);
+  const shots = [];
+  boss.createBullet = (targetPos, options) => {
+    shots.push({ targetPos, options });
+  };
+
+  boss.fireSniperShot(new Victor(760, 180));
+
+  assert.equal(shots.length, 1);
+  assert.equal(shots[0].targetPos.x, app.screen.width);
+  assert.equal(shots[0].targetPos.y, 180);
+  assert.equal(shots[0].options.speed, 6.0);
+});
+
+test("colosso closes space on a diagonal instead of charging in a straight line", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_colosso",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(360, 120);
+  boss.enemy.position.set(120, 120);
+  boss.orbitDirection = 1;
+  const startX = boss.enemy.position.x;
+  const startY = boss.enemy.position.y;
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  assert.ok((boss.enemy.position.x - startX) > 0.2);
+  assert.ok(Math.abs(boss.enemy.position.y - startY) > 0.05);
+});
+
+test("predador burst reposition exceeds base speed and flanks the player", () => {
+  const app = createAppMock();
+  const boss = new BossEnemy({
+    app,
+    container: new PIXI.Container(),
+    enemyBullets: [],
+    enemyRadius: 20,
+    speed: 1,
+    color: 0xffc0cb,
+    life: 10,
+    value: 10,
+    typeId: "boss_predador",
+  });
+  const playerSprite = new PIXI.Sprite();
+  playerSprite.width = 20;
+  playerSprite.position.set(260, 120);
+  boss.enemy.position.set(120, 120);
+  boss.orbitDirection = 1;
+  boss.burstCooldown = 0;
+  const startX = boss.enemy.position.x;
+  const startY = boss.enemy.position.y;
+
+  boss.updateBossBehavior({ player: playerSprite });
+
+  const moved = Math.hypot(boss.enemy.position.x - startX, boss.enemy.position.y - startY);
+  assert.ok(moved > boss.speed * 1.5);
+  assert.ok(Math.abs(boss.enemy.position.y - startY) > 0.05);
+});
+
 test("boss behavior triggers and resets timers for all named patterns", () => {
   const cases = [
     {
@@ -238,9 +546,9 @@ test("boss behavior triggers and resets timers for all named patterns", () => {
       expectedTimers: { burst: 180 },
     },
     {
-      typeId: "boss_destruidor",
-      expectedCalls: [["arc", 5], ["spin"]],
-      expectedTimers: { arc: 180, spin: 480 },
+      typeId: "boss_sniper",
+      expectedCalls: [["snipe"]],
+      expectedTimers: { snipe: 120 },
     },
     {
       typeId: "boss_colosso",
@@ -274,15 +582,16 @@ test("boss behavior triggers and resets timers for all named patterns", () => {
     });
     const playerSprite = new PIXI.Sprite();
     playerSprite.width = 20;
-    playerSprite.position.set(100, 0);
-    boss.enemy.position.set(0, 0);
-    boss.attackTimers = { burst: 0, arc: 0, spin: 0, cross: 0 };
+    playerSprite.position.set(180, 80);
+    boss.enemy.position.set(80, 80);
+    boss.attackTimers = { burst: 0, arc: 0, spin: 0, cross: 0, snipe: 0 };
     const calls = [];
 
     boss.fireBurst = (target, count) => calls.push(["burst", count]);
     boss.fireArc = (target, count) => calls.push(["arc", count]);
     boss.fireSpin = () => calls.push(["spin"]);
     boss.fireCross = () => calls.push(["cross"]);
+    boss.fireSniperShot = () => calls.push(["snipe"]);
 
     boss.updateBossBehavior({ player: playerSprite });
 

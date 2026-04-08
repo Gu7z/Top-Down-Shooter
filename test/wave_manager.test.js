@@ -36,6 +36,14 @@ function createManager({ finishGame = () => {} } = {}) {
   return { app, manager, banners, timeouts };
 }
 
+test("manager starts on wave 1 and queues the authored opening wave", () => {
+  const { manager, banners } = createManager();
+
+  assert.equal(manager.currentWave, 1);
+  assert.equal(manager.enemiesToSpawn.length, 3);
+  assert.equal(banners.at(-1).text, "W A V E  1");
+});
+
 test("procedural waves are capped to avoid unbounded enemy queues", () => {
   const { manager } = createManager();
 
@@ -97,7 +105,33 @@ test("startWave handles authored normal and boss waves", () => {
   manager.startWave(5);
   assert.equal(manager.enemiesToSpawn.length, 1);
   assert.equal(manager.enemiesToSpawn[0].isBoss, true);
+  assert.equal(manager.enemiesToSpawn[0].life, 45);
   assert.equal(banners.at(-1).text, 'B O S S  W A V E');
+
+  manager.startWave(10);
+  assert.equal(manager.enemiesToSpawn.length, 1);
+  assert.equal(manager.enemiesToSpawn[0].typeId, 'boss_sniper');
+  assert.equal(manager.enemiesToSpawn[0].life, 75);
+});
+
+test("boss waves use the tuned boss life curve", () => {
+  const { manager } = createManager();
+
+  manager.startWave(15);
+  assert.equal(manager.enemiesToSpawn[0].typeId, "boss_colosso");
+  assert.equal(manager.enemiesToSpawn[0].life, 100);
+
+  manager.startWave(20);
+  assert.equal(manager.enemiesToSpawn[0].typeId, "boss_supremo");
+  assert.equal(manager.enemiesToSpawn[0].life, 140);
+
+  manager.startWave(25);
+  assert.equal(manager.enemiesToSpawn[0].typeId, "boss_predador");
+  assert.equal(manager.enemiesToSpawn[0].life, 200);
+
+  manager.startWave(30);
+  assert.equal(manager.enemiesToSpawn[0].typeId, "boss_apocalipse");
+  assert.equal(manager.enemiesToSpawn[0].life, 350);
 });
 
 test("spawnSingleEnemy creates boss and normal spawns", () => {
@@ -193,6 +227,7 @@ test("wave manager handles empty queues and regular-wave clearing branches", () 
     },
   };
 
+  manager.startWave(1);
   manager.spawnSingleEnemy({ spawns: [] });
   assert.equal(manager.activeBoss, null);
 

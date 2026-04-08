@@ -12,7 +12,7 @@ const WAVES = {
   7: { count: 11, mix: ["cacador", "atirador"] },
   8: { count: 12, mix: ["cacador", "atirador", "artilheiro"] },
   9: { count: 14, mix: ["sentinela", "corredor", "atirador", "artilheiro"] },
-  10: { isBoss: true, bossId: "destruidor" },
+  10: { isBoss: true, bossId: "sniper" },
   11: { count: 16, mix: ["corredor", "atirador", "artilheiro"], speedMod: 1.05 },
   12: { count: 18, mix: ["cacador", "corredor", "atirador"], speedMod: 1.05 },
   13: { count: 20, mix: ["sentinela", "corredor", "artilheiro"], speedMod: 1.1 },
@@ -56,15 +56,15 @@ const ENEMY_DEFS = {
 };
 
 const BOSS_DEFS = {
-  "guardiao":   { color: 0xffc0cb, enemyRadius: 30, life: 30,  speed: 0.8, value: 20,  typeId: "boss_guardiao"   },
-  "destruidor": { color: 0xff00ff, enemyRadius: 35, life: 50,  speed: 0.6, value: 40,  typeId: "boss_destruidor" },
-  "colosso":    { color: 0xff2222, enemyRadius: 40, life: 80,  speed: 0.5, value: 80,  typeId: "boss_colosso"    },
-  "supremo":    { color: 0x880000, enemyRadius: 50, life: 120, speed: 0.5, value: 150, typeId: "boss_supremo"    },
+  "guardiao":   { color: 0xffc0cb, enemyRadius: 30, life: 45,  speed: 0.8, value: 20,  typeId: "boss_guardiao"   },
+  "sniper":     { color: 0x7a6cff, enemyRadius: 35, life: 75,  speed: 0.62, value: 40,  typeId: "boss_sniper"    },
+  "colosso":    { color: 0xff2222, enemyRadius: 40, life: 100, speed: 0.5, value: 80,  typeId: "boss_colosso"    },
+  "supremo":    { color: 0x880000, enemyRadius: 50, life: 140, speed: 0.5, value: 150, typeId: "boss_supremo"    },
   // --- New bosses (waves 25 and 30) ---
   // Predador: fast aggressive hunter, burst + wide arc + spin
-  "predador":   { color: 0x00ff88, enemyRadius: 45, life: 180, speed: 1.1, value: 200, typeId: "boss_predador"   },
+  "predador":   { color: 0x00ff88, enemyRadius: 45, life: 200, speed: 1.1, value: 200, typeId: "boss_predador"   },
   // Apocalipse: final boss, all attack patterns combined at peak aggression
-  "apocalipse": { color: 0xff0066, enemyRadius: 55, life: 280, speed: 0.8, value: 400, typeId: "boss_apocalipse" },
+  "apocalipse": { color: 0xff0066, enemyRadius: 55, life: 350, speed: 0.8, value: 400, typeId: "boss_apocalipse" },
 };
 
 const MAX_PROCEDURAL_ENEMY_COUNT = 90;
