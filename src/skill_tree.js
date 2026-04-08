@@ -590,17 +590,14 @@ export default class SkillTree {
   }
 
   handleNodePrimary(skillId) {
-    const status = this.getNodeStatus(skillId);
-    if (status === "purchased") return;
+    if (this.skillState.has(skillId)) return;
 
-    if (status === "available") {
-      const result = this.skillState.purchase(skillId);
-      if (result.ok) {
-        this.flashFeedback(UISkin.palette.accentGreen);
-        this.buildHud();
-        this.buildTabs();
-        this.renderContent();
-      }
+    const result = this.skillState.purchaseCascade(skillId);
+    if (result.ok) {
+      this.flashFeedback(UISkin.palette.accentGreen);
+      this.buildHud();
+      this.buildTabs();
+      this.renderContent();
     }
   }
 

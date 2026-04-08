@@ -14,7 +14,7 @@ module.exports = {
   },
   plugins: ["@snowpack/plugin-dotenv"],
   packageOptions: {
-    /* ... */
+    knownEntrypoints: ["crypto-js"],
   },
   devOptions: {
     /* ... */

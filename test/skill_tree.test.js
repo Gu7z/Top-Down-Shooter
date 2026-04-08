@@ -42,6 +42,21 @@ function createStateStub(options = {}) {
       this.purchased.add(id);
       return { ok: true, purchasedId: id, cost: 45 };
     },
+    purchaseCascade(id) {
+      if (this.purchased.has(id)) return { ok: false, reason: 'already_purchased' };
+      const skill = getSkillById(id);
+      if (!skill) return { ok: false, reason: 'missing_skill' };
+      const chain = [];
+      const collect = (sid) => {
+        if (this.purchased.has(sid)) return;
+        for (const prereq of (getSkillById(sid)?.prereqs || [])) collect(prereq);
+        chain.push(sid);
+      };
+      collect(id);
+      if (chain.length === 0) return { ok: false, reason: 'already_purchased' };
+      for (const cid of chain) this.purchased.add(cid);
+      return { ok: true, purchasedIds: chain };
+    },
     refundCascade(id) {
       this.purchased.delete(id);
       return { ok: true, removedIds: [id], refunded: 45 };
@@ -69,13 +84,13 @@ test('skill tree handles nodes click properly through secondary methods', () => 
   });
 
   const previousPurchasedLength = screen.skillState.getPurchasedIds().length;
-  // Node is locked so clicking it shouldn't purchase
+  // Locked node: cascade compra pré-requisitos + alvo (fire_rate_1 + bullet_speed_1 = +2)
   screen.handleNodePrimary('bullet_speed_1');
-  assert.equal(screen.skillState.getPurchasedIds().length, previousPurchasedLength);
+  assert.equal(screen.skillState.getPurchasedIds().length, previousPurchasedLength + 2);
 
-  // Available node
+  // Skill já comprada: não faz nada
   screen.handleNodePrimary('fire_rate_1');
-  assert.equal(screen.skillState.getPurchasedIds().length, previousPurchasedLength + 1);
+  assert.equal(screen.skillState.getPurchasedIds().length, previousPurchasedLength + 2);
 });
 
 test('skill tree handles node secondary refund cascade', () => {

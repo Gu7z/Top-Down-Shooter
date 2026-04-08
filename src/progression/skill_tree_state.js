@@ -1,4 +1,5 @@
 import { SKILL_TREE, getSkillById } from "./skill_tree_data.js";
+import { encodePayload, decodePayload } from "./storage_security.js";
 
 export const SKILL_TREE_STORAGE_KEY = "neonHunt.skillTree.v1";
 
@@ -16,25 +17,56 @@ function normalizePayload(payload, initialCredits) {
   const fallback = createDefaultPayload(initialCredits);
   if (!payload || typeof payload !== "object") return fallback;
 
-  const purchased = new Set(Array.isArray(payload.purchasedIds) ? payload.purchasedIds : []);
-  purchased.add("core");
+  // Filtrar IDs existentes na árvore, em ordem topológica
+  const rawPurchased = new Set(Array.isArray(payload.purchasedIds) ? payload.purchasedIds : []);
+  rawPurchased.add("core");
+  const knownIds = [...rawPurchased]
+    .filter((id) => getSkillById(id))
+    .sort((a, b) => (treeOrder.get(a) ?? 0) - (treeOrder.get(b) ?? 0));
+
+  // Validar cadeia de pré-requisitos — skill sem prereq satisfeito é descartada
+  const validated = new Set(["core"]);
+  for (const id of knownIds) {
+    if (id === "core") continue;
+    const skill = getSkillById(id);
+    const prereqs = Array.isArray(skill?.prereqs) ? skill.prereqs : [];
+    if (prereqs.every((pId) => validated.has(pId))) validated.add(id);
+  }
 
   return {
-    credits: Number.isFinite(payload.credits) ? payload.credits : fallback.credits,
-    purchasedIds: [...purchased].filter((id) => getSkillById(id)),
+    credits: Number.isFinite(payload.credits) ? Math.max(0, Math.floor(payload.credits)) : fallback.credits,
+    purchasedIds: [...validated],
     spentBySkillId: payload.spentBySkillId || {},
   };
+}
+
+// Lida com saves antigos (plain JSON) — código legado
+function migrateLegacyPayload(raw, storage, initialCredits) {
+  if (!raw || raw.charAt(0) !== '{') return null;
+  try {
+    const legacy = JSON.parse(raw);
+    const migrated = normalizePayload(legacy, initialCredits);
+    storage?.setItem?.(SKILL_TREE_STORAGE_KEY, encodePayload(migrated));
+    return migrated;
+  } catch {
+    return null;
+  }
 }
 
 function loadPayload(storage, initialCredits) {
   const raw = storage?.getItem?.(SKILL_TREE_STORAGE_KEY);
   if (!raw) return createDefaultPayload(initialCredits);
 
-  try {
-    return normalizePayload(JSON.parse(raw), initialCredits);
-  } catch {
-    return createDefaultPayload(initialCredits);
-  }
+  // Tenta formato seguro atual
+  const decoded = decodePayload(raw);
+  if (decoded !== null) return normalizePayload(decoded, initialCredits);
+
+  // Tenta migrar save legado (plain JSON)
+  const migrated = migrateLegacyPayload(raw, storage, initialCredits);
+  if (migrated !== null) return migrated;
+
+  // Assinatura inválida ou formato desconhecido → reset para defaults
+  return createDefaultPayload(initialCredits);
 }
 
 function sortByTreeOrder(ids) {
@@ -86,7 +118,7 @@ export function createSkillTreeState({
 
   function save() {
     payload.purchasedIds = sortByTreeOrder(purchased);
-    storage?.setItem?.(SKILL_TREE_STORAGE_KEY, JSON.stringify(payload));
+    storage?.setItem?.(SKILL_TREE_STORAGE_KEY, encodePayload(payload));
   }
 
   function getCredits() {
@@ -153,6 +185,36 @@ export function createSkillTreeState({
     return { ok: true, purchasedId: id, cost: result.cost };
   }
 
+  function purchaseCascade(targetId) {
+    if (purchased.has(targetId)) return { ok: false, reason: "already_purchased" };
+    const skill = getSkillById(targetId);
+    if (!skill) return { ok: false, reason: "missing_skill" };
+
+    // Coleta em ordem topológica: prereqs antes do alvo
+    const chain = [];
+    const visited = new Set();
+    function collect(id) {
+      if (visited.has(id) || purchased.has(id)) return;
+      visited.add(id);
+      for (const prereqId of getPrereqs(getSkillById(id))) collect(prereqId);
+      chain.push(id);
+    }
+    collect(targetId);
+
+    if (chain.length === 0) return { ok: false, reason: "already_purchased" };
+
+    // Compra em ordem — para no primeiro que não der créditos
+    const purchasedIds = [];
+    for (const id of chain) {
+      const result = purchase(id);
+      if (!result.ok) break;
+      purchasedIds.push(id);
+    }
+
+    if (purchasedIds.length === 0) return { ok: false, reason: "not_enough_credits" };
+    return { ok: true, purchasedIds };
+  }
+
   function refundCascade(id) {
     if (id === "core") return { ok: false, reason: "core_locked", removedIds: [], refunded: 0 };
     if (!purchased.has(id)) return { ok: false, reason: "not_purchased", removedIds: [], refunded: 0 };
@@ -207,6 +269,7 @@ export function createSkillTreeState({
     canPurchase,
     getCost,
     purchase,
+    purchaseCascade,
     refundCascade,
     getVisibleSkillIds,
     getInitialFrameIds,
