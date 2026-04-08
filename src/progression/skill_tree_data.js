@@ -272,7 +272,7 @@ const baseSkills = [
     {
       id: "marking_swarm",
       name: "Enxame Marcador",
-      description: "+1 Drone. Os drones congelam os inimigos visados.",
+      description: "+1 Drone. Os drones congelam os inimigos visados, mas não afetam chefes.",
       effects: { droneAppliesFreeze: true, droneCount: 1 },
     },
   ]),
@@ -280,7 +280,7 @@ const baseSkills = [
     {
       id: "slow_field_1",
       name: "Campo Criogênico",
-      description: "+20% de chance de congelar inimigos com cada tiro.",
+      description: "+20% de chance de congelar inimigos com cada tiro. Não afeta chefes.",
       effects: { freezeChance: 0.20 },
     },
     {

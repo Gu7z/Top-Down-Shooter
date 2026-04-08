@@ -91,6 +91,7 @@ test('drones apply freeze fusion when droneAppliesFreeze is true', () => {
   const bullet = droneSys.bullets[0];
   assert.ok(bullet.controlEffects.freezeChance);
   assert.equal(bullet.controlEffects.freezeChance, 0.45);
+  assert.equal(bullet.controlEffects.freezeAffectsBosses, false);
 });
 
 test('drones use targeting correctly', () => {

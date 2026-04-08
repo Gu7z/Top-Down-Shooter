@@ -1,6 +1,7 @@
 import { UPGRADE_REGISTRY } from './run_upgrade_data.js';
 
 const DEFAULT_EFFECTS = {
+  bossDamageMultiplier: 1,
   chainLightningChance: 0,
   chainLightningTargets: 2,
   chainLightningDamage: 1,

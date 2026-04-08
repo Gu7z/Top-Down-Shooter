@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { RunUpgradeState } from '../../src/run_upgrades/run_upgrade_state.js';
+import { UPGRADE_REGISTRY } from '../../src/run_upgrades/run_upgrade_data.js';
 
 test('picks exactly 2 upgrades from registry', () => {
   const state = new RunUpgradeState();
@@ -60,15 +61,32 @@ test('getActiveEffects returns zero values before any choice', () => {
   assert.equal(eff.chainLightningChance, 0);
   assert.equal(eff.viralCoreRadius, 0);
   assert.equal(eff.retaliationPulseRadius, 0);
+  assert.equal(eff.bossDamageMultiplier, 1);
 });
 
-test('getActiveEffects reflects chosen upgrade tier', () => {
+test('getActiveEffects reflects chosen chain_lightning tier deterministically', () => {
   const state = new RunUpgradeState();
-  const chainUpgrade = state.active.find(u => u.id === 'chain_lightning');
-  const chainIdx = state.active.indexOf(chainUpgrade);
-  if (chainIdx === -1) return;
-  state.applyChoice(chainIdx);
+  state.active = [
+    UPGRADE_REGISTRY.find(u => u.id === 'chain_lightning'),
+    UPGRADE_REGISTRY.find(u => u.id === 'viral_core'),
+  ];
+  state.levels = [0, 0];
+
+  state.applyChoice(0);
   const eff = state.getActiveEffects();
-  assert.equal(eff.chainLightningChance, 0.20);
+  assert.equal(eff.chainLightningChance, 0.15);
   assert.equal(eff.chainLightningTargets, 2);
+});
+
+test('getActiveEffects reflects chosen boss_hunter tier deterministically', () => {
+  const state = new RunUpgradeState();
+  state.active = [
+    UPGRADE_REGISTRY.find(u => u.id === 'boss_hunter'),
+    UPGRADE_REGISTRY.find(u => u.id === 'viral_core'),
+  ];
+  state.levels = [0, 0];
+
+  state.applyChoice(0);
+  const eff = state.getActiveEffects();
+  assert.equal(eff.bossDamageMultiplier, 1.25);
 });

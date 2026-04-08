@@ -38,3 +38,8 @@ test("getSkillById returns the exact skill", () => {
   assert.equal(getSkillById("core").name, "Core");
   assert.equal(getSkillById("missing"), undefined);
 });
+
+test("freeze-related control skills clearly state they do not affect bosses", () => {
+  assert.match(getSkillById("slow_field_1").description, /chefes/i);
+  assert.match(getSkillById("marking_swarm").description, /chefes/i);
+});

@@ -249,6 +249,8 @@ export default class Game {
 
     this.tick = () => {
       this.hud.update(this.clear);
+      if (this.runFinished) return;
+
       this.player.update(keys);
       // Removed this.enemySpawner.update() because WaveManager manages spawning now
       this.waveManager.update(this.player, this.enemySpawner, this.effects);
@@ -317,6 +319,7 @@ export default class Game {
     };
 
     this._showUpgradeScreen = () => {
+      if (this.runFinished || this.player.lifes < 1) return;
       if (!this.upgradeState.shouldShow()) return;
       this.app.ticker.remove(this.tick);
       this.upgradeScreen.show(this.upgradeState, (chosenIndex) => {

@@ -143,7 +143,7 @@ export default class DroneSystem {
     
     // Fusion: Drone Applies Freeze
     if (this.droneAppliesFreeze) {
-      bullet.controlEffects = { freezeChance: 0.45 };
+      bullet.controlEffects = { freezeChance: 0.45, freezeAffectsBosses: false };
       bullet.controlDurationMultiplier = 1;
     }
     

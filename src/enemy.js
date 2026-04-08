@@ -91,9 +91,10 @@ export default class Enemy {
 
     const baseDuration = 120; // ~2 seconds at 60fps
     const duration = Math.ceil(baseDuration * durationMultiplier);
+    const freezeBlockedByBoss = this.isBoss && controlEffects.freezeAffectsBosses === false;
 
     // Freeze
-    if (controlEffects.freezeChance && Math.random() < controlEffects.freezeChance) {
+    if (!freezeBlockedByBoss && controlEffects.freezeChance && Math.random() < controlEffects.freezeChance) {
       if (!this.frozen) {
         this.frozen = true;
         this.freezeTimer = duration;
@@ -346,7 +347,10 @@ export default class Enemy {
   }
 
   kill(enemies, indexEnemy, player, effects, damage = 1) {
-    const effectiveDamage = Math.ceil(damage * this.damageMultiplier);
+    const bossDamageMultiplier = this.isBoss
+      ? (player.runUpgradeEffects?.bossDamageMultiplier || 1)
+      : 1;
+    const effectiveDamage = Math.ceil(damage * this.damageMultiplier * bossDamageMultiplier);
 
     if (this.life > effectiveDamage) {
       this.life -= effectiveDamage;

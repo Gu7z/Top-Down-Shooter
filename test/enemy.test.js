@@ -147,6 +147,31 @@ test('freeze timer is set based on duration multiplier', () => {
   assert.equal(timedEnemy.freezeTimer, 240);
 });
 
+test('boss ignores skill-tree freeze flag but still receives knockback', () => {
+  const bossEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    isBoss: true,
+    container,
+  });
+  const startX = bossEnemy.enemy.position.x;
+
+  bossEnemy.applyControlEffects({
+    freezeChance: 1.0,
+    freezeAffectsBosses: false,
+    knockbackBonus: 15,
+    knockbackDirection: { x: 1, y: 0 },
+  });
+
+  assert.equal(bossEnemy.frozen, false);
+  assert.equal(bossEnemy.freezeTimer, 0);
+  assert.equal(bossEnemy.enemy.position.x, startX + 15);
+});
+
 test('kill applies damageMultiplier from weaken effect', () => {
   const weakened = new Enemy({
     app,
@@ -166,6 +191,39 @@ test('kill applies damageMultiplier from weaken effect', () => {
   const arr = [weakened];
   weakened.kill(arr, 0, { points: 0 }, undefined, 1);
   assert.equal(weakened.life, 2); // 4 - ceil(1*2) = 2
+});
+
+test('kill amplifies damage only against bosses when boss run upgrade is active', () => {
+  const bossEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    isBoss: true,
+    container,
+  });
+  const normalEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    isBoss: false,
+    container,
+  });
+  const playerWithBossUpgrade = {
+    points: 0,
+    runUpgradeEffects: { bossDamageMultiplier: 1.5 },
+  };
+
+  bossEnemy.kill([bossEnemy], 0, playerWithBossUpgrade, undefined, 2);
+  normalEnemy.kill([normalEnemy], 0, playerWithBossUpgrade, undefined, 2);
+
+  assert.equal(bossEnemy.life, 2);
+  assert.equal(normalEnemy.life, 3);
 });
 
 test('removePlayerLife uses player.takeDamage when available', () => {

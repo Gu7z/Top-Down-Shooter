@@ -180,11 +180,31 @@ export class RunUpgradeScreen {
     g.drawRoundedRect(-50, -44, 100, 88, 6);
     g.endFill();
     switch (upgrade.id) {
+      case 'boss_hunter': this._iconBossHunter(g, upgrade.color); break;
       case 'chain_lightning': this._iconLightning(g, upgrade.color); break;
       case 'viral_core':      this._iconViral(g, upgrade.color);     break;
       case 'retaliation_pulse': this._iconPulse(g, upgrade.color);   break;
     }
     container.addChild(g);
+  }
+
+  _iconBossHunter(g, color) {
+    g.lineStyle(2.5, color, 1);
+    g.drawCircle(0, 0, 24);
+    g.moveTo(-34, 0);
+    g.lineTo(-12, 0);
+    g.moveTo(12, 0);
+    g.lineTo(34, 0);
+    g.moveTo(0, -34);
+    g.lineTo(0, -12);
+    g.moveTo(0, 12);
+    g.lineTo(0, 34);
+
+    g.lineStyle(1.5, color, 0.7);
+    g.drawCircle(0, 0, 10);
+    g.beginFill(color, 0.18);
+    g.drawPolygon([-6, -4, 0, -10, 6, -4, 4, 8, -4, 8]);
+    g.endFill();
   }
 
   _iconLightning(g, color) {
@@ -315,7 +335,10 @@ export class RunUpgradeScreen {
       this.app.ticker.remove(this._animTicker);
       this._animTicker = null;
     }
-    this.container?.destroy({ children: true });
+    if (this.container) {
+      this.app.stage.removeChild(this.container);
+      this.container.destroy({ children: true });
+    }
     this.container = null;
   }
 }

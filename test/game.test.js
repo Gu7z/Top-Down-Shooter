@@ -205,6 +205,32 @@ test('game finishRun is idempotent and the summary back button rebuilds the menu
   assert.ok(localApp.stage.children.length > 0);
 });
 
+test('game does not open the upgrade screen after death resolves the run on a cleared boss wave', () => {
+  const { app: localApp, game: localGame } = createGameHarness('boss-death-race');
+
+  localGame.player.lifes = 0;
+  localGame.player.update = () => {};
+  localGame.player.shooting.update = () => {};
+  localGame.droneSystem.update = () => {};
+  localGame.waveManager.currentWave = 5;
+  localGame.waveManager.state = 'CLEARING';
+  localGame.waveManager.enemiesToSpawn = [];
+  localGame.enemySpawner.spawns = [];
+
+  localGame.tick();
+
+  assert.equal(localGame.runFinished, true);
+  assert.equal(localApp.stage.children.length, 1);
+
+  const topContainer = localApp.stage.children[0];
+  const visibleTexts = topContainer.children
+    .filter((child) => typeof child.text === 'string')
+    .map((child) => child.text);
+
+  assert.ok(visibleTexts.includes('SÚMULA DA RUN'));
+  assert.ok(visibleTexts.includes('ESCOLHA SEU UPGRADE') === false);
+});
+
 test('game tick removes out-of-bounds, colliding, and destroyed enemy bullets', () => {
   const { game: localGame } = createGameHarness('bullets');
   localGame.hud.update = () => {};

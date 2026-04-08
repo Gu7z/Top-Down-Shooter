@@ -1,5 +1,18 @@
 export const UPGRADE_REGISTRY = [
   {
+    id: 'boss_hunter',
+    name: 'Caça-Titãs',
+    color: 0xFF7A00,
+    tiers: [
+      { description: 'Causa 25% mais dano em chefes.', effect: { bossDamageMultiplier: 1.25 } },
+      { description: 'Causa 50% mais dano em chefes.', effect: { bossDamageMultiplier: 1.50 } },
+      { description: 'Causa 75% mais dano em chefes.', effect: { bossDamageMultiplier: 1.75 } },
+      { description: 'Dobra o dano contra chefes.', effect: { bossDamageMultiplier: 2.00 } },
+      { description: 'Causa 125% mais dano em chefes.', effect: { bossDamageMultiplier: 2.25 } },
+      { description: 'ANIQUILADOR DE TITÃS: causa 150% mais dano em chefes.', effect: { bossDamageMultiplier: 2.50 } },
+    ],
+  },
+  {
     id: 'chain_lightning',
     name: 'Raio em Cadeia',
     color: 0x00FFFF,

@@ -93,6 +93,7 @@ export default class Shooting {
         knockbackBonus: this.skillEffects.knockbackBonus,
         enemyWeakenMultiplier: this.skillEffects.enemyWeakenMultiplier,
         freezeChance: this.skillEffects.freezeChance || 0,
+        freezeAffectsBosses: false,
       };
       bullet.controlDurationMultiplier = this.controlDurationMultiplier;
       bullet.chainPulseRadius = this.skillEffects.chainPulseRadius;

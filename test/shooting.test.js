@@ -121,6 +121,7 @@ test('bullets carry control effects and chain pulse radius', () => {
   assert.equal(bullet.controlEffects.knockbackBonus, 20);
   assert.equal(bullet.controlEffects.enemyWeakenMultiplier, 1.5);
   assert.equal(bullet.controlEffects.freezeChance, 0.25);
+  assert.equal(bullet.controlEffects.freezeAffectsBosses, false);
   assert.equal(bullet.chainPulseRadius, 100);
   assert.equal(bullet.controlDurationMultiplier, 1.3);
 });
