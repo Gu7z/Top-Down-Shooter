@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import Victor from 'victor';
 import Enemy from '../src/enemy.js';
 import { setupPixiMock, createAppMock } from './helpers.js';
 
@@ -192,4 +193,348 @@ test('removePlayerLife uses player.takeDamage when available', () => {
 
   testEnemy.removePlayerLife(takeDamagePlayer, { spawns: [testEnemy] });
   assert.equal(takeDamagePlayer.takeDamageCalled, true);
+});
+
+test('frozen enemy update keeps health text in sync before early return', () => {
+  const frozenEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    container,
+  });
+  const safePlayer = {
+    player: new PIXI.Sprite(),
+    collidesWithCircle() { return false; },
+  };
+  safePlayer.player.width = 20;
+
+  frozenEnemy.applyControlEffects({ freezeChance: 1 });
+  frozenEnemy.life = 3;
+  frozenEnemy.update(safePlayer, { spawns: [frozenEnemy] });
+
+  assert.equal(frozenEnemy.enemyLifeText.text, 3);
+});
+
+test('updateControlTimers decrements cooldown and removes expired weaken effects', () => {
+  const controlledEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    container,
+  });
+
+  controlledEnemy.contactCooldown = 2;
+  controlledEnemy.damageMultiplier = 2;
+  controlledEnemy.controlTimers = [{ type: 'weaken', timer: 1, value: 2 }];
+  controlledEnemy.updateControlTimers();
+
+  assert.equal(controlledEnemy.contactCooldown, 1);
+  assert.equal(controlledEnemy.damageMultiplier, 1);
+  assert.equal(controlledEnemy.controlTimers.length, 0);
+});
+
+test('removePlayerLife heavy enemy applies cooldown, knockback, and effects', () => {
+  const heavyEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 12,
+    value: 1,
+    container,
+  });
+  heavyEnemy.enemy.position.set(0, 0);
+  const heavyPlayer = {
+    player: new PIXI.Sprite(),
+    lifes: 3,
+  };
+  heavyPlayer.player.position.set(20, 0);
+  const effectCalls = [];
+  const effects = {
+    shake(amount) { effectCalls.push(['shake', amount]); },
+    explosion(x, y, color, size) { effectCalls.push(['explosion', color, size]); },
+    pulse(target, color, size) { effectCalls.push(['pulse', color, size]); },
+  };
+
+  heavyEnemy.removePlayerLife(heavyPlayer, { spawns: [heavyEnemy] }, effects);
+
+  assert.equal(heavyPlayer.lifes, 2);
+  assert.equal(heavyEnemy.contactCooldown, 90);
+  assert.notEqual(heavyEnemy.knockbackVelocity.x, 0);
+  assert.deepEqual(effectCalls, [
+    ['shake', 6],
+    ['explosion', 0xff2d55, 18],
+    ['pulse', 0xff2d55, 12],
+  ]);
+});
+
+test('removePlayerLife damages light enemy when player is invulnerable', () => {
+  const lightEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    container,
+  });
+  const invulnerablePlayer = {
+    player: new PIXI.Sprite(),
+    takeDamage() { return false; },
+  };
+  const localSpawner = { spawns: [lightEnemy] };
+  let killArgs = null;
+  lightEnemy.kill = (...args) => { killArgs = args; };
+
+  lightEnemy.removePlayerLife(invulnerablePlayer, localSpawner);
+
+  assert.equal(lightEnemy.contactCooldown, 90);
+  assert.equal(killArgs[4], 10);
+});
+
+test('removePlayerLife force-kills light enemy and removes it from spawns', () => {
+  const disposableEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 1,
+    value: 1,
+    container,
+  });
+  const plainPlayer = {
+    player: new PIXI.Sprite(),
+    lifes: 2,
+  };
+  plainPlayer.player.position.set(0, 0);
+  const localSpawner = { spawns: [disposableEnemy] };
+  const effectCalls = [];
+
+  disposableEnemy.removePlayerLife(plainPlayer, localSpawner, {
+    shake(amount) { effectCalls.push(['shake', amount]); },
+    explosion(x, y, color, size) { effectCalls.push(['explosion', color, size]); },
+    pulse(target, color, size) { effectCalls.push(['pulse', color, size]); },
+  });
+
+  assert.equal(plainPlayer.lifes, 1);
+  assert.equal(localSpawner.spawns.length, 0);
+  assert.equal(disposableEnemy.enemy.destroyed, true);
+  assert.deepEqual(effectCalls, [
+    ['shake', 8],
+    ['explosion', 0xff2d55, 24],
+    ['pulse', 0xff2d55, 15],
+  ]);
+});
+
+test('updateRanged chooses recuar, strafe, and aproximar states by distance', () => {
+  const originalRandom = Math.random;
+  Math.random = () => 0.9;
+
+  try {
+    const rangedEnemy = new Enemy({
+      app,
+      enemyRadius: 10,
+      speed: 1,
+      color: 0xff0000,
+      life: 3,
+      value: 1,
+      container,
+      behaviorType: 'ranged',
+      enemyBullets: [],
+    });
+    rangedEnemy.fireBullet = () => {};
+    const rangedPlayer = { player: new PIXI.Sprite() };
+    rangedPlayer.player.width = 20;
+
+    rangedEnemy.enemy.position.set(0, 0);
+    rangedPlayer.player.position.set(100, 0);
+    rangedEnemy.aiTimer = 0;
+    rangedEnemy.updateRanged(rangedPlayer, { spawns: [] });
+    assert.equal(rangedEnemy.aiState, 'recuar');
+
+    rangedEnemy.enemy.position.set(0, 0);
+    rangedPlayer.player.position.set(200, 0);
+    rangedEnemy.aiTimer = 0;
+    rangedEnemy.strafeDirection = 1;
+    rangedEnemy.updateRanged(rangedPlayer, { spawns: [] });
+    assert.equal(rangedEnemy.aiState, 'strafe');
+    assert.equal(rangedEnemy.strafeDirection, -1);
+
+    rangedEnemy.enemy.position.set(0, 0);
+    rangedPlayer.player.position.set(400, 0);
+    rangedEnemy.aiTimer = 0;
+    rangedEnemy.updateRanged(rangedPlayer, { spawns: [] });
+    assert.equal(rangedEnemy.aiState, 'aproximar');
+  } finally {
+    Math.random = originalRandom;
+  }
+});
+
+test('updateRanged triggers contact damage and sets fire cooldown by enemy type', () => {
+  const closeEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 3,
+    value: 1,
+    container,
+    behaviorType: 'ranged',
+    typeId: 'devastador',
+    enemyBullets: [],
+  });
+  const rangedPlayer = { player: new PIXI.Sprite() };
+  rangedPlayer.player.width = 40;
+  rangedPlayer.player.position.set(0, 0);
+  closeEnemy.enemy.position.set(0, 0);
+  let removed = 0;
+  closeEnemy.removePlayerLife = () => { removed += 1; };
+
+  closeEnemy.updateRanged(rangedPlayer, { spawns: [] });
+  assert.equal(removed, 1);
+
+  const shooter = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 3,
+    value: 1,
+    container,
+    behaviorType: 'ranged',
+    typeId: 'devastador',
+    enemyBullets: [],
+  });
+  shooter.enemy.position.set(0, 0);
+  rangedPlayer.player.width = 20;
+  rangedPlayer.player.position.set(400, 0);
+  shooter.aiTimer = 10;
+  shooter.shootCooldown = 0;
+  let fired = 0;
+  shooter.fireBullet = () => { fired += 1; };
+
+  shooter.updateRanged(rangedPlayer, { spawns: [] });
+
+  assert.equal(fired, 1);
+  assert.equal(shooter.shootCooldown, 280);
+});
+
+test('fireBullet spawns expected projectile counts for each ranged type', () => {
+  const originalWindow = global.window;
+  const created = [];
+  global.window = {
+    EnemyBulletClass: class {
+      constructor(options) {
+        this.options = options;
+        created.push(options);
+      }
+    },
+  };
+
+  try {
+    const playerPosition = new Victor(100, 0);
+    const cases = [
+      ['artilheiro', 3],
+      ['devastador', 5],
+      ['espectre', 2],
+      ['infiltrador', 1],
+      ['atirador', 1],
+    ];
+
+    for (const [typeId, expected] of cases) {
+      created.length = 0;
+      const bullets = [];
+      const rangedEnemy = new Enemy({
+        app,
+        enemyRadius: 10,
+        speed: 1,
+        color: 0xff0000,
+        life: 3,
+        value: 1,
+        container,
+        typeId,
+        enemyBullets: bullets,
+      });
+      rangedEnemy.enemy.position.set(0, 0);
+
+      rangedEnemy.fireBullet(playerPosition);
+
+      assert.equal(bullets.length, expected);
+      assert.equal(created.length, expected);
+      assert.equal(created[0].color, 0xff0000);
+    }
+  } finally {
+    global.window = originalWindow;
+  }
+});
+
+test('goToPlayer moves enemy toward player when not colliding', () => {
+  const walker = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 3,
+    value: 1,
+    container,
+  });
+  const farPlayer = {
+    player: new PIXI.Sprite(),
+    collidesWithCircle() { return false; },
+  };
+  farPlayer.player.position.set(100, 0);
+  walker.enemy.position.set(0, 0);
+
+  walker.goToPlayer(farPlayer, { spawns: [walker] });
+
+  assert.notEqual(walker.enemy.position.x, 0);
+  assert.equal(walker.enemyLifeText.text, 3);
+});
+
+test('forceKill destroys enemy graphics', () => {
+  const doomedEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 3,
+    value: 1,
+    container,
+  });
+
+  doomedEnemy.forceKill();
+
+  assert.equal(doomedEnemy.enemy.visible, false);
+  assert.equal(doomedEnemy.enemy.destroyed, true);
+  assert.equal(doomedEnemy.enemyLifeText.destroyed, true);
+});
+
+test('update routes ranged enemies and thaws frozen tint to readable color', () => {
+  const rangedEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xffffff,
+    life: 3,
+    value: 1,
+    container,
+    behaviorType: 'ranged',
+    enemyBullets: [],
+  });
+  let rangedUpdated = 0;
+  rangedEnemy.updateRanged = () => { rangedUpdated += 1; };
+  rangedEnemy.frozen = true;
+  rangedEnemy.freezeTimer = 1;
+
+  rangedEnemy.update({ player: new PIXI.Sprite() }, { spawns: [rangedEnemy] });
+
+  assert.equal(rangedUpdated, 1);
+  assert.equal(rangedEnemy.frozen, false);
+  assert.equal(rangedEnemy.enemyLifeText.style.fill, 0x000000);
 });

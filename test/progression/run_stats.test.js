@@ -100,3 +100,16 @@ test("lowHpCreditBonus is awarded when player survived with low HP", () => {
 
   assert.equal(withBonus.total - withoutBonus.total, 20);
 });
+
+test("missing shotsHit is treated as zero accuracy instead of NaN", () => {
+  const summary = createRunSummary({
+    score: 50,
+    timeSurvivedSeconds: 30,
+    shotsFired: 10,
+    killsByType: {},
+    bossKills: 0,
+  });
+
+  assert.equal(summary.accuracyPercent, 0);
+  assert.equal(Number.isFinite(summary.credits.total), true);
+});

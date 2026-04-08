@@ -183,6 +183,7 @@ export function createLabel({
 
   if (halo) {
     label.haloWrapper = halo;
+    label.glowHalo = halo;
 
     const setPosition = label.position.set.bind(label.position);
     label.position.set = (nextX, nextY) => {

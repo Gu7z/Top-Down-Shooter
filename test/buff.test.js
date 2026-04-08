@@ -36,13 +36,89 @@ test('buff collision updates player', () => {
 });
 
 test('timers trigger destroy', () => {
-  const cbs = [];
-  const appImmediate = {
+  const timeouts = [];
+  const appTimed = {
     ...createAppMock(),
-    setInterval(fn) { cbs.push(fn); return { clear() {} }; },
-    setTimeout(fn) { fn(); return { clear() {} }; }
+    setTimeout(fn, seconds) {
+      const timer = {
+        fn,
+        seconds,
+        cleared: false,
+        clear() { this.cleared = true; },
+      };
+      timeouts.push(timer);
+      return timer;
+    }
   };
-  const b = new Buff({ app: appImmediate, hud });
-  cbs[0]();
-  assert.ok(b.buff.destroyed);
+  const b = new Buff({ app: appTimed, hud });
+  const firstBuff = b.buff;
+
+  assert.equal(timeouts[0].seconds, 7);
+  assert.equal(timeouts[1].seconds, 20);
+
+  timeouts[0].fn();
+  assert.ok(firstBuff.destroyed);
+
+  timeouts[1].fn();
+  assert.notEqual(b.buff, firstBuff);
+  assert.equal(timeouts.length, 4);
+});
+
+test('dispose clears pending buff timers', () => {
+  const timers = [];
+  const appTimed = {
+    ...createAppMock(),
+    setTimeout(fn, seconds) {
+      const timer = {
+        fn,
+        seconds,
+        cleared: false,
+        clear() { this.cleared = true; },
+      };
+      timers.push(timer);
+      return timer;
+    }
+  };
+  const b = new Buff({ app: appTimed, hud });
+
+  b.dispose();
+
+  assert.equal(timers.every((timer) => timer.cleared), true);
+});
+
+test('buff applies nearest scaling and resets fire velocity after the timed bonus', () => {
+  const originalTextureFrom = PIXI.Texture.from;
+  const timeouts = [];
+  const appTimed = {
+    ...createAppMock(),
+    setTimeout(fn, seconds) {
+      const timer = {
+        fn,
+        seconds,
+        cleared: false,
+        clear() { this.cleared = true; },
+      };
+      timeouts.push(timer);
+      return timer;
+    }
+  };
+  PIXI.Texture.from = () => ({ baseTexture: {} });
+
+  try {
+    const localBuff = new Buff({ app: appTimed, hud });
+    const localPlayer = {
+      shooting: { setFireVelocity: 0 },
+    };
+
+    assert.equal(localBuff.buff.texture.baseTexture.scaleMode, PIXI.SCALE_MODES.NEAREST);
+
+    localBuff.get(localPlayer);
+    assert.equal(localPlayer.shooting.setFireVelocity, 2);
+    assert.equal(timeouts.at(-1).seconds, 4);
+
+    timeouts.at(-1).fn();
+    assert.equal(localPlayer.shooting.setFireVelocity, 1);
+  } finally {
+    PIXI.Texture.from = originalTextureFrom;
+  }
 });

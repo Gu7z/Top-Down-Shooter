@@ -41,14 +41,19 @@ function sortByTreeOrder(ids) {
   return [...ids].sort((a, b) => treeOrder.get(a) - treeOrder.get(b));
 }
 
+function getPrereqs(skill) {
+  return Array.isArray(skill?.prereqs) ? skill.prereqs : [];
+}
+
 function skillDepth(skillId, seen = new Set()) {
   if (seen.has(skillId)) return 0;
   seen.add(skillId);
 
   const skill = getSkillById(skillId);
-  if (!skill || skill.prereqs.length === 0) return 0;
+  const prereqs = getPrereqs(skill);
+  if (prereqs.length === 0) return 0;
 
-  return 1 + Math.max(...skill.prereqs.map((id) => skillDepth(id, new Set(seen))));
+  return 1 + Math.max(...prereqs.map((id) => skillDepth(id, new Set(seen))));
 }
 
 function dependsOn(skillId, targetId, seen = new Set()) {
@@ -59,7 +64,7 @@ function dependsOn(skillId, targetId, seen = new Set()) {
   const skill = getSkillById(skillId);
   if (!skill) return false;
 
-  return skill.prereqs.some((prereqId) => dependsOn(prereqId, targetId, seen));
+  return getPrereqs(skill).some((prereqId) => dependsOn(prereqId, targetId, seen));
 }
 
 function getDefaultStorage() {
@@ -123,7 +128,7 @@ export function createSkillTreeState({
     if (!skill) return { ok: false, reason: "missing_skill" };
     if (purchased.has(id)) return { ok: false, reason: "already_purchased" };
 
-    const missingPrereqs = skill.prereqs.filter((prereq) => !purchased.has(prereq));
+    const missingPrereqs = getPrereqs(skill).filter((prereq) => !purchased.has(prereq));
     if (missingPrereqs.length) {
       return { ok: false, reason: "missing_prereqs", missingPrereqs };
     }
@@ -178,8 +183,9 @@ export function createSkillTreeState({
     for (const skill of SKILL_TREE) {
       if (visible.has(skill.id)) continue;
 
-      const isAvailable = skill.prereqs.length > 0 && skill.prereqs.every((id) => purchased.has(id));
-      const isDirectChildSignal = skill.prereqs.some((id) => purchased.has(id));
+      const prereqs = getPrereqs(skill);
+      const isAvailable = prereqs.length > 0 && prereqs.every((id) => purchased.has(id));
+      const isDirectChildSignal = prereqs.some((id) => purchased.has(id));
 
       if (isAvailable || isDirectChildSignal) visible.add(skill.id);
     }

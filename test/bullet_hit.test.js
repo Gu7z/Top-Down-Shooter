@@ -114,3 +114,70 @@ test('bulletHit chain pulse applies control to nearby enemies', () => {
   assert.equal(nearResult.effects.freezeChance, 0.9);
   assert.equal(nearResult.effects.knockbackBonus, undefined);
 });
+
+test('bulletHit stops after one hit when kill mutates enemies array', () => {
+  const mutationBullet = {
+    position: { x: 0, y: 0 },
+    destroy() { this.destroyed = true; },
+  };
+  const killed = [];
+  const firstEnemy = {
+    enemy: { position: { x: 0, y: 0 } },
+    enemyRadius: 5,
+    kill(enemies, index) {
+      killed.push('first');
+      enemies.splice(index, 1);
+    },
+  };
+  const secondEnemy = {
+    enemy: { position: { x: 0, y: 0 } },
+    enemyRadius: 5,
+    kill() {
+      killed.push('second');
+    },
+  };
+  const enemies = [firstEnemy, secondEnemy];
+
+  bulletHit(mutationBullet, enemies, 5, { points: 1 });
+
+  assert.deepEqual(killed, ['first']);
+  assert.deepEqual(enemies, [secondEnemy]);
+});
+
+test('bulletHit applies visual effects and drone bounty bonus', () => {
+  const effectCalls = [];
+  const droneBullet = {
+    position: { x: 0, y: 0 },
+    source: 'drone',
+    isCrit: true,
+    damage: 2,
+    destroy() { this.destroyed = true; },
+  };
+  const bountyEnemy = {
+    enemy: { position: { x: 0, y: 0 } },
+    enemyRadius: 5,
+    value: 3,
+    kill(enemies, index, hitPlayer, effects, damage) {
+      this.forwardedDamage = damage;
+    },
+  };
+  const playerWithBounty = {
+    points: 1,
+    skillEffects: { droneBountyBonus: true },
+  };
+  const effects = {
+    pulse(target, color, duration) { effectCalls.push(['pulse', color, duration]); },
+    explosion(x, y, color, amount) { effectCalls.push(['explosion', color, amount]); },
+    shake(amount) { effectCalls.push(['shake', amount]); },
+  };
+
+  bulletHit(droneBullet, [bountyEnemy], 5, playerWithBounty, effects);
+
+  assert.equal(playerWithBounty.points, 4);
+  assert.equal(bountyEnemy.forwardedDamage, 2);
+  assert.deepEqual(effectCalls, [
+    ['pulse', 0xff4d4d, 6],
+    ['explosion', 0xff2d55, 16],
+    ['shake', 4.0],
+  ]);
+});

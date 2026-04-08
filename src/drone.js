@@ -104,11 +104,9 @@ export default class DroneSystem {
         drone.sprite.rotation = angle + Math.PI / 2; // Facing tangent to orbit
       }
       
-      if (drone.fireTimer <= 0) {
+      if (drone.fireTimer <= 0 && target) {
         drone.fireTimer = this.fireInterval;
-        if (target) { // Only fire if there is a target (saves bullets from firing idly)
-            this.fire(drone, drone.sprite.rotation);
-        }
+        this.fire(drone, drone.sprite.rotation);
       }
     });
     

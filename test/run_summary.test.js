@@ -53,3 +53,63 @@ test('run summary shows victory title when final wave is cleared', () => {
   const title = screen.container.children.find((child) => child.text === 'EMINÊNCIA SUPERADA');
   assert.ok(title);
 });
+
+test('run summary keeps stat rows separated on compact screens', () => {
+  const app = {
+    ...createAppMock(),
+    screen: { width: 860, height: 453 },
+  };
+  const screen = new RunSummary({
+    app,
+    username: 'player',
+    summary: {
+      score: 100,
+      credits: { total: 42, breakdown: [] },
+      accuracyPercent: 80,
+      shotsFired: 10,
+      shotsHit: 8,
+      timeSurvivedSeconds: 60,
+      killsByType: {},
+      bossKills: 1,
+      highlights: [],
+    },
+  });
+  const rowTexts = [
+    'SCORE FINAL:',
+    'CREDITOS GANHOS:',
+    'PRECISAO:',
+    'TIROS:',
+    'TEMPO:',
+    'BOSSES:',
+  ];
+  const yPositions = rowTexts.map((prefix) => (
+    screen.container.children.find((child) => child.text?.startsWith(prefix)).position.y
+  ));
+
+  for (let index = 1; index < yPositions.length; index += 1) {
+    assert.ok(yPositions[index] - yPositions[index - 1] >= 24);
+  }
+});
+
+test('run summary destroy removes the container from stage', () => {
+  const app = createAppMock();
+  const screen = new RunSummary({
+    app,
+    username: 'player',
+    summary: {
+      score: 100,
+      credits: { total: 42, breakdown: [] },
+      accuracyPercent: 80,
+      shotsFired: 10,
+      shotsHit: 8,
+      timeSurvivedSeconds: 60,
+      killsByType: {},
+      bossKills: 1,
+      highlights: [],
+    },
+  });
+
+  screen.destroy();
+
+  assert.equal(app.stage.children.includes(screen.container), false);
+});

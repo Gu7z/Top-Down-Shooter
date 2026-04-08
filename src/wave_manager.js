@@ -67,6 +67,8 @@ const BOSS_DEFS = {
   "apocalipse": { color: 0xff0066, enemyRadius: 55, life: 280, speed: 0.8, value: 400, typeId: "boss_apocalipse" },
 };
 
+const MAX_PROCEDURAL_ENEMY_COUNT = 90;
+
 export default class WaveManager {
   constructor({ app, spawnerContainer, enemyBullets, renderBanner, updateBossHud, finishGame }) {
     this.app = app;
@@ -85,6 +87,7 @@ export default class WaveManager {
     this.spawnRate = 60; // 1 second per enemy (instead of 0.75s)
     
     this.activeBoss = null;
+    this.finishGameTimer = null;
     
     this.startWave(this.currentWave);
   }
@@ -92,9 +95,9 @@ export default class WaveManager {
   startWave(waveIndex) {
     let composition = WAVES[waveIndex];
     
-    // Procedural scaled random waves after 20
+    // Procedural scaled random waves after authored wave definitions.
     if (!composition) {
-       const scalingLimit = waveIndex * 3;
+       const scalingLimit = Math.min(waveIndex * 3, MAX_PROCEDURAL_ENEMY_COUNT);
        composition = {
          count: scalingLimit,
          mix: ["sprinter", "atirador", "artilheiro"],
@@ -205,9 +208,10 @@ export default class WaveManager {
 
           this.renderBanner(`A P O C A L I P S E   D E R R O T A D O`, true);
           this.state = "ENDGAME"; // halt progression gently, then call finish Game
-          setTimeout(() => {
+          this.finishGameTimer = this.app.setTimeout(() => {
              this.finishGame("victory");
-          }, 4000);
+             this.finishGameTimer = null;
+          }, 4);
           return;
         }
 
@@ -221,5 +225,10 @@ export default class WaveManager {
         }
       }
     }
+  }
+
+  destroy() {
+    this.finishGameTimer?.clear?.();
+    this.finishGameTimer = null;
   }
 }

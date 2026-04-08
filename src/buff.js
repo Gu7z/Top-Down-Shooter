@@ -7,7 +7,13 @@ export default class Buff {
     this.width = 40;
     this.height = 40;
     this.buffDuration = 4;
+    this.buffLifetime = 7;
+    this.respawnDelay = 20;
     this.buffContainer = new PIXI.Container();
+    this.buff = null;
+    this.expireTimer = null;
+    this.respawnTimer = null;
+    this.disposed = false;
 
     this.createBuff({
       app: this.app,
@@ -15,6 +21,12 @@ export default class Buff {
   }
 
   createBuff({ app }) {
+    if (this.disposed || this.hud.dead) return;
+
+    this.destroy();
+    this.respawnTimer?.clear?.();
+    this.respawnTimer = null;
+
     const randomX = generateRandom(
       this.width,
       this.app.screen.width - this.width
@@ -33,22 +45,21 @@ export default class Buff {
     this.buff.width = this.width;
     this.buff.height = this.height;
 
-    const timer = this.app.setInterval(() => {
-      if (!this.buff.destroyed) {
+    this.expireTimer = this.app.setTimeout(() => {
+      this.expireTimer = null;
+      if (!this.buff?.destroyed) {
         this.destroy();
       }
+    }, this.buffLifetime);
 
-      timer.clear();
-    }, 7);
-
-    const newtimer = this.app.setInterval(() => {
-      if (!this.hud.dead) {
+    this.respawnTimer = this.app.setTimeout(() => {
+      this.respawnTimer = null;
+      if (!this.hud.dead && !this.disposed) {
         this.createBuff({
           app: this.app,
         });
       }
-      newtimer.clear();
-    }, 20);
+    }, this.respawnDelay);
 
     this.buffContainer.addChild(this.buff);
     if (!app.stage.children.includes(this.buffContainer)) {
@@ -68,7 +79,7 @@ export default class Buff {
   }
 
   update(player) {
-    if (this.buff.destroyed) return;
+    if (!this.buff || this.buff.destroyed) return;
 
     const playerBounds = player.player.getBounds();
     const buffBounds = this.buff.getBounds();
@@ -85,6 +96,21 @@ export default class Buff {
   }
 
   destroy() {
-    this.buff.destroy();
+    this.expireTimer?.clear?.();
+    this.expireTimer = null;
+    if (this.buff) {
+      this.buff.parent?.removeChild?.(this.buff);
+      if (!this.buff.destroyed) {
+        this.buff.destroy();
+      }
+    }
+  }
+
+  dispose() {
+    this.disposed = true;
+    this.destroy();
+    this.respawnTimer?.clear?.();
+    this.respawnTimer = null;
+    this.buffContainer.destroy?.({ children: true });
   }
 }

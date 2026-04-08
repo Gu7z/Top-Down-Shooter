@@ -3,7 +3,7 @@ import bulletHit from "./utils/bullet_hit.js";
 import { createDefaultSkillEffects } from "./progression/skill_effects.js";
 
 export default class Shooting {
-  constructor({ app, player, playerSize, keys, skillEffects = {}, runStats = null }) {
+  constructor({ app, player, playerSize, keys, skillEffects = {}, runStats = null, effects = null }) {
     this.app = app;
     this.player = player;
     this.playerSize = playerSize;
@@ -25,7 +25,7 @@ export default class Shooting {
     this.shootingContainer = new PIXI.Container();
     this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
     this.interval = undefined;
-    this.effects = undefined;
+    this.effects = effects;
 
     this.shoot();
   }

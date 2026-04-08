@@ -79,7 +79,8 @@ export default class BossEnemy extends Enemy {
     this.enemyLifeText.text = this.life;
     
     // HP based pacing - fires faster at lower health
-    const healthRatio = this.life / this.maxLife;
+    const maxLife = Math.max(1, this.maxLife || 0);
+    const healthRatio = Math.max(0, this.life) / maxLife;
     const fireSpeedMod = healthRatio < 0.5 ? 1.4 : 1; 
 
     // Handle Attack Patterns

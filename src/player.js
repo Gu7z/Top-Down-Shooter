@@ -3,7 +3,7 @@ import { createDefaultSkillEffects } from "./progression/skill_effects.js";
 import CollisionMask from "./utils/collision_mask.js";
 
 export default class Player {
-  constructor({ app, username, keys, skillEffects = {}, runStats = null }) {
+  constructor({ app, username, keys, skillEffects = {}, runStats = null, effects = null }) {
     this.app = app;
     this.points = 0;
     this.skillEffects = { ...createDefaultSkillEffects(), ...skillEffects };
@@ -96,6 +96,7 @@ export default class Player {
       keys,
       skillEffects: this.skillEffects,
       runStats,
+      effects,
     });
 
     // Shield bubble — visible only when shield > 0

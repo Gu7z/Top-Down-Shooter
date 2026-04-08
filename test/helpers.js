@@ -27,6 +27,10 @@ export function setupPixiMock() {
         delete this.eventHandlers[event];
         return this;
       }
+      destroy(options = {}) {
+        if (options.children) this.children.forEach((child) => child.destroy?.(options));
+        this.destroyed = true;
+      }
     },
     Sprite: class {
       constructor(texture = {}) {
@@ -63,6 +67,7 @@ export function setupPixiMock() {
         this.interactive = false;
         this.cursor = null;
         this.position = { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } };
+        this.scale = { x: 1, y: 1, set(x, y = x) { this.x = x; this.y = y; } };
         this.eventHandlers = {};
       }
       beginFill()  { return this; }
@@ -150,6 +155,11 @@ export function createAppMock() {
     setTimeout() { return { clear() {} }; },
     renderer: { view: { onmousemove: null } },
     view: {
+      eventListeners: {},
+      addEventListener(event, fn) { this.eventListeners[event] = fn; },
+      removeEventListener(event, fn) {
+        if (this.eventListeners[event] === fn) delete this.eventListeners[event];
+      },
       getBoundingClientRect: () => ({ left: 0, top: 0, width: 800, height: 600 })
     },
     render() {},

@@ -124,3 +124,58 @@ test('bullets carry control effects and chain pulse radius', () => {
   assert.equal(bullet.chainPulseRadius, 100);
   assert.equal(bullet.controlDurationMultiplier, 1.3);
 });
+
+test('constructor effects are available for the first fired shot', () => {
+  const effects = {
+    explosions: 0,
+    shakes: 0,
+    explosion() { this.explosions += 1; },
+    shake() { this.shakes += 1; },
+  };
+  const shootingWithEffects = new Shooting({
+    app,
+    player,
+    playerSize: 20,
+    keys: {},
+    effects,
+  });
+
+  shootingWithEffects.fire();
+
+  assert.equal(effects.explosions, 1);
+  assert.equal(effects.shakes, 1);
+});
+
+test('shoot timer recursively reschedules and setter updates fire velocity', () => {
+  const timerApp = createAppMock();
+  const timers = [];
+  timerApp.setInterval = (fn, seconds) => {
+    const timer = {
+      fn,
+      seconds,
+      cleared: false,
+      clear() {
+        this.cleared = true;
+      },
+    };
+    timers.push(timer);
+    return timer;
+  };
+
+  const timedShooting = new Shooting({
+    app: timerApp,
+    player,
+    playerSize: 20,
+    keys: { ' ': true },
+  });
+  let fireCalls = 0;
+  timedShooting.fire = () => { fireCalls += 1; };
+
+  timers[0].fn();
+  timedShooting.setFireVelocity = 2;
+
+  assert.equal(fireCalls, 1);
+  assert.equal(timers[0].cleared, true);
+  assert.equal(timers.length, 2);
+  assert.equal(timedShooting.fireVelocity, 2);
+});

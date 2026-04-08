@@ -157,7 +157,7 @@ export default class Hud {
       container:    this.hudContainer,
       text:         "//  PAUSADO  //",
       x:            cx,
-      y:            cy - 40,
+      y:            cy - 139,
       fontSize:     58,
       color:        UISkin.palette.accentAlt,
       bold:         true,
@@ -166,10 +166,25 @@ export default class Hud {
     });
     this.textPaused.visible = false;
 
+    this.pauseContinueBtn = createPillButton({
+      container: this.hudContainer,
+      x:         cx,
+      y:         cy - 50,
+      text:      "▶  CONTINUAR",
+      width:     280,
+      height:    52,
+      primary:   true,
+      onClick:   () => {
+        if (this._resume) this._resume();
+      },
+    });
+    this.pauseContinueBtn.bg.visible = false;
+    this.pauseContinueBtn.label.visible = false;
+
     this.pauseSettingsBtn = createPillButton({
       container: this.hudContainer,
       x:         cx,
-      y:         cy + 50,
+      y:         cy + 16,
       text:      "⚙  CONFIGURAÇÕES",
       width:     280,
       height:    52,
@@ -183,7 +198,7 @@ export default class Hud {
     this.pauseControlsBtn = createPillButton({
       container: this.hudContainer,
       x:         cx,
-      y:         cy + 116,
+      y:         cy + 82,
       text:      "⌨  CONTROLES",
       width:     280,
       height:    52,
@@ -197,7 +212,7 @@ export default class Hud {
     this.pauseEndRunBtn = createPillButton({
       container: this.hudContainer,
       x:         cx,
-      y:         cy + 182,
+      y:         cy + 148,
       text:      "■  ENCERRAR RUN",
       width:     280,
       height:    52,
@@ -224,6 +239,10 @@ export default class Hud {
   }
 
   // ── Pause toggle ───────────────────────────────────────────────
+  set resume(fn) {
+    this._resume = fn;
+  }
+
   set openSettings(fn) {
     this._openSettings = fn;
   }
@@ -233,6 +252,11 @@ export default class Hud {
   }
 
   set endRun(fn) {
+    if (typeof fn !== "function") {
+      this._endRun = null;
+      return;
+    }
+
     this._endRun = () => {
       fn();
       if (!this._onRunEnded) {
@@ -249,6 +273,8 @@ export default class Hud {
 
   set showPaused(val) {
     this.textPaused.visible = val;
+    this.pauseContinueBtn.bg.visible = val;
+    this.pauseContinueBtn.label.visible = val;
     this.pauseSettingsBtn.bg.visible = val;
     this.pauseSettingsBtn.label.visible = val;
     this.pauseControlsBtn.bg.visible = val;

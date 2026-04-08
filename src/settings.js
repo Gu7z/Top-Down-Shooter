@@ -117,6 +117,7 @@ export default class Settings {
     const startDrag = (e) => {
       this._dragging = true;
       this._updateFromPointer(e);
+      this._removeDragListeners();
       this.app.stage.on("pointermove", this._onDrag);
       this.app.stage.on("pointerup", this._onDrop);
     };
@@ -125,8 +126,7 @@ export default class Settings {
     };
     this._onDrop = () => {
       this._dragging = false;
-      this.app.stage.off("pointermove", this._onDrag);
-      this.app.stage.off("pointerup", this._onDrop);
+      this._removeDragListeners();
     };
 
     track.on("pointerdown", startDrag);
@@ -236,11 +236,23 @@ export default class Settings {
     });
   }
 
-  close() {
+  _removeDragListeners() {
     this.app.stage.off("pointermove", this._onDrag);
     this.app.stage.off("pointerup", this._onDrop);
-    this.app.stage.removeChild(this.container);
+  }
+
+  close() {
+    this._removeDragListeners();
+    this.container.parent?.removeChild?.(this.container);
     this.onBack();
+    this.render();
+  }
+
+  destroy() {
+    this._dragging = false;
+    this._removeDragListeners();
+    this.container.parent?.removeChild?.(this.container);
+    this.container.destroy?.({ children: true });
     this.render();
   }
 

@@ -104,3 +104,23 @@ test('skill tree switches branches via selectedBranch', () => {
   assert.equal(screen.selectedBranch, 2);
   assert.ok(screen.contentLayer.children.length > 0);
 });
+
+test('skill tree ignores wheel before scroll content is available', () => {
+  const screen = new SkillTree({
+    app: createSkillTreeAppMock(),
+    skillState: createStateStub(),
+    onBack: () => {},
+  });
+  let prevented = false;
+
+  screen.scrollContent = null;
+  screen.contentTotalH = undefined;
+  screen.onWheel({
+    clientY: 200,
+    deltaY: 20,
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(screen.scrollY, 0);
+  assert.equal(prevented, false);
+});

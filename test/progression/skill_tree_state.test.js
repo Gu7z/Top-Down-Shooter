@@ -83,3 +83,31 @@ test("progressive reveal exposes purchased, available, and direct child signals"
   assert.ok(state.getVisibleSkillIds().includes("fire_rate_1"));
   assert.equal(state.getInitialFrameIds().join(","), "core");
 });
+
+test("state falls back when storage contains invalid JSON and clamps credits when setting them", () => {
+  const storage = memoryStorage({
+    [SKILL_TREE_STORAGE_KEY]: "{not-json",
+  });
+  const state = createSkillTreeState({ storage, initialCredits: 50 });
+
+  assert.equal(state.getCredits(), 50);
+  assert.deepEqual(state.getPurchasedIds(), ["core"]);
+
+  state.setCredits(-1.2);
+  assert.equal(state.getCredits(), 0);
+});
+
+test("state works without global localStorage by using the default in-memory fallback", () => {
+  const originalLocalStorage = global.localStorage;
+  delete global.localStorage;
+
+  try {
+    const state = createSkillTreeState();
+    state.setCredits(3.9);
+
+    assert.equal(state.getCredits(), 3);
+    assert.deepEqual(state.getPurchasedIds(), ["core"]);
+  } finally {
+    global.localStorage = originalLocalStorage;
+  }
+});

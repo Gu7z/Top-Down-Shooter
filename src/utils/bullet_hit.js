@@ -1,6 +1,11 @@
 const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
-  enemies.forEach((enemy, indexEnemy) => {
-    if (bullet.destroyed) return;
+  const enemiesSnapshot = [...enemies];
+
+  for (const enemy of enemiesSnapshot) {
+    if (bullet.destroyed) break;
+    const indexEnemy = enemies.indexOf(enemy);
+    if (indexEnemy === -1) continue;
+
     const distanceX = enemy.enemy.position.x - bullet.position.x;
     const distanceY = enemy.enemy.position.y - bullet.position.y;
     const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
@@ -27,9 +32,9 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
       // Chain pulse: apply control effects to nearby enemies
       const chainRadius = bullet.chainPulseRadius || 0;
       if (chainRadius > 0 && controlEffects) {
-        enemies.forEach((nearbyEnemy, nearbyIndex) => {
-          if (nearbyIndex === indexEnemy) return;
-          if (nearbyEnemy.enemy.destroyed) return;
+        for (const nearbyEnemy of enemiesSnapshot) {
+          if (nearbyEnemy === enemy) continue;
+          if (nearbyEnemy.enemy.destroyed) continue;
           const nDx = nearbyEnemy.enemy.position.x - enemy.enemy.position.x;
           const nDy = nearbyEnemy.enemy.position.y - enemy.enemy.position.y;
           const nearbyDist = Math.sqrt(nDx * nDx + nDy * nDy);
@@ -45,7 +50,7 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
               effects.pulse(nearbyEnemy.enemy, 0x5cc8ff, 6);
             }
           }
-        });
+        }
       }
 
       if (bullet.source === 'drone' && player.skillEffects?.droneBountyBonus) {
@@ -69,7 +74,7 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
         PIXI.sound.Sound.from("sound/reward.mp3").play();
       }
     }
-  });
+  }
 };
 
 export default bulletHit;

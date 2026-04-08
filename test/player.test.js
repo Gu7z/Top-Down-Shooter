@@ -266,3 +266,230 @@ test('survivedLowHp flag is set when player reaches 1 HP', () => {
   tracked.takeDamage(1); // 2 → 1 HP
   assert.equal(tracked.survivedLowHp, true);
 });
+
+test('takeDamage with shield triggers hit effect when provided', () => {
+  const shielded = new Player({
+    app: createAppMock(),
+    username: 'shieldfx',
+    keys: {},
+    skillEffects: { maxShield: 1 },
+  });
+  let explosions = 0;
+
+  shielded.takeDamage(1, {
+    explosion() { explosions += 1; },
+  });
+
+  assert.equal(explosions, 1);
+});
+
+test('tryDash without movement keys uses mouse direction', () => {
+  const mouseDasher = new Player({
+    app: createAppMock(),
+    username: 'mousedash',
+    keys: {},
+    skillEffects: { dashEnabled: true },
+  });
+  mouseDasher.player.position.set(100, 100);
+  mouseDasher.setMousePosition(200, 100);
+
+  mouseDasher.tryDash({});
+
+  assert.equal(mouseDasher.dashDirection.x > 0, true);
+  assert.equal(Math.abs(mouseDasher.dashDirection.y) < 0.0001, true);
+});
+
+test('updateDash stops dash and clamps player inside screen bounds', () => {
+  const clampDash = new Player({
+    app: createAppMock(),
+    username: 'clampdash',
+    keys: {},
+    skillEffects: { dashEnabled: true },
+  });
+  clampDash.player.width = 20;
+  clampDash.player.height = 20;
+  clampDash.player.position.set(900, 700);
+  clampDash.player.x = 900;
+  clampDash.player.y = 700;
+  clampDash.isDashing = true;
+  clampDash.dashTimer = 1;
+  clampDash.dashDirection = { x: 1, y: 1 };
+
+  clampDash.updateDash();
+
+  assert.equal(clampDash.isDashing, false);
+  assert.equal(clampDash.player.x <= clampDash.app.screen.width - 10, true);
+  assert.equal(clampDash.player.y <= clampDash.app.screen.height - 10, true);
+});
+
+test('updateInvulnerability clears expired invulnerability timer', () => {
+  const guarded = new Player({
+    app: createAppMock(),
+    username: 'guardclear',
+    keys: {},
+  });
+  guarded.invulnerable = true;
+  guarded.invulnerableTimer = 1;
+
+  guarded.updateInvulnerability();
+
+  assert.equal(guarded.invulnerable, false);
+  assert.equal(guarded.invulnerableTimer, 0);
+});
+
+test('outOfBounds covers bottom, right, and default key paths', () => {
+  const boundaryPlayer = new Player({
+    app: createAppMock(),
+    username: 'bounds',
+    keys: {},
+  });
+  boundaryPlayer.player.position.set(1000, 1000);
+  boundaryPlayer.player.width = 10;
+  boundaryPlayer.player.height = 10;
+
+  assert.equal(boundaryPlayer.outOfBounds('s'), true);
+  assert.equal(boundaryPlayer.outOfBounds('d'), true);
+  assert.equal(boundaryPlayer.outOfBounds('x'), true);
+});
+
+test('movePlayer does nothing while dashing', () => {
+  const dashLocked = new Player({
+    app: createAppMock(),
+    username: 'dashlocked',
+    keys: {},
+  });
+  const startX = dashLocked.player.x;
+  dashLocked.isDashing = true;
+
+  dashLocked.movePlayer({ d: true });
+
+  assert.equal(dashLocked.player.x, startX);
+});
+
+test('collidesWithCircle covers shield, fallback, and mask-based collision paths', () => {
+  const collider = new Player({
+    app: createAppMock(),
+    username: 'collider',
+    keys: {},
+    skillEffects: { maxShield: 1 },
+  });
+  collider.player.position.set(100, 100);
+
+  assert.equal(collider.collidesWithCircle(100, 100, 5), true);
+
+  collider.shield = 0;
+  collider.collisionMask = null;
+  assert.equal(collider.collidesWithCircle(100, 100, 5), true);
+
+  PIXI.Point = class {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+  };
+  collider.player.scale.x = 1;
+  collider.player.toLocal = () => ({ x: 0, y: 0 });
+  collider.collisionMask = {
+    width: 10,
+    height: 10,
+    isSolid(x, y) { return x === 5 && y === 5; },
+  };
+
+  assert.equal(collider.collidesWithCircle(100, 100, 1), true);
+});
+
+test('collidesWithCircle returns false when the collision mask has no solid pixels', () => {
+  const collider = new Player({
+    app: createAppMock(),
+    username: 'nomaskhit',
+    keys: {},
+  });
+
+  PIXI.Point = class {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+  };
+  collider.player.position.set(100, 100);
+  collider.player.scale.x = 1;
+  collider.player.toLocal = () => ({ x: 0, y: 0 });
+  collider.collisionMask = {
+    width: 10,
+    height: 10,
+    isSolid() { return false; },
+  };
+
+  assert.equal(collider.collidesWithCircle(100, 100, 1), false);
+});
+
+test('updateGlow covers invulnerable and normal glow states', () => {
+  const glowing = new Player({
+    app: createAppMock(),
+    username: 'glow',
+    keys: {},
+  });
+  glowing.player.position.set(50, 60);
+  glowing.shield = 1;
+  glowing.invulnerable = true;
+  glowing.updateGlow();
+  assert.equal(glowing.shieldBubble.visible, true);
+  assert.equal([1, 0.15].includes(glowing.player.alpha), true);
+
+  glowing.invulnerable = false;
+  glowing.updateGlow();
+  assert.equal(glowing.player.alpha, 1);
+});
+
+test('player creates collision mask from loaded texture and deferred texture load', () => {
+  const originalDocument = global.document;
+  const originalTextureFrom = PIXI.Texture.from;
+
+  global.document = {
+    createElement() {
+      return {
+        getContext() {
+          return {
+            drawImage() {},
+            getImageData() {
+              return { data: new Uint8ClampedArray([0, 0, 0, 255]) };
+            },
+          };
+        },
+      };
+    },
+  };
+
+  try {
+    PIXI.Texture.from = () => ({
+      rotate: 0,
+      baseTexture: {
+        hasLoaded: true,
+        resource: { source: {} },
+        width: 1,
+        height: 1,
+      },
+    });
+    const loaded = new Player({ app: createAppMock(), username: 'loaded', keys: {} });
+    assert.ok(loaded.collisionMask);
+
+    let onLoad = null;
+    PIXI.Texture.from = () => ({
+      rotate: 0,
+      baseTexture: {
+        hasLoaded: false,
+        resource: { source: {} },
+        width: 1,
+        height: 1,
+        once(event, fn) { onLoad = fn; },
+      },
+    });
+    const deferred = new Player({ app: createAppMock(), username: 'deferred', keys: {} });
+    assert.equal(deferred.collisionMask, null);
+    onLoad();
+    assert.ok(deferred.collisionMask);
+  } finally {
+    global.document = originalDocument;
+    PIXI.Texture.from = originalTextureFrom;
+  }
+});

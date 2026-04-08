@@ -39,6 +39,7 @@ export default class Game {
       keys,
       skillEffects: this.skillEffects,
       runStats: this.runStats,
+      effects: this.effects,
     });
     this.enemySpawner = new Spawner({ app, player: this.player });
     this.enemyBullets = [];
@@ -155,8 +156,10 @@ export default class Game {
     };
 
     this.clear = () => {
-      this.player.shooting.interval.clear();
+      this.player.shooting.interval?.clear?.();
       this.effects.destroy();
+      this.waveManager.destroy?.();
+      this.enemySpawner.destroy?.();
       this.app.ticker.remove(this.tick);
       this.app.renderer.view.onmousemove = null;
       window.removeEventListener("pointerdown", this.handlePointerDown);
@@ -199,6 +202,13 @@ export default class Game {
           new Menu({ app: this.app });
         },
       });
+    };
+    this.hud.resume = () => {
+      if (!paused) return;
+      this.hud.showPaused = false;
+      this.player.shooting.update();
+      app.start();
+      paused = false;
     };
     this.hud.onRunEnded = this.finishRun;
     this.hud.endRun = () => this.finishRun({ reason: "manual" });

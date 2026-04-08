@@ -44,3 +44,48 @@ test('settings back button callback is called on close', () => {
   settings.close();
   assert.equal(backCalled, true);
 });
+
+test('settings destroy removes drag listeners without calling back callback', () => {
+  const localApp = createAppMock();
+  let localBackCalled = false;
+  const localSettings = new Settings({
+    app: localApp,
+    onBack: () => { localBackCalled = true; },
+  });
+
+  localSettings.sliderThumb.eventHandlers.pointerdown({
+    global: { x: localSettings._track.x + localSettings._track.w / 2 },
+  });
+  assert.equal(typeof localApp.stage._events.pointermove, 'function');
+  assert.equal(typeof localApp.stage._events.pointerup, 'function');
+
+  localSettings.destroy();
+
+  assert.equal(localApp.stage._events.pointermove, undefined);
+  assert.equal(localApp.stage._events.pointerup, undefined);
+  assert.equal(localBackCalled, false);
+});
+
+test('settings drag handlers update volume while dragging and clean up on drop', () => {
+  const localApp = createAppMock();
+  const localSettings = new Settings({
+    app: localApp,
+    onBack: () => {},
+  });
+
+  localSettings.sliderThumb.eventHandlers.pointerdown({
+    global: { x: localSettings._track.x },
+  });
+  localApp.stage._events.pointermove({
+    global: { x: localSettings._track.x + localSettings._track.w },
+  });
+
+  assert.equal(localSettings.volValue.text, '100');
+  assert.equal(localSettings._dragging, true);
+
+  localApp.stage._events.pointerup();
+
+  assert.equal(localSettings._dragging, false);
+  assert.equal(localApp.stage._events.pointermove, undefined);
+  assert.equal(localApp.stage._events.pointerup, undefined);
+});

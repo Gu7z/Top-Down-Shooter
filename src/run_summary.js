@@ -93,7 +93,8 @@ export default class RunSummary {
     const rightX = cx + halfW - 20;
 
     const startY = cardTop + 173;
-    const gap    = Math.min(34, (cardBottom - 220 - startY) / 6);
+    const availableGap = (cardBottom - 220 - startY) / 6;
+    const gap = Math.max(24, Math.min(34, availableGap));
 
     const rows = [
       [`SCORE FINAL: ${summary.score}`,                    UISkin.palette.accentGreen],

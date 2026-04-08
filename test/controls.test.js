@@ -19,3 +19,14 @@ test('back button returns to menu', () => {
   back.eventHandlers.pointerdown();
   assert.strictEqual(menuShown, true);
 });
+
+test('wheel scrolling updates the controls list position when content overflows', () => {
+  const localApp = createAppMock();
+  const localControls = new Controls({ app: localApp, menu: { show() {}, hide() {} } });
+  const listContainer = localControls.controlsContainer.children.find((child) => Array.isArray(child.children));
+  const initialY = listContainer.y ?? 0;
+
+  localApp.view.eventListeners.wheel({ deltaY: 120 });
+
+  assert.notEqual(listContainer.y, initialY);
+});

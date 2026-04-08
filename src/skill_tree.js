@@ -170,7 +170,12 @@ export default class SkillTree {
   }
 
   onWheel(e) {
+    if (!this.scrollContent || !Number.isFinite(this.contentTotalH) || !Number.isFinite(this.scrollBaseY)) {
+      return;
+    }
+
     const rect = this.app.renderer.view.getBoundingClientRect();
+    if (!rect.height) return;
     const my = (e.clientY - rect.top) * (SCREEN_H / rect.height);
 
     if (my >= CONTENT_Y && my <= CONTENT_Y + CONTENT_H) {

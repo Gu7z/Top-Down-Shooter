@@ -28,6 +28,8 @@ export default class EnemyBullet {
     app.stage.addChild(this.trailContainer);
     
     this.framesCount = 0;
+    this.trailTimers = new Set();
+    this.destroyTimer = null;
   }
 
   isOutOfBounds() {
@@ -50,9 +52,12 @@ export default class EnemyBullet {
       trail.position.set(this.bullet.position.x, this.bullet.position.y);
       this.trailContainer.addChild(trail);
       
-      const fadeInterval = setInterval(() => {
+      let fadeInterval;
+      fadeInterval = this.app.setInterval(() => {
+        if (!fadeInterval) return;
         if (trail.destroyed) {
-          clearInterval(fadeInterval);
+          fadeInterval.clear();
+          this.trailTimers.delete(fadeInterval);
           return;
         }
         trail.alpha -= 0.05;
@@ -60,9 +65,11 @@ export default class EnemyBullet {
         trail.scale.y *= 0.9;
         if (trail.alpha <= 0) {
           trail.destroy();
-          clearInterval(fadeInterval);
+          fadeInterval.clear();
+          this.trailTimers.delete(fadeInterval);
         }
-      }, 30);
+      }, 0.03);
+      this.trailTimers.add(fadeInterval);
     }
   }
 
@@ -82,12 +89,15 @@ export default class EnemyBullet {
     this.destroyed = true;
     this.bullet.visible = false;
     this.bullet.destroy();
+    this.trailTimers.forEach((timer) => timer.clear());
+    this.trailTimers.clear();
     
-    // Trail will fade out on its own, but we detach the container from further updates
-    setTimeout(() => {
+    // Drop leftover trail graphics after a short grace period.
+    this.destroyTimer = this.app.setTimeout(() => {
       if (!this.trailContainer.destroyed) {
         this.trailContainer.destroy({ children: true });
       }
-    }, 1000);
+      this.destroyTimer = null;
+    }, 1);
   }
 }

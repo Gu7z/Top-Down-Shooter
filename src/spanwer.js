@@ -13,7 +13,7 @@ export default class Spawner {
     this.spawnerContainer = new PIXI.Container();
     this.app.stage.addChild(this.spawnerContainer);
 
-    this.app.setInterval(() => {
+    this.spawnLimitTimer = this.app.setInterval(() => {
       this.spawnLimit += 1;
     }, 5);
   }
@@ -108,6 +108,12 @@ export default class Spawner {
       }
     });
     this.spawns = [];
+  }
+
+  destroy() {
+    this.reset();
+    this.spawnLimitTimer?.clear?.();
+    this.spawnLimitTimer = null;
   }
 
   update(player) {

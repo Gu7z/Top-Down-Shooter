@@ -7,8 +7,10 @@ function totalKills(killsByType = {}) {
 }
 
 function accuracyPercent({ shotsFired, shotsHit }) {
-  if (!shotsFired) return 0;
-  return Math.round((shotsHit / shotsFired) * 100);
+  const fired = safeCount(shotsFired);
+  if (fired <= 0) return 0;
+  const hit = safeCount(shotsHit);
+  return Math.round((hit / fired) * 100);
 }
 
 export function createRunStats({ now = Date.now } = {}) {

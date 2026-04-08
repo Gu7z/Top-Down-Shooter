@@ -36,3 +36,85 @@ test('update spawns enemies', () => {
   spawner.reset();
   assert.strictEqual(spawner.spawns.length, 0);
 });
+
+test('destroy clears spawn limit timer', () => {
+  const timers = [];
+  const trackedApp = {
+    ...createAppMock(),
+    setInterval(fn, seconds) {
+      const timer = {
+        fn,
+        seconds,
+        cleared: false,
+        clear() { this.cleared = true; },
+      };
+      timers.push(timer);
+      return timer;
+    },
+  };
+  const trackedSpawner = new Spawner({ app: trackedApp, player });
+
+  trackedSpawner.destroy();
+
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].cleared, true);
+});
+
+test('spawn limit timer increments and reset covers forceKill and fallback destroy paths', () => {
+  const timers = [];
+  const trackedApp = {
+    ...createAppMock(),
+    setInterval(fn, seconds) {
+      const timer = {
+        fn,
+        seconds,
+        clear() {},
+      };
+      timers.push(timer);
+      return timer;
+    },
+  };
+  const trackedSpawner = new Spawner({ app: trackedApp, player });
+  let forceKilled = 0;
+  const enemy = {
+    visible: true,
+    destroyCalls: 0,
+    destroy() {
+      this.destroyCalls += 1;
+    },
+  };
+  trackedSpawner.spawns = [
+    { forceKill() { forceKilled += 1; } },
+    { enemy },
+  ];
+
+  timers[0].fn();
+  trackedSpawner.reset();
+
+  assert.equal(trackedSpawner.spawnLimit, 2);
+  assert.equal(forceKilled, 1);
+  assert.equal(enemy.visible, false);
+  assert.equal(enemy.destroyCalls, 1);
+});
+
+test('enemyType covers late-game variants and update stops when the player is dead', () => {
+  const originalRandom = Math.random;
+  const localPlayer = { points: 1, lifes: 1 };
+  const localSpawner = new Spawner({ app: createAppMock(), player: localPlayer });
+  const randomValues = [8.1 / 13, 11.1 / 13, 12.5 / 13];
+  let index = 0;
+
+  try {
+    Math.random = () => randomValues[index++];
+
+    assert.equal(localSpawner.enemyType().typeId, 'pink_striker');
+    assert.equal(localSpawner.enemyType().typeId, 'red_rusher');
+    assert.equal(localSpawner.enemyType().typeId, 'white_sprinter');
+
+    localPlayer.lifes = 0;
+    localSpawner.update(localPlayer);
+    assert.equal(localSpawner.spawns.length, 0);
+  } finally {
+    Math.random = originalRandom;
+  }
+});
