@@ -1,8 +1,10 @@
 import { createLabel, addScreenCorners, addCornerBrackets, UISkin } from '../ui_system.js';
 
 const CARD_W = 260;
-const CARD_H = 380;
+const CARD_H = 264;
 const CHAMFER = 14;
+const ICON_BOX_W = 92;
+const ICON_BOX_H = 68;
 
 export class RunUpgradeScreen {
   constructor(app) {
@@ -91,10 +93,10 @@ export class RunUpgradeScreen {
 
     addCornerBrackets(c, 0, 0, CARD_W, CARD_H, 14, upgrade.color, 0.95);
 
-    const iconY = -CARD_H / 2 + 20 + 48;
+    const iconY = -CARD_H / 2 + 18 + (ICON_BOX_H / 2);
     this._buildIcon(c, upgrade, 0, iconY);
 
-    const nameY = iconY + 56;
+    const nameY = iconY + (ICON_BOX_H / 2) + 20;
     createLabel({
       container: c,
       text: upgrade.name.toUpperCase(),
@@ -120,16 +122,16 @@ export class RunUpgradeScreen {
     const tierData = level < 6 ? upgrade.tiers[level] : upgrade.tiers[5];
     const descLabel = new PIXI.Text(tierData.description, {
       fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-      fill: UISkin.palette.textSecondary,
-      fontSize: 10,
+      fill: UISkin.palette.textPrimary,
+      fontSize: 11,
       wordWrap: true,
-      wordWrapWidth: CARD_W - 36,
+      wordWrapWidth: CARD_W - 40,
       align: 'center',
-      letterSpacing: 0.3,
-      lineHeight: 15,
+      letterSpacing: 0.4,
+      lineHeight: 16,
     });
     descLabel.anchor.set(0.5, 0);
-    descLabel.position.set(0, pipY + 14);
+    descLabel.position.set(0, pipY + 18);
     c.addChild(descLabel);
 
     bg.interactive = true;
@@ -177,7 +179,7 @@ export class RunUpgradeScreen {
     g.position.set(cx, cy);
     g.beginFill(0x0A0A18, 0.9);
     g.lineStyle(1, upgrade.color, 0.25);
-    g.drawRoundedRect(-50, -44, 100, 88, 6);
+    g.drawRoundedRect(-(ICON_BOX_W / 2), -(ICON_BOX_H / 2), ICON_BOX_W, ICON_BOX_H, 6);
     g.endFill();
     switch (upgrade.id) {
       case 'boss_hunter': this._iconBossHunter(g, upgrade.color); break;

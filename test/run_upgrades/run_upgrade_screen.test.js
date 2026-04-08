@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { RunUpgradeScreen } from "../../src/run_upgrades/run_upgrade_screen.js";
 import { UPGRADE_REGISTRY } from "../../src/run_upgrades/run_upgrade_data.js";
+import { UISkin } from "../../src/ui_system.js";
 import { setupPixiMock, createAppMock } from "../helpers.js";
 
 setupPixiMock();
@@ -28,6 +29,35 @@ function findCardContainers(screen) {
 function findCardBackground(cardContainer) {
   return cardContainer.children.find((child) => child.eventHandlers?.pointerdown);
 }
+
+function findDescriptionLabel(cardContainer) {
+  return cardContainer.children.find((child) => child.style?.wordWrap === true);
+}
+
+function getCommandBounds(graphics) {
+  const points = graphics.commands.filter((command) => typeof command.x === "number" && typeof command.y === "number");
+  return {
+    minX: Math.min(...points.map((point) => point.x)),
+    maxX: Math.max(...points.map((point) => point.x)),
+    minY: Math.min(...points.map((point) => point.y)),
+    maxY: Math.max(...points.map((point) => point.y)),
+  };
+}
+
+test("run upgrade screen uses brighter copy and more compact cards", () => {
+  const screen = new RunUpgradeScreen(createUpgradeApp());
+
+  screen._build(buildCards(), () => {});
+
+  const [firstCard] = findCardContainers(screen);
+  const bg = findCardBackground(firstCard);
+  const description = findDescriptionLabel(firstCard);
+  const bounds = getCommandBounds(bg);
+
+  assert.equal(description.style.fill, UISkin.palette.textPrimary);
+  assert.equal(bounds.maxX - bounds.minX, 260);
+  assert.equal(bounds.maxY - bounds.minY, 264);
+});
 
 test("run upgrade screen builds interactive cards and reacts to hover", () => {
   const screen = new RunUpgradeScreen(createUpgradeApp());

@@ -132,14 +132,18 @@ test('game opens settings and controls, then handles pause, resume, mute, and da
   const { app: localApp, game: localGame } = createGameHarness('systems');
   let startCalls = 0;
   let stopCalls = 0;
-  let shootingUpdates = 0;
+  const shootingEnabledStates = [];
   let dashKeys = null;
   let muteCalls = 0;
   const originalToggleMute = audio.toggleMute;
+  const originalSetEnabled = localGame.player.shooting.setEnabled.bind(localGame.player.shooting);
 
   localApp.start = () => { startCalls += 1; };
   localApp.stop = () => { stopCalls += 1; };
-  localGame.player.shooting.update = () => { shootingUpdates += 1; };
+  localGame.player.shooting.setEnabled = (enabled) => {
+    shootingEnabledStates.push(enabled);
+    originalSetEnabled(enabled);
+  };
   localGame.player.tryDash = (keysState) => { dashKeys = { ...keysState }; };
   audio.toggleMute = () => { muteCalls += 1; };
 
@@ -159,21 +163,24 @@ test('game opens settings and controls, then handles pause, resume, mute, and da
     localGame.handleSystemKeys({ key: 'Escape' });
     assert.equal(stopCalls, 1);
     assert.equal(localGame.hud.textPaused.visible, true);
+    assert.equal(localGame.player.shooting.enabled, false);
 
     localGame.handleSystemKeys({ key: 'Escape' });
     assert.equal(startCalls, 1);
+    assert.equal(localGame.player.shooting.enabled, true);
 
     localGame.handleSystemKeys({ key: 'Escape' });
     localGame.hud.pauseContinueBtn.bg.eventHandlers.pointerdown();
     localGame.hud.pauseContinueBtn.bg.eventHandlers.pointerdown();
     assert.equal(startCalls, 2);
     assert.equal(localGame.hud.textPaused.visible, false);
+    assert.equal(localGame.player.shooting.enabled, true);
 
     localGame.handleSystemKeys({ key: 'm' });
     localGame.handleSystemKeys({ key: 'Shift' });
     assert.equal(muteCalls, 1);
     assert.deepEqual(dashKeys, {});
-    assert.ok(shootingUpdates >= 4);
+    assert.deepEqual(shootingEnabledStates, [false, true, false, true]);
   } finally {
     audio.toggleMute = originalToggleMute;
     localGame.clear();

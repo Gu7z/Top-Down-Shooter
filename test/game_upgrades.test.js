@@ -48,6 +48,46 @@ function createGameHarness(username = "player") {
   return { app, game };
 }
 
+function createGameHarnessWithShootTimers(username = "player") {
+  const timers = [];
+  const app = {
+    ...createAppMock(),
+    render() {},
+    start() {},
+    stop() {},
+    setInterval(fn, seconds) {
+      const timer = {
+        fn,
+        seconds,
+        cleared: false,
+        clear() {
+          this.cleared = true;
+        },
+      };
+      timers.push(timer);
+      return timer;
+    },
+  };
+  const windowHarness = createWindowHarness();
+
+  global.window = windowHarness.window;
+  global.localStorage = {
+    storage: {},
+    getItem(key) { return this.storage[key] || null; },
+    setItem(key, value) { this.storage[key] = value; },
+  };
+  global.__SNOWPACK_ENV__ = {
+    SNOWPACK_PUBLIC_API_URL_PROD: "",
+    SNOWPACK_PUBLIC_API_URL_DEV: "",
+    MODE: "production",
+  };
+  global.fetch = async () => ({ json: async () => ({}) });
+
+  const game = new Game({ app, username });
+  game.player.player.getBounds = () => ({ x: 0, y: 0, width: 40, height: 40 });
+  return { app, game, timers };
+}
+
 function findUpgradeCardBackgrounds(container) {
   return container.children
     .filter((child) => child.children?.some((nested) => nested.eventHandlers?.pointerdown))
@@ -110,6 +150,24 @@ test("game upgrade screen does not open when the run already ended, the player i
   game._showUpgradeScreen();
   assert.equal(showCalls, 0);
   assert.equal(app.ticker.callbacks.includes(game.tick), true);
+});
+
+test("game upgrade screen clears held-fire state so the shot loop does not continue under the overlay", () => {
+  const { game, timers } = createGameHarnessWithShootTimers("upgrade-held-fire");
+  let fireCalls = 0;
+
+  game.player.shooting.fire = () => {
+    fireCalls += 1;
+  };
+
+  game.handlePointerDown();
+  game.player.shooting.update(true, game.enemySpawner, game.player);
+
+  game._showUpgradeScreen();
+  timers[0].fn();
+
+  assert.equal(game.player.shooting.shooting, false);
+  assert.equal(fireCalls, 0);
 });
 
 test("game viral core clouds slow enemies, deal damage over time, and expire cleanly", () => {

@@ -161,8 +161,9 @@ export default class Game {
             break;
           }
 
+          shooting = false;
           this.hud.showPaused = !paused;
-          this.player.shooting.update();
+          this.player.shooting.setEnabled(paused);
           app.render();
 
           if (paused) {
@@ -239,8 +240,9 @@ export default class Game {
     };
     this.hud.resume = () => {
       if (!paused) return;
+      shooting = false;
       this.hud.showPaused = false;
-      this.player.shooting.update();
+      this.player.shooting.setEnabled(true);
       app.start();
       paused = false;
     };
@@ -321,10 +323,13 @@ export default class Game {
     this._showUpgradeScreen = () => {
       if (this.runFinished || this.player.lifes < 1) return;
       if (!this.upgradeState.shouldShow()) return;
+      shooting = false;
+      this.player.shooting.setEnabled(false);
       this.app.ticker.remove(this.tick);
       this.upgradeScreen.show(this.upgradeState, (chosenIndex) => {
         this.upgradeState.applyChoice(chosenIndex);
         this.player.setRunUpgradeEffects(this.upgradeState.getActiveEffects());
+        this.player.shooting.setEnabled(true);
         this.app.ticker.add(this.tick);
       });
     };

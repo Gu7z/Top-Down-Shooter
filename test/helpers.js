@@ -69,21 +69,65 @@ export function setupPixiMock() {
         this.position = { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } };
         this.scale = { x: 1, y: 1, set(x, y = x) { this.x = x; this.y = y; } };
         this.eventHandlers = {};
+        this.commands = [];
+        this.fillStyles = [];
+        this.lineStyles = [];
       }
-      beginFill()  { return this; }
+      beginFill(color, alpha)  {
+        this.fillStyles.push({ color, alpha });
+        return this;
+      }
       endFill()    { return this; }
-      lineStyle()  { return this; }
-      moveTo()           { return this; }
-      lineTo()           { return this; }
-      bezierCurveTo()    { return this; }
-      closePath()  { return this; }
-      drawRect()   { return this; }
-      drawRoundedRect() { return this; }
-      drawPolygon() { return this; }
-      drawEllipse(){ return this; }
-      drawCircle() { return this; }
-      arc()        { return this; }
-      clear()      { return this; }
+      lineStyle(width, color, alpha)  {
+        this.lineStyles.push({ width, color, alpha });
+        return this;
+      }
+      moveTo(x, y) {
+        this.commands.push({ type: "moveTo", x, y });
+        return this;
+      }
+      lineTo(x, y) {
+        this.commands.push({ type: "lineTo", x, y });
+        return this;
+      }
+      bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y) {
+        this.commands.push({ type: "bezierCurveTo", cp1x, cp1y, cp2x, cp2y, x, y });
+        return this;
+      }
+      closePath()  {
+        this.commands.push({ type: "closePath" });
+        return this;
+      }
+      drawRect(x, y, width, height) {
+        this.commands.push({ type: "drawRect", x, y, width, height });
+        return this;
+      }
+      drawRoundedRect(x, y, width, height, radius) {
+        this.commands.push({ type: "drawRoundedRect", x, y, width, height, radius });
+        return this;
+      }
+      drawPolygon(points) {
+        this.commands.push({ type: "drawPolygon", points });
+        return this;
+      }
+      drawEllipse(x, y, width, height) {
+        this.commands.push({ type: "drawEllipse", x, y, width, height });
+        return this;
+      }
+      drawCircle(x, y, radius) {
+        this.commands.push({ type: "drawCircle", x, y, radius });
+        return this;
+      }
+      arc(x, y, radius, startAngle, endAngle) {
+        this.commands.push({ type: "arc", x, y, radius, startAngle, endAngle });
+        return this;
+      }
+      clear()      {
+        this.commands = [];
+        this.fillStyles = [];
+        this.lineStyles = [];
+        return this;
+      }
       on(event, fn)  { this.eventHandlers[event] = fn; return this; }
       off(event) {
         delete this.eventHandlers[event];

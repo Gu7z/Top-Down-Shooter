@@ -21,6 +21,7 @@ export default class Shooting {
     this.controlDurationMultiplier = this.skillEffects.controlDurationMultiplier;
     this.keys = keys;
     this.shooting = false;
+    this.enabled = true;
     this.shootInterval = 0.3;
     this.shootingContainer = new PIXI.Container();
     this.app.stage.addChild(this.shootingContainer);
@@ -37,12 +38,17 @@ export default class Shooting {
 
   shoot() {
     this.interval = this.app.setInterval(() => {
-      if (this.keys[" "] || this.shooting) {
+      if (this.enabled && (this.keys[" "] || this.shooting)) {
         this.fire();
       }
       this.interval.clear();
       this.shoot();
     }, this.shootInterval / this.fireVelocity);
+  }
+
+  setEnabled(enabled) {
+    this.enabled = enabled;
+    if (!enabled) this.shooting = false;
   }
 
   fire() {
