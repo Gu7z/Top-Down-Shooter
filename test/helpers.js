@@ -5,6 +5,8 @@ export function setupPixiMock() {
         this.children = [];
         this.position = { x: 0, y: 0, set(x, y) { this.x = x; this.y = y; } };
         this.scale = { x: 1, y: 1, set(x, y = x) { this.x = x; this.y = y; } };
+        this.visible = true;
+        this.alpha = 1;
         this.interactive = false;
         this.cursor = null;
         this.eventHandlers = {};
