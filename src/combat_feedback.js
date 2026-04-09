@@ -1,12 +1,12 @@
 export function pickNumberStyle(damage, isCrit) {
   let fontSize;
-  if (damage <= 3)       fontSize = 14;
-  else if (damage <= 7)  fontSize = 18;
-  else if (damage <= 14) fontSize = 22;
-  else                   fontSize = 28;
+  if (damage <= 3)       fontSize = 20;
+  else if (damage <= 7)  fontSize = 26;
+  else if (damage <= 14) fontSize = 32;
+  else                   fontSize = 40;
 
   if (isCrit) {
-    return { text: `CRIT ${damage}`, fontSize: fontSize + 6, color: 0xFF00FF };
+    return { text: `CRIT ${damage}`, fontSize: fontSize + 8, color: 0xFF00FF };
   }
 
   const color =
@@ -74,25 +74,25 @@ class CombatFeedback {
   }
 
   _update() {
-    // Animation phases (100 frames total ~1.67s @ 60fps):
-    //   frames  1-16: pop-in  — scale 0→1.4→1.0
-    //   frames 16-75: float   — rise 50px, horizontal drift
-    //   frames 75-99: fade    — alpha 1→0, scale shrinks
+    // Animation phases (200 frames total ~3.33s @ 60fps):
+    //   frames   1-32: pop-in  — scale 0→1.4→1.0
+    //   frames  32-152: float  — rise 50px, horizontal drift
+    //   frames 152-199: fade   — alpha 1→0, scale shrinks
     for (let i = this._active.length - 1; i >= 0; i--) {
       const slot = this._active[i];
       const f = slot.frame;
 
-      if (f <= 15) {
-        const scale = f <= 8
-          ? (f / 8) * 1.4
-          : 1.4 - ((f - 8) / 7) * 0.4;
+      if (f <= 31) {
+        const scale = f <= 16
+          ? (f / 16) * 1.4
+          : 1.4 - ((f - 16) / 15) * 0.4;
         slot.container.scale.set(scale);
-      } else if (f <= 75) {
+      } else if (f <= 152) {
         slot.container.scale.set(1.0);
-        slot.container.position.y -= 50 / 60;
-        slot.container.position.x += slot.vx / 60;
-      } else if (f <= 99) {
-        const t = (f - 75) / 24;
+        slot.container.position.y -= 50 / 120;
+        slot.container.position.x += slot.vx / 120;
+      } else if (f <= 199) {
+        const t = (f - 152) / 48;
         slot.container.alpha = 1 - t;
         slot.container.scale.set(1.0 - t * 0.3);
       } else {
@@ -110,7 +110,7 @@ class CombatFeedback {
   spawnDeathEffect(x, y, color, isBoss) {
     this._spawnNovaRing(x, y, color, 0, 16, 52);
     if (isBoss) {
-      this._spawnNovaRing(x, y, color, 8, 20, 72);
+      this._spawnNovaRing(x, y, color, 16, 20, 72);
     }
   }
 
@@ -118,7 +118,7 @@ class CombatFeedback {
     const ring = new PIXI.Graphics();
     this.app.stage.addChild(ring);
     let frame = 0;
-    const maxFrames = 50;
+    const maxFrames = 100;
 
     const update = () => {
       if (frame < delayFrames) { frame++; return; }
