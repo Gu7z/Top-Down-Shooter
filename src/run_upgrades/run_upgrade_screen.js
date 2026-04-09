@@ -1,4 +1,5 @@
 import { createLabel, addScreenCorners, addCornerBrackets, UISkin } from '../ui_system.js';
+import { playSound } from '../synth.js';
 
 const CARD_W = 260;
 const CARD_H = 264;
@@ -145,6 +146,7 @@ export class RunUpgradeScreen {
       this._drawCardBg(bg, upgrade.color, false);
     });
     bg.on('pointerdown', () => {
+      playSound('card_select');
       this._flashCard(c, upgrade.color, onSelectFn);
     });
 

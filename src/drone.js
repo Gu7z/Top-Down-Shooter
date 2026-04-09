@@ -1,5 +1,6 @@
 import Victor from "victor";
 import bulletHit from "./utils/bullet_hit.js";
+import { playSound } from "./synth.js";
 
 export default class DroneSystem {
   constructor({ app, player, skillEffects = {}, runStats = null, effects = null }) {
@@ -153,10 +154,6 @@ export default class DroneSystem {
     if (this.effects) {
       this.effects.explosion(dx, dy, 0x8be9fd, 4); // small muzzle flash animation
     }
-    try {
-      if (PIXI.sound && PIXI.sound.Sound) {
-         PIXI.sound.Sound.from("sound/shot.mp3").play();
-      }
-    } catch(e) {}
+    playSound('shot');
   }
 }

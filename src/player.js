@@ -1,6 +1,7 @@
 import Shooting from "./shooting.js";
 import { createDefaultSkillEffects } from "./progression/skill_effects.js";
 import CollisionMask from "./utils/collision_mask.js";
+import { playSound } from "./synth.js";
 
 export default class Player {
   constructor({ app, username, keys, skillEffects = {}, runStats = null, effects = null }) {
@@ -130,12 +131,14 @@ export default class Player {
       if (effects) {
         effects.explosion(this.player.position.x, this.player.position.y, 0x00ffff, 12);
       }
+      playSound('shield_hit');
       this.applyPostHitGuard();
       return true;
     }
 
     // HP damage
     this.lifes -= amount;
+    playSound('player_hit');
 
     // Track low HP survival
     if (this.lifes === 1) {

@@ -140,7 +140,7 @@ test('banner transitions through hold and out states', () => {
   for (let i = 0; i < 25; i += 1) localHud.updateBanner();
   assert.equal(localHud.bannerState, 'HOLD');
 
-  for (let i = 0; i < 61; i += 1) localHud.updateBanner();
+  for (let i = 0; i < 121; i += 1) localHud.updateBanner();
   assert.equal(localHud.bannerState, 'OUT');
 
   for (let i = 0; i < 40; i += 1) localHud.updateBanner();
@@ -188,15 +188,12 @@ test('hud short-circuits repeated death handling and shield regen early returns 
     app: localApp,
     player: { points: 0, lifes: 0, username: 'u' },
   });
-  let deathSoundCalls = 0;
-  localHud.deathSound.play = () => { deathSoundCalls += 1; };
   localHud.dead = true;
 
   localHud.endgameCheck(() => {});
   localHud._updateShieldRegenArc();
 
   assert.equal(stopCalls, 0);
-  assert.equal(deathSoundCalls, 0);
 
   const shieldHud = new Hud({
     app: createAppMock(),

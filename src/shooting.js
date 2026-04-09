@@ -1,6 +1,7 @@
 import Victor from "victor";
 import bulletHit from "./utils/bullet_hit.js";
 import { createDefaultSkillEffects } from "./progression/skill_effects.js";
+import { playSound } from "./synth.js";
 
 export default class Shooting {
   constructor({ app, player, playerSize, keys, skillEffects = {}, runStats = null, effects = null }) {
@@ -25,7 +26,6 @@ export default class Shooting {
     this.shootInterval = 0.3;
     this.shootingContainer = new PIXI.Container();
     this.app.stage.addChild(this.shootingContainer);
-    this.sound = PIXI.sound.Sound.from("sound/shot.mp3");
     this.interval = undefined;
     this.effects = effects;
 
@@ -52,7 +52,7 @@ export default class Shooting {
   }
 
   fire() {
-    this.sound.play();
+    playSound('shot');
     const angle = this.player.rotation;
 
     this.bullets = this.bullets.filter((bullet) => {

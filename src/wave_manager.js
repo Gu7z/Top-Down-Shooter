@@ -1,5 +1,6 @@
 import BossEnemy from "./boss_enemy.js";
 import Enemy from "./enemy.js";
+import { playSound } from "./synth.js";
 
 // Arena wave definitions
 const WAVES = {
@@ -112,7 +113,8 @@ export default class WaveManager {
 
     if (composition.isBoss) {
       this.enemiesToSpawn.push({ isBoss: true, ...BOSS_DEFS[composition.bossId] });
-      this.renderBanner(`B O S S  W A V E`, false); // show only ~2s
+      this.renderBanner(`B O S S  W A V E`, false);
+      playSound('boss_spawn');
     } else {
       for (let i = 0; i < composition.count; i++) {
         let eType = composition.type || composition.mix[Math.floor(Math.random() * composition.mix.length)];
@@ -208,6 +210,7 @@ export default class WaveManager {
           player.points += 1000; // Big bonus
 
           this.renderBanner(`A P O C A L I P S E   D E R R O T A D O`, true);
+          playSound('victory');
           this.state = "ENDGAME"; // halt progression gently, then call finish Game
           this.finishGameTimer = this.app.setTimeout(() => {
              this.finishGame("victory");
@@ -217,6 +220,7 @@ export default class WaveManager {
         }
 
         this.renderBanner(`WAVE ${this.currentWave} COMPLETA`, false);
+        playSound('wave_complete');
         this.state = "INTERWAVE";
         this.interWaveTimer = isCompletedBoss ? 300 : 240; // 5s or 4s at 60fps
         

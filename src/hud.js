@@ -1,4 +1,5 @@
 import Menu from "./menu.js";
+import { playSound } from "./synth.js";
 import {
   UISkin,
   createCard,
@@ -12,7 +13,6 @@ export default class Hud {
     this.app    = app;
     this.player = player;
     this.hudContainer = new PIXI.Container();
-    this.deathSound   = PIXI.sound.Sound.from("sound/death.mp3");
     this.dead = false;
 
     this.buildStatPanels();
@@ -368,7 +368,7 @@ export default class Hud {
         this.bannerAlpha = 1;
         if (!this.bannerPersist) {
            this.bannerState = "HOLD";
-           this.bannerTimer = 60; // 1s
+           this.bannerTimer = 120; // 2s
         }
       }
     } else if (this.bannerState === "HOLD") {
@@ -394,7 +394,7 @@ export default class Hud {
       if (this.dead) return;
 
       this.dead = true;
-      this.deathSound.play();
+      playSound('death');
       this.app.stop();
       if (this._onRunEnded) {
         this._onRunEnded({ reason: "death" });

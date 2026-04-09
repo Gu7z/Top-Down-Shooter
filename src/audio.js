@@ -1,3 +1,5 @@
+import { setSynthVolume } from './synth.js';
+
 export const audio = {
   volume: 0.7,
   muted: false,
@@ -12,7 +14,9 @@ export const audio = {
   },
 
   apply() {
-    PIXI.sound.volumeAll = this.muted ? 0 : this.volume;
+    const effective = this.muted ? 0 : this.volume;
+    PIXI.sound.volumeAll = effective;
+    setSynthVolume(effective);
   },
 
   setVolume(value) {
