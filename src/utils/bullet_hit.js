@@ -1,3 +1,6 @@
+import { playSound } from "../synth.js";
+import { spawnDamageNumber } from '../combat_feedback.js';
+
 const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
   const enemiesSnapshot = [...enemies];
 
@@ -12,6 +15,12 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
 
     if (distance < bulletRadius + enemy.enemyRadius) {
       player.runStats?.recordShotHit?.();
+      spawnDamageNumber(
+        bullet.position.x,
+        bullet.position.y,
+        bullet.damage || 1,
+        !!bullet.isCrit
+      );
 
       // Calculate knockback direction from bullet to enemy
       const controlEffects = bullet.controlEffects ? { ...bullet.controlEffects } : null;
@@ -95,15 +104,12 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
         }
         if (chainTargets.length > 0 && effects?.chainLightning) {
           effects.chainLightning(enemy.enemy.position.x, enemy.enemy.position.y, chainTargets);
+          playSound('lightning');
         }
       }
 
       bullet.visible = false;
       bullet.destroy();
-
-      if (player.points % 10 === 0) {
-        PIXI.sound.Sound.from("sound/reward.mp3").play();
-      }
     }
   }
 };
