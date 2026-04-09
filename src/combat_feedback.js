@@ -18,6 +18,17 @@ export function pickNumberStyle(damage, isCrit) {
   return { text: String(damage), fontSize, color };
 }
 
+class CombatFeedback {
+  constructor(app) {
+    this.app = app;
+    this._pool = [];
+    this._active = [];
+  }
+
+  spawnDamageNumber(x, y, damage, isCrit) {}
+  spawnDeathEffect(x, y, color, isBoss) {}
+}
+
 let _instance = null;
 
 export function initCombatFeedback(app) {
@@ -30,15 +41,4 @@ export function spawnDamageNumber(x, y, damage, isCrit) {
 
 export function spawnDeathEffect(x, y, color, isBoss) {
   _instance?.spawnDeathEffect(x, y, color, isBoss);
-}
-
-class CombatFeedback {
-  constructor(app) {
-    this.app = app;
-    this._pool = [];
-    this._active = [];
-  }
-
-  spawnDamageNumber() {}
-  spawnDeathEffect() {}
 }

@@ -53,3 +53,27 @@ test('crit always magenta regardless of damage tier', () => {
   assert.strictEqual(low.color, 0xFF00FF);
   assert.strictEqual(high.color, 0xFF00FF);
 });
+
+test('damage 3: boundary of small tier', () => {
+  const s = pickNumberStyle(3, false);
+  assert.strictEqual(s.fontSize, 14);
+  assert.strictEqual(s.color, 0x888888);
+});
+
+test('damage 4: boundary of medium tier', () => {
+  const s = pickNumberStyle(4, false);
+  assert.strictEqual(s.fontSize, 18);
+  assert.strictEqual(s.color, 0x00FFFF);
+});
+
+test('damage 14: boundary of large tier', () => {
+  const s = pickNumberStyle(14, false);
+  assert.strictEqual(s.fontSize, 22);
+  assert.strictEqual(s.color, 0xFF9900);
+});
+
+test('damage 15: boundary of XL tier', () => {
+  const s = pickNumberStyle(15, false);
+  assert.strictEqual(s.fontSize, 28);
+  assert.strictEqual(s.color, 0xFF00FF);
+});
