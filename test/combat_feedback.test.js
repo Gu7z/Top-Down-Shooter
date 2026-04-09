@@ -137,3 +137,61 @@ test('spawning 17 numbers recycles oldest (max 16 visible)', () => {
   );
   assert.strictEqual(visible.length, 16);
 });
+
+// --- Animation lifecycle ---
+
+test('slot returns to inactive after 50 frames', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  spawn(0, 0, 5, false);
+  app.ticker.stepFrames(50);
+  const visible = app.stage.children.filter(
+    c => c.constructor === PIXI.Container && c.visible
+  );
+  assert.strictEqual(visible.length, 0);
+});
+
+test('container floats upward during frames 8-37', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  spawn(100, 200, 5, false);
+  app.ticker.stepFrames(8);
+  const slot = app.stage.children.find(
+    c => c.constructor === PIXI.Container && c.visible
+  );
+  const yAfterPopIn = slot.position.y;
+  app.ticker.stepFrames(10);
+  assert.ok(slot.position.y < yAfterPopIn, 'container should have moved upward');
+});
+
+// --- spawnDeathEffect ---
+
+test('spawnDeathEffect adds a Graphics ring to stage', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  const before = app.stage.children.length;
+  spawnDeathEffect(200, 200, 0xFF3366, false);
+  assert.ok(app.stage.children.length > before);
+});
+
+test('boss death adds two rings', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  const before = app.stage.children.length;
+  spawnDeathEffect(200, 200, 0xFF00FF, true);
+  assert.strictEqual(app.stage.children.length, before + 2);
+});
+
+test('nova ring removes itself from stage after 25 frames', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  spawnDeathEffect(100, 100, 0xFF3366, false);
+  const ringsBefore = app.stage.children.filter(
+    c => c.constructor === PIXI.Graphics
+  ).length;
+  app.ticker.stepFrames(26);
+  const ringsAfter = app.stage.children.filter(
+    c => c.constructor === PIXI.Graphics
+  ).length;
+  assert.ok(ringsAfter < ringsBefore, 'ring should be removed after animation');
+});
