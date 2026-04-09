@@ -1,4 +1,6 @@
 import Victor from "victor";
+import { playSound } from "./synth.js";
+import { spawnDeathEffect } from './combat_feedback.js';
 
 export default class Enemy {
   constructor({ app, enemyRadius, speed, color, life, value, container, typeId = "unknown", isBoss = false, behaviorType = "melee", enemyBullets = null }) {
@@ -368,9 +370,11 @@ export default class Enemy {
       isBoss: this.isBoss,
     });
     if (effects) {
-      effects.explosion(this.enemy.position.x, this.enemy.position.y, 0xfff275, 18);
+      effects.explosion(this.enemy.position.x, this.enemy.position.y, this.color, 18);
       effects.shake(3.5);
     }
+    spawnDeathEffect(this.enemy.position.x, this.enemy.position.y, this.color, this.isBoss);
+    playSound('enemy_death');
 
     this.enemy.visible = false;
     this.enemyLifeText.visible = false;
