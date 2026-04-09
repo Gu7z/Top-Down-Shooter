@@ -16,6 +16,7 @@ import { RunUpgradeScreen } from './run_upgrades/run_upgrade_screen.js';
 
 import EnemyBullet from "./enemy_bullet.js";
 import WaveManager from "./wave_manager.js";
+import { initCombatFeedback } from './combat_feedback.js';
 
 // Make it available globally for Enemy class without needing to alter deep tree constructor parameters excessively across 6 classes
 if (typeof window !== "undefined") {
@@ -31,6 +32,7 @@ export default class Game {
     const keys = {};
 
     this.effects = new Effects({ app });
+    initCombatFeedback(app);
     this.skillState = createSkillTreeState();
     this.skillEffects = deriveSkillEffects(this.skillState.getPurchasedIds());
     this.runStats = createRunStats();
