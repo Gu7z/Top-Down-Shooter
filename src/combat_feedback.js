@@ -67,13 +67,17 @@ class CombatFeedback {
     slot.container.alpha = 1;
     slot.container.visible = true;
     slot.active = true;
-    slot.frame = 0;
+    slot.frame = 1;  // was 0 — start at 1 so pop-in is visible immediately
     slot.vx = (Math.random() - 0.5) * 30;
 
     this._active.push(slot);
   }
 
   _update() {
+    // Animation phases (50 frames total ~0.83s @ 60fps):
+    //   frames  1-8:  pop-in  — scale 0→1.4→1.0
+    //   frames  8-37: float   — rise 50px, horizontal drift
+    //   frames 37-49: fade    — alpha 1→0, scale shrinks
     for (let i = this._active.length - 1; i >= 0; i--) {
       const slot = this._active[i];
       const f = slot.frame;

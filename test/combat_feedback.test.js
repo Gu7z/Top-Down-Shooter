@@ -135,5 +135,5 @@ test('spawning 17 numbers recycles oldest (max 16 visible)', () => {
   const visible = app.stage.children.filter(
     c => c.constructor === PIXI.Container && c.visible
   );
-  assert.ok(visible.length <= 16);
+  assert.strictEqual(visible.length, 16);
 });
