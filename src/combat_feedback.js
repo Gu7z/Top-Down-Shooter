@@ -74,25 +74,25 @@ class CombatFeedback {
   }
 
   _update() {
-    // Animation phases (50 frames total ~0.83s @ 60fps):
-    //   frames  1-8:  pop-in  — scale 0→1.4→1.0
-    //   frames  8-37: float   — rise 50px, horizontal drift
-    //   frames 37-49: fade    — alpha 1→0, scale shrinks
+    // Animation phases (100 frames total ~1.67s @ 60fps):
+    //   frames  1-16: pop-in  — scale 0→1.4→1.0
+    //   frames 16-75: float   — rise 50px, horizontal drift
+    //   frames 75-99: fade    — alpha 1→0, scale shrinks
     for (let i = this._active.length - 1; i >= 0; i--) {
       const slot = this._active[i];
       const f = slot.frame;
 
-      if (f <= 7) {
-        const scale = f <= 4
-          ? (f / 4) * 1.4
-          : 1.4 - ((f - 4) / 3) * 0.4;
+      if (f <= 15) {
+        const scale = f <= 8
+          ? (f / 8) * 1.4
+          : 1.4 - ((f - 8) / 7) * 0.4;
         slot.container.scale.set(scale);
-      } else if (f <= 37) {
+      } else if (f <= 75) {
         slot.container.scale.set(1.0);
-        slot.container.position.y -= 50 / 30;
-        slot.container.position.x += slot.vx / 30;
-      } else if (f <= 49) {
-        const t = (f - 37) / 12;
+        slot.container.position.y -= 50 / 60;
+        slot.container.position.x += slot.vx / 60;
+      } else if (f <= 99) {
+        const t = (f - 75) / 24;
         slot.container.alpha = 1 - t;
         slot.container.scale.set(1.0 - t * 0.3);
       } else {
@@ -110,7 +110,7 @@ class CombatFeedback {
   spawnDeathEffect(x, y, color, isBoss) {
     this._spawnNovaRing(x, y, color, 0, 16, 52);
     if (isBoss) {
-      this._spawnNovaRing(x, y, color, 4, 20, 72);
+      this._spawnNovaRing(x, y, color, 8, 20, 72);
     }
   }
 
@@ -118,7 +118,7 @@ class CombatFeedback {
     const ring = new PIXI.Graphics();
     this.app.stage.addChild(ring);
     let frame = 0;
-    const maxFrames = 25;
+    const maxFrames = 50;
 
     const update = () => {
       if (frame < delayFrames) { frame++; return; }

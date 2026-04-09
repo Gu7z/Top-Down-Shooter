@@ -140,22 +140,22 @@ test('spawning 17 numbers recycles oldest (max 16 visible)', () => {
 
 // --- Animation lifecycle ---
 
-test('slot returns to inactive after 50 frames', () => {
+test('slot returns to inactive after 100 frames', () => {
   const app = createAppMock();
   initCombatFeedback(app);
   spawn(0, 0, 5, false);
-  app.ticker.stepFrames(50);
+  app.ticker.stepFrames(100);
   const visible = app.stage.children.filter(
     c => c.constructor === PIXI.Container && c.visible
   );
   assert.strictEqual(visible.length, 0);
 });
 
-test('container floats upward during frames 8-37', () => {
+test('container floats upward during frames 16-75', () => {
   const app = createAppMock();
   initCombatFeedback(app);
   spawn(100, 200, 5, false);
-  app.ticker.stepFrames(8);
+  app.ticker.stepFrames(16);
   const slot = app.stage.children.find(
     c => c.constructor === PIXI.Container && c.visible
   );
@@ -182,14 +182,14 @@ test('boss death adds two rings', () => {
   assert.strictEqual(app.stage.children.length, before + 2);
 });
 
-test('nova ring removes itself from stage after 25 frames', () => {
+test('nova ring removes itself from stage after 50 frames', () => {
   const app = createAppMock();
   initCombatFeedback(app);
   spawnDeathEffect(100, 100, 0xFF3366, false);
   const ringsBefore = app.stage.children.filter(
     c => c.constructor === PIXI.Graphics
   ).length;
-  app.ticker.stepFrames(26);
+  app.ticker.stepFrames(51);
   const ringsAfter = app.stage.children.filter(
     c => c.constructor === PIXI.Graphics
   ).length;
