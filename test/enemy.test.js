@@ -111,6 +111,32 @@ test('applyControlEffects applies weaken to enemy', () => {
   assert.equal(weakEnemy.damageMultiplier, 1.5);
 });
 
+test('applyControlEffects refreshes weaken without stacking the same multiplier repeatedly', () => {
+  const weakEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    container,
+  });
+
+  weakEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
+  const firstTimer = weakEnemy.controlTimers.find((entry) => entry.type === 'weaken')?.timer;
+
+  weakEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
+
+  assert.equal(weakEnemy.damageMultiplier, 1.5);
+  assert.equal(
+    weakEnemy.controlTimers.filter((entry) => entry.type === 'weaken').length,
+    1,
+  );
+  assert.ok(
+    weakEnemy.controlTimers.find((entry) => entry.type === 'weaken')?.timer >= firstTimer,
+  );
+});
+
 test('applyControlEffects applies knockback', () => {
   const kbEnemy = new Enemy({
     app,
@@ -224,6 +250,48 @@ test('kill amplifies damage only against bosses when boss run upgrade is active'
 
   assert.equal(bossEnemy.life, 2);
   assert.equal(normalEnemy.life, 3);
+});
+
+test('kill returns effective damage and syncs life text immediately after a non-lethal hit', () => {
+  const bossEnemy = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 10,
+    value: 1,
+    isBoss: true,
+    container,
+  });
+  const playerWithBossUpgrade = {
+    points: 0,
+    runUpgradeEffects: { bossDamageMultiplier: 2 },
+  };
+
+  bossEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
+  const dealtDamage = bossEnemy.kill([bossEnemy], 0, playerWithBossUpgrade, undefined, 2);
+
+  assert.equal(dealtDamage, 6);
+  assert.equal(bossEnemy.life, 4);
+  assert.equal(bossEnemy.enemyLifeText.text, 4);
+});
+
+test('kill returns only the remaining life when a hit overkills the target', () => {
+  const enemyToOverkill = new Enemy({
+    app,
+    enemyRadius: 10,
+    speed: 1,
+    color: 0xff0000,
+    life: 1,
+    value: 1,
+    container,
+  });
+
+  const dealtDamage = enemyToOverkill.kill([enemyToOverkill], 0, { points: 0 }, undefined, 2);
+
+  assert.equal(dealtDamage, 1);
+  assert.equal(enemyToOverkill.life, 0);
+  assert.equal(enemyToOverkill.enemyLifeText.text, 0);
 });
 
 test('removePlayerLife uses player.takeDamage when available', () => {

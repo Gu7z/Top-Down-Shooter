@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import bulletHit from '../src/utils/bullet_hit.js';
 import { setupPixiMock } from './helpers.js';
+import { initCombatFeedback } from '../src/combat_feedback.js';
+import { createAppMock } from './helpers.js';
 
 setupPixiMock();
 
@@ -49,6 +51,56 @@ test('bulletHit records hit stats and forwards bullet damage', () => {
 
   assert.equal(trackedPlayer.runStats.hits, 1);
   assert.equal(forwardedDamage, 3);
+});
+
+test('bulletHit displays the effective damage returned by kill', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+
+  const trackedBullet = {
+    position: { x: 40, y: 50 },
+    damage: 3,
+    destroy() { this.destroyed = true; },
+  };
+  const trackedEnemy = {
+    enemy: { position: { x: 40, y: 50 } },
+    enemyRadius: 5,
+    kill() {
+      return 9;
+    },
+  };
+
+  bulletHit(trackedBullet, [trackedEnemy], 5, { points: 0 });
+
+  const activeNumber = app.stage.children.find(
+    (child) => child.constructor === PIXI.Container && child.visible,
+  );
+  assert.equal(activeNumber.children[0].text, '9');
+});
+
+test('bulletHit displays only the remaining life when the hit overkills the enemy', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+
+  const trackedBullet = {
+    position: { x: 20, y: 30 },
+    damage: 2,
+    destroy() { this.destroyed = true; },
+  };
+  const trackedEnemy = {
+    enemy: { position: { x: 20, y: 30 } },
+    enemyRadius: 5,
+    kill() {
+      return 1;
+    },
+  };
+
+  bulletHit(trackedBullet, [trackedEnemy], 5, { points: 0 });
+
+  const activeNumber = app.stage.children.find(
+    (child) => child.constructor === PIXI.Container && child.visible,
+  );
+  assert.equal(activeNumber.children[0].text, '1');
 });
 
 test('bulletHit applies control effects to enemy on hit', () => {

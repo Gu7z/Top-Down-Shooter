@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import Game from "../src/game.js";
+import Enemy from "../src/enemy.js";
 import { UPGRADE_REGISTRY } from "../src/run_upgrades/run_upgrade_data.js";
 import { setupPixiMock, createAppMock } from "./helpers.js";
 
@@ -229,6 +230,44 @@ test("game viral core clouds slow enemies, deal damage over time, and expire cle
 
   assert.equal(game.viralClouds.length, 0);
   assert.equal(nearSpawn.enemy.speed, 10);
+});
+
+test("game tick keeps enemy life text synced in the same frame a player bullet lands", () => {
+  const { game } = createGameHarness("boss-life-sync");
+  game.hud.update = () => {};
+  game.player.update = () => {};
+  game.waveManager.update = () => {};
+  game.droneSystem.update = () => {};
+
+  const bossEnemy = new Enemy({
+    app: game.app,
+    enemyRadius: 10,
+    speed: 0,
+    color: 0xff0000,
+    life: 5,
+    value: 1,
+    isBoss: true,
+    container: game.enemySpawner.spawnerContainer,
+  });
+  bossEnemy.enemy.position.set(game.player.player.position.x + 24, game.player.player.position.y);
+  bossEnemy.enemyLifeText.position.set(game.player.player.position.x + 24, game.player.player.position.y);
+  bossEnemy.enemyLifeText.text = 5;
+  game.enemySpawner.spawns = [bossEnemy];
+
+  const bullet = new PIXI.Graphics();
+  bullet.position.set(game.player.player.position.x + 20, game.player.player.position.y);
+  bullet.velocity = { x: 4, y: 0 };
+  bullet.damage = 2;
+  bullet.isCrit = false;
+  bullet.destroy = function destroy() {
+    this.destroyed = true;
+  };
+  game.player.shooting.bullets = [bullet];
+
+  game.tick();
+
+  assert.equal(bossEnemy.life, 3);
+  assert.equal(bossEnemy.enemyLifeText.text, 3);
 });
 
 test("game retaliation pulse damages nearby enemies, stuns survivors, and clears nearby bullets", () => {

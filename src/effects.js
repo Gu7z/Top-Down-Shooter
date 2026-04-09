@@ -5,6 +5,8 @@ export default class Effects {
     this.shakePower = 0;
     this.particles = [];
     this.pulses = [];
+    this.circleParticlePool = [];
+    this.boltPool = [];
 
     this.backgroundContainer = new PIXI.Container();
     this.effectsContainer = new PIXI.Container();
@@ -59,9 +61,39 @@ export default class Effects {
     });
   }
 
+  _acquireCircleParticle() {
+    const sprite = this.circleParticlePool.pop() || new PIXI.Graphics();
+    sprite.clear();
+    sprite.alpha = 1;
+    sprite.visible = true;
+    sprite.scale.set(1, 1);
+    return sprite;
+  }
+
+  _acquireBoltGraphic() {
+    const sprite = this.boltPool.pop() || new PIXI.Graphics();
+    sprite.clear();
+    sprite.alpha = 1;
+    sprite.visible = true;
+    sprite.scale.set(1, 1);
+    return sprite;
+  }
+
+  _releaseCircleParticle(sprite) {
+    sprite.clear();
+    sprite.parent?.removeChild?.(sprite);
+    this.circleParticlePool.push(sprite);
+  }
+
+  _releaseBoltGraphic(sprite) {
+    sprite.clear();
+    sprite.parent?.removeChild?.(sprite);
+    this.boltPool.push(sprite);
+  }
+
   explosion(x, y, color = 0xff4d4d, amount = 14) {
     for (let i = 0; i < amount; i += 1) {
-      const particle = new PIXI.Graphics();
+      const particle = this._acquireCircleParticle();
       const radius = Math.random() * 2 + 1;
       const angle = (Math.PI * 2 * i) / amount + Math.random() * 0.3;
       const speed = Math.random() * 3 + 1.2;
@@ -74,9 +106,11 @@ export default class Effects {
       this.effectsContainer.addChild(particle);
       this.particles.push({
         sprite: particle,
+        kind: "circle",
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         life: 30,
+        maxLife: 30,
         gravity: 0.05,
       });
     }
@@ -96,40 +130,55 @@ export default class Effects {
   }
 
   updateParticles() {
-    this.particles = this.particles.filter((particle) => {
+    let write = 0;
+
+    for (let i = 0; i < this.particles.length; i += 1) {
+      const particle = this.particles[i];
       particle.vy += particle.gravity;
       particle.sprite.position.x += particle.vx;
       particle.sprite.position.y += particle.vy;
       particle.life -= 1;
-      particle.sprite.alpha = Math.max(0, particle.life / (particle.maxLife || 30));
+      particle.sprite.alpha = Math.max(0, particle.life / particle.maxLife);
 
       if (particle.life <= 0) {
-        particle.sprite.destroy();
-        return false;
+        if (particle.kind === "bolt") this._releaseBoltGraphic(particle.sprite);
+        else this._releaseCircleParticle(particle.sprite);
+        continue;
       }
 
-      return true;
-    });
+      this.particles[write] = particle;
+      write += 1;
+    }
+
+    this.particles.length = write;
   }
 
   updatePulses() {
-    this.pulses = this.pulses.filter((pulse) => {
-      if (pulse.displayObject.destroyed) return false;
+    let write = 0;
+
+    for (let i = 0; i < this.pulses.length; i += 1) {
+      const pulse = this.pulses[i];
+      if (pulse.displayObject.destroyed) continue;
+
       const progress = pulse.current / pulse.duration;
       pulse.displayObject.tint = progress > 0.5 ? pulse.color : pulse.originalTint;
       pulse.current -= 1;
 
       if (pulse.current <= 0) {
         pulse.displayObject.tint = pulse.originalTint;
-        return false;
+        continue;
       }
-      return true;
-    });
+
+      this.pulses[write] = pulse;
+      write += 1;
+    }
+
+    this.pulses.length = write;
   }
 
   chainLightning(fromX, fromY, targets) {
     for (const target of targets) {
-      const bolt = new PIXI.Graphics();
+      const bolt = this._acquireBoltGraphic();
       const segments = 8;
       const points = [{ x: fromX, y: fromY }];
       for (let i = 1; i < segments; i++) {
@@ -160,7 +209,15 @@ export default class Effects {
       drawPath();
 
       this.effectsContainer.addChild(bolt);
-      this.particles.push({ sprite: bolt, vx: 0, vy: 0, life: 35, maxLife: 35, gravity: 0 });
+      this.particles.push({
+        sprite: bolt,
+        kind: "bolt",
+        vx: 0,
+        vy: 0,
+        life: 35,
+        maxLife: 35,
+        gravity: 0,
+      });
     }
   }
 
@@ -211,5 +268,19 @@ export default class Effects {
     this.app.ticker.remove(this.tick);
     this.backgroundContainer.destroy?.({ children: true });
     this.effectsContainer.destroy?.({ children: true });
+    this.particles.length = 0;
+    this.pulses.length = 0;
+
+    for (const sprite of this.circleParticlePool) {
+      sprite.parent?.removeChild?.(sprite);
+      sprite.destroy?.();
+    }
+    for (const sprite of this.boltPool) {
+      sprite.parent?.removeChild?.(sprite);
+      sprite.destroy?.();
+    }
+
+    this.circleParticlePool.length = 0;
+    this.boltPool.length = 0;
   }
 }

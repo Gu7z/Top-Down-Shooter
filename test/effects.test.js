@@ -63,7 +63,35 @@ test("explosion particles move, fade, and are removed at end of life", () => {
 
   assert.notEqual(firstParticle.sprite.position.x, startX);
   assert.equal(effects.particles.length, 0);
-  assert.equal(firstParticle.sprite.destroyed, true);
+  assert.equal(firstParticle.sprite.parent, null);
+});
+
+test("effects reuses an explosion particle graphic after expiry", () => {
+  const app = createEffectsApp();
+  const effects = new Effects({ app });
+
+  effects.explosion(10, 20, 0xff0000, 1);
+  const firstSprite = effects.particles[0].sprite;
+  effects.particles[0].life = 1;
+  effects.updateParticles();
+
+  effects.explosion(10, 20, 0xff0000, 1);
+
+  assert.equal(effects.particles[0].sprite, firstSprite);
+});
+
+test("effects updateParticles compacts in place instead of replacing the array", () => {
+  const app = createEffectsApp();
+  const effects = new Effects({ app });
+
+  effects.explosion(10, 20, 0xff0000, 2);
+  const sameArray = effects.particles;
+  effects.particles[0].life = 1;
+
+  effects.updateParticles();
+
+  assert.equal(effects.particles, sameArray);
+  assert.equal(effects.particles.length, 1);
 });
 
 test("active particles remain until life expires", () => {
@@ -112,6 +140,20 @@ test("pulse drops destroyed targets without touching tint", () => {
   assert.equal(target.tint, 0x123456);
 });
 
+test("effects updatePulses compacts in place instead of replacing the array", () => {
+  const app = createEffectsApp();
+  const effects = new Effects({ app });
+  const target = new PIXI.Graphics();
+
+  effects.pulse(target, 0xff00ff, 1);
+  const sameArray = effects.pulses;
+
+  effects.updatePulses();
+
+  assert.equal(effects.pulses, sameArray);
+  assert.equal(effects.pulses.length, 0);
+});
+
 test("tick updates shake, particles, and pulses", () => {
   const app = createEffectsApp();
   const effects = new Effects({ app });
@@ -141,6 +183,20 @@ test("chainLightning creates one visual bolt particle per target", () => {
   assert.equal(effects.particles[0].maxLife, 35);
 });
 
+test("effects reuses a chain lightning bolt graphic after expiry", () => {
+  const app = createEffectsApp();
+  const effects = new Effects({ app });
+
+  effects.chainLightning(10, 20, [{ x: 40, y: 50 }]);
+  const firstBolt = effects.particles[0].sprite;
+  effects.particles[0].life = 1;
+  effects.updateParticles();
+
+  effects.chainLightning(10, 20, [{ x: 40, y: 50 }]);
+
+  assert.equal(effects.particles[0].sprite, firstBolt);
+});
+
 test("screenPulse animates ring and flash to completion and invokes callback", () => {
   const app = createEffectsApp();
   const effects = new Effects({ app });
@@ -164,9 +220,23 @@ test("destroy unregisters ticker and destroys effect containers", () => {
   const app = createEffectsApp();
   const effects = new Effects({ app });
 
+  effects.explosion(10, 20, 0xff0000, 1);
+  const circleSprite = effects.particles[0].sprite;
+  effects.particles[0].life = 1;
+  effects.updateParticles();
+
+  effects.chainLightning(10, 20, [{ x: 40, y: 50 }]);
+  const boltSprite = effects.particles[0].sprite;
+  effects.particles[0].life = 1;
+  effects.updateParticles();
+
   effects.destroy();
 
   assert.equal(app.ticker.removedFn, effects.tick);
   assert.equal(effects.backgroundContainer.destroyed, true);
   assert.equal(effects.effectsContainer.destroyed, true);
+  assert.equal(effects.circleParticlePool.length, 0);
+  assert.equal(effects.boltPool.length, 0);
+  assert.equal(circleSprite.destroyed, true);
+  assert.equal(boltSprite.destroyed, true);
 });

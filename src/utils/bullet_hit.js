@@ -15,12 +15,6 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
 
     if (distance < bulletRadius + enemy.enemyRadius) {
       player.runStats?.recordShotHit?.();
-      spawnDamageNumber(
-        bullet.position.x,
-        bullet.position.y,
-        bullet.damage || 1,
-        !!bullet.isCrit
-      );
 
       // Calculate knockback direction from bullet to enemy
       const controlEffects = bullet.controlEffects ? { ...bullet.controlEffects } : null;
@@ -65,7 +59,13 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
       if (bullet.source === 'drone' && player.skillEffects?.droneBountyBonus) {
         player.points += enemy.value; // Drone kills give 100% extra points
       }
-      enemy.kill(enemies, indexEnemy, player, effects, bullet.damage || 1);
+      const appliedDamage = enemy.kill(enemies, indexEnemy, player, effects, bullet.damage || 1);
+      spawnDamageNumber(
+        bullet.position.x,
+        bullet.position.y,
+        appliedDamage || bullet.damage || 1,
+        !!bullet.isCrit
+      );
 
       if (effects) {
         const pulseColor = bullet.isCrit ? 0xff4d4d : 0xffffff;

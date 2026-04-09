@@ -107,12 +107,25 @@ export default class Enemy {
 
     // Enemy weaken
     if (controlEffects.enemyWeakenMultiplier && controlEffects.enemyWeakenMultiplier > 1) {
-      this.damageMultiplier *= controlEffects.enemyWeakenMultiplier;
-      this.controlTimers.push({
-        type: "weaken",
-        timer: duration,
-        value: controlEffects.enemyWeakenMultiplier,
-      });
+      const nextMultiplier = controlEffects.enemyWeakenMultiplier;
+      const activeWeaken = this.controlTimers.find((entry) => entry.type === "weaken");
+
+      // Re-applying weaken should refresh/replace the debuff, not stack exponentially.
+      if (activeWeaken) {
+        if (activeWeaken.value !== nextMultiplier) {
+          this.damageMultiplier /= activeWeaken.value;
+          this.damageMultiplier *= nextMultiplier;
+          activeWeaken.value = nextMultiplier;
+        }
+        activeWeaken.timer = duration;
+      } else {
+        this.damageMultiplier *= nextMultiplier;
+        this.controlTimers.push({
+          type: "weaken",
+          timer: duration,
+          value: nextMultiplier,
+        });
+      }
     }
 
     // Knockback
@@ -353,14 +366,19 @@ export default class Enemy {
       ? (player.runUpgradeEffects?.bossDamageMultiplier || 1)
       : 1;
     const effectiveDamage = Math.ceil(damage * this.damageMultiplier * bossDamageMultiplier);
+    const appliedDamage = Math.min(this.life, effectiveDamage);
 
     if (this.life > effectiveDamage) {
       this.life -= effectiveDamage;
-      return;
+      this.enemyLifeText.text = this.life;
+      return appliedDamage;
     }
 
     this.life = 0;
-    if (!enemies) return;
+    this.enemyLifeText.text = this.life;
+    if (!enemies) {
+      return appliedDamage;
+    }
 
     const scoreMultiplier = player.skillEffects?.scoreMultiplier || 1;
     player.points += Math.ceil(this.value * scoreMultiplier);
@@ -384,6 +402,8 @@ export default class Enemy {
     if (player.runUpgradeEffects?.viralCoreRadius > 0) {
       player.onEnemyKilledAt?.(this.enemy.position.x, this.enemy.position.y);
     }
+
+    return appliedDamage;
   }
 
   forceKill() {

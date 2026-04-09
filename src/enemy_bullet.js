@@ -73,8 +73,8 @@ export default class EnemyBullet {
     app.stage.addChild(this.trailContainer);
     
     this.framesCount = 0;
-    this.trailTimers = new Set();
-    this.destroyTimer = null;
+    this.trailFadeStepFrames = 2;
+    this.trailNodes = [];
   }
 
   isOutOfBounds() {
@@ -87,35 +87,64 @@ export default class EnemyBullet {
     );
   }
 
+  _spawnTrailNode() {
+    const trail = new PIXI.Graphics();
+    trail.beginFill(this.trailColor, 1);
+    trail.drawCircle(0, 0, this.radius * this.trailScale);
+    trail.endFill();
+    trail.alpha = this.trailAlpha;
+    trail.position.set(this.bullet.position.x, this.bullet.position.y);
+    this.trailContainer.addChild(trail);
+
+    this.trailNodes.push({
+      sprite: trail,
+      alpha: this.trailAlpha,
+      scale: 1,
+      fadeFrames: 0,
+    });
+  }
+
+  _updateTrailNodes() {
+    let write = 0;
+
+    for (let i = 0; i < this.trailNodes.length; i += 1) {
+      const node = this.trailNodes[i];
+      if (node.sprite.destroyed) {
+        this.trailContainer.removeChild(node.sprite);
+        continue;
+      }
+
+      node.fadeFrames += 1;
+      if (node.fadeFrames < this.trailFadeStepFrames) {
+        this.trailNodes[write] = node;
+        write += 1;
+        continue;
+      }
+
+      node.fadeFrames = 0;
+      node.alpha -= 0.05;
+      node.scale *= 0.9;
+      node.sprite.alpha = node.alpha;
+      node.sprite.scale.set(node.scale, node.scale);
+
+      if (node.alpha <= 0) {
+        this.trailContainer.removeChild(node.sprite);
+        node.sprite.destroy();
+        continue;
+      }
+
+      this.trailNodes[write] = node;
+      write += 1;
+    }
+
+    this.trailNodes.length = write;
+  }
+
   updateTrail() {
-    this.framesCount++;
+    this.framesCount += 1;
+    this._updateTrailNodes();
     if (this.framesCount % 3 === 0) {
-      const trail = new PIXI.Graphics();
-      trail.beginFill(this.trailColor, 1);
-      trail.drawCircle(0, 0, this.radius * this.trailScale);
-      trail.endFill();
-      trail.alpha = this.trailAlpha;
-      trail.position.set(this.bullet.position.x, this.bullet.position.y);
-      this.trailContainer.addChild(trail);
-      
-      let fadeInterval;
-      fadeInterval = this.app.setInterval(() => {
-        if (!fadeInterval) return;
-        if (trail.destroyed) {
-          fadeInterval.clear();
-          this.trailTimers.delete(fadeInterval);
-          return;
-        }
-        trail.alpha -= 0.05;
-        trail.scale.x *= 0.9;
-        trail.scale.y *= 0.9;
-        if (trail.alpha <= 0) {
-          trail.destroy();
-          fadeInterval.clear();
-          this.trailTimers.delete(fadeInterval);
-        }
-      }, 0.03);
-      this.trailTimers.add(fadeInterval);
+      this._spawnTrailNode();
     }
   }
 
@@ -136,9 +165,13 @@ export default class EnemyBullet {
     this.bullet.visible = false;
     this.bullet.parent?.removeChild?.(this.bullet);
     this.bullet.destroy({ children: true });
-    this.trailTimers.forEach((timer) => timer.clear());
-    this.trailTimers.clear();
+    this.trailNodes.forEach((node) => {
+      this.trailContainer.removeChild(node.sprite);
+      node.sprite.destroy();
+    });
+    this.trailNodes.length = 0;
     if (!this.trailContainer.destroyed) {
+      this.trailContainer.parent?.removeChild?.(this.trailContainer);
       this.trailContainer.destroy({ children: true });
     }
   }

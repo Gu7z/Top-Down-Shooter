@@ -25,7 +25,7 @@ function createTimerApp() {
   return { app, intervals };
 }
 
-test("enemy bullet trail uses tracked app timers and clears them on destroy", () => {
+test("enemy bullet trail stays frame-driven without per-trail intervals", () => {
   const { app, intervals } = createTimerApp();
   const enemyBullet = new EnemyBullet({
     app,
@@ -37,14 +37,94 @@ test("enemy bullet trail uses tracked app timers and clears them on destroy", ()
   enemyBullet.framesCount = 2;
   enemyBullet.updateTrail();
 
-  assert.equal(intervals.length, 1);
-  assert.equal(intervals[0].seconds, 0.03);
+  assert.equal(intervals.length, 0);
+  assert.equal(enemyBullet.trailNodes.length, 1);
+  assert.equal(enemyBullet.trailContainer.children.length, 1);
+  assert.equal(enemyBullet.trailContainer.children[0].alpha, enemyBullet.trailAlpha);
 
-  enemyBullet.destroy();
+  enemyBullet.updateTrail();
 
-  assert.equal(intervals[0].cleared, true);
-  assert.equal(enemyBullet.trailTimers.size, 0);
-  assert.equal(enemyBullet.trailContainer.destroyed, true);
+  assert.equal(enemyBullet.trailNodes.length, 1);
+  assert.equal(enemyBullet.trailContainer.children.length, 1);
+  assert.equal(enemyBullet.trailContainer.children[0].alpha, enemyBullet.trailAlpha);
+  assert.equal(enemyBullet.trailContainer.children[0].scale.x, 1);
+  assert.equal(enemyBullet.trailContainer.children[0].scale.y, 1);
+
+  enemyBullet.updateTrail();
+
+  assert.equal(enemyBullet.trailNodes.length, 1);
+  assert.equal(enemyBullet.trailContainer.children.length, 1);
+  assert.equal(enemyBullet.trailContainer.children[0].alpha, enemyBullet.trailAlpha - 0.05);
+  assert.equal(enemyBullet.trailContainer.children[0].scale.x, 0.9);
+  assert.equal(enemyBullet.trailContainer.children[0].scale.y, 0.9);
+});
+
+test("enemy bullet trail nodes detach from the container on expiration", () => {
+  const { app } = createTimerApp();
+  const enemyBullet = new EnemyBullet({
+    app,
+    position: { x: 10, y: 10 },
+    targetPosition: { x: 20, y: 10 },
+    color: 0xff0000,
+  });
+
+  enemyBullet.framesCount = 2;
+  enemyBullet.updateTrail();
+
+  assert.equal(enemyBullet.trailNodes.length, 1);
+  assert.equal(enemyBullet.trailContainer.children.length, 1);
+
+  for (let i = 0; i < 18; i += 1) {
+    enemyBullet._updateTrailNodes();
+  }
+
+  assert.equal(enemyBullet.trailNodes.length, 0);
+  assert.equal(enemyBullet.trailContainer.children.length, 0);
+});
+
+test("enemy bullet removes stale destroyed trail sprites from the container", () => {
+  const { app } = createTimerApp();
+  const enemyBullet = new EnemyBullet({
+    app,
+    position: { x: 10, y: 10 },
+    targetPosition: { x: 20, y: 10 },
+    color: 0xff0000,
+  });
+
+  enemyBullet.framesCount = 2;
+  enemyBullet.updateTrail();
+
+  const trail = enemyBullet.trailContainer.children[0];
+  trail.destroy();
+
+  enemyBullet._updateTrailNodes();
+
+  assert.equal(enemyBullet.trailNodes.length, 0);
+  assert.equal(enemyBullet.trailContainer.children.length, 0);
+});
+
+test("enemy bullet spawns trail nodes on the third and sixth updates", () => {
+  const { app } = createTimerApp();
+  const enemyBullet = new EnemyBullet({
+    app,
+    position: { x: 10, y: 10 },
+    targetPosition: { x: 20, y: 10 },
+    color: 0xff0000,
+  });
+
+  enemyBullet.update();
+  enemyBullet.update();
+  assert.equal(enemyBullet.trailContainer.children.length, 0);
+
+  enemyBullet.update();
+  assert.equal(enemyBullet.trailContainer.children.length, 1);
+
+  enemyBullet.update();
+  enemyBullet.update();
+  assert.equal(enemyBullet.trailContainer.children.length, 1);
+
+  enemyBullet.update();
+  assert.equal(enemyBullet.trailContainer.children.length, 2);
 });
 
 test("enemy bullet updates position and reports out-of-bounds", () => {
@@ -67,30 +147,27 @@ test("enemy bullet updates position and reports out-of-bounds", () => {
   assert.equal(enemyBullet.isOutOfBounds(), true);
 });
 
-test("enemy bullet trail timer fades and destroys trail graphics", () => {
+test("enemy bullet stress burst does not fan out trail timers", () => {
   const { app, intervals } = createTimerApp();
-  const enemyBullet = new EnemyBullet({
-    app,
-    position: { x: 10, y: 10 },
-    targetPosition: { x: 20, y: 10 },
-    color: 0xff0000,
-  });
+  const bullets = [];
+  for (let i = 0; i < 40; i += 1) {
+    bullets.push(new EnemyBullet({
+      app,
+      position: { x: 10, y: 10 + i },
+      targetPosition: { x: 200, y: 10 + i },
+      color: 0xff0000,
+    }));
+  }
 
-  enemyBullet.framesCount = 2;
-  enemyBullet.updateTrail();
-  const timer = intervals[0];
-  const trail = enemyBullet.trailContainer.children[0];
-  trail.alpha = 0.04;
+  for (let frame = 0; frame < 60; frame += 1) {
+    for (const bullet of bullets) bullet.update();
+  }
 
-  timer.fn();
-
-  assert.equal(trail.destroyed, true);
-  assert.equal(timer.cleared, true);
-  assert.equal(enemyBullet.trailTimers.size, 0);
+  assert.equal(intervals.length, 0);
 });
 
-test("enemy bullet clears a trail timer when the trail graphic was already destroyed", () => {
-  const { app, intervals } = createTimerApp();
+test("enemy bullet destroy clears trail nodes", () => {
+  const { app } = createTimerApp();
   const enemyBullet = new EnemyBullet({
     app,
     position: { x: 10, y: 10 },
@@ -100,14 +177,14 @@ test("enemy bullet clears a trail timer when the trail graphic was already destr
 
   enemyBullet.framesCount = 2;
   enemyBullet.updateTrail();
-  const timer = intervals[0];
-  const trail = enemyBullet.trailContainer.children[0];
-  trail.destroy();
 
-  timer.fn();
+  enemyBullet.destroy();
 
-  assert.equal(timer.cleared, true);
-  assert.equal(enemyBullet.trailTimers.size, 0);
+  assert.equal(enemyBullet.trailNodes.length, 0);
+  assert.equal(enemyBullet.trailContainer.parent, null);
+  assert.equal(app.stage.children.includes(enemyBullet.trailContainer), false);
+  assert.equal(enemyBullet.trailContainer.children.length, 0);
+  assert.equal(enemyBullet.trailContainer.destroyed, true);
 });
 
 test("enemy bullet update and destroy are no-ops after destruction", () => {

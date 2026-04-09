@@ -1,0 +1,14 @@
+{
+  "enemyBullet": {
+    "bullets": 40,
+    "framesSimulated": 60,
+    "timersCreated": 0,
+    "activeTrailTimers": 0,
+    "trailGraphics": 120
+  },
+  "effects": {
+    "particles": 43,
+    "pulses": 0,
+    "effectChildren": 43
+  }
+}
