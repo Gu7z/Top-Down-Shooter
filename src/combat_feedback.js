@@ -18,15 +18,127 @@ export function pickNumberStyle(damage, isCrit) {
   return { text: String(damage), fontSize, color };
 }
 
+const POOL_SIZE = 16;
+
 class CombatFeedback {
   constructor(app) {
     this.app = app;
     this._pool = [];
     this._active = [];
+
+    for (let i = 0; i < POOL_SIZE; i++) {
+      const container = new PIXI.Container();
+      const text = new PIXI.Text('', {
+        fontFamily: 'JetBrains Mono, monospace',
+        fontWeight: 'bold',
+        fontSize: 18,
+        fill: 0xffffff,
+      });
+      text.anchor.set(0.5);
+      container.addChild(text);
+      container.visible = false;
+      container.alpha = 1;
+      app.stage.addChild(container);
+      this._pool.push({ container, text, active: false, frame: 0, vx: 0 });
+    }
+
+    this._update = this._update.bind(this);
+    app.ticker.add(this._update);
   }
 
-  spawnDamageNumber(x, y, damage, isCrit) {}
-  spawnDeathEffect(x, y, color, isBoss) {}
+  _acquireSlot() {
+    const free = this._pool.find(s => !s.active);
+    if (free) return free;
+    const oldest = this._active.shift();
+    oldest.active = false;
+    oldest.container.visible = false;
+    return oldest;
+  }
+
+  spawnDamageNumber(x, y, damage, isCrit) {
+    const slot = this._acquireSlot();
+    const { text: label, fontSize, color } = pickNumberStyle(damage, isCrit);
+
+    slot.text.text = label;
+    slot.text.style.fontSize = fontSize;
+    slot.text.style.fill = color;
+    slot.container.position.set(x, y);
+    slot.container.scale.set(0);
+    slot.container.alpha = 1;
+    slot.container.visible = true;
+    slot.active = true;
+    slot.frame = 0;
+    slot.vx = (Math.random() - 0.5) * 30;
+
+    this._active.push(slot);
+  }
+
+  _update() {
+    for (let i = this._active.length - 1; i >= 0; i--) {
+      const slot = this._active[i];
+      const f = slot.frame;
+
+      if (f <= 7) {
+        const scale = f <= 4
+          ? (f / 4) * 1.4
+          : 1.4 - ((f - 4) / 3) * 0.4;
+        slot.container.scale.set(scale);
+      } else if (f <= 37) {
+        slot.container.scale.set(1.0);
+        slot.container.position.y -= 50 / 30;
+        slot.container.position.x += slot.vx / 30;
+      } else if (f <= 49) {
+        const t = (f - 37) / 12;
+        slot.container.alpha = 1 - t;
+        slot.container.scale.set(1.0 - t * 0.3);
+      } else {
+        slot.container.visible = false;
+        slot.container.alpha = 1;
+        slot.active = false;
+        this._active.splice(i, 1);
+        continue;
+      }
+
+      slot.frame++;
+    }
+  }
+
+  spawnDeathEffect(x, y, color, isBoss) {
+    this._spawnNovaRing(x, y, color, 0, 16, 52);
+    if (isBoss) {
+      this._spawnNovaRing(x, y, color, 4, 20, 72);
+    }
+  }
+
+  _spawnNovaRing(x, y, color, delayFrames, startR, endR) {
+    const ring = new PIXI.Graphics();
+    this.app.stage.addChild(ring);
+    let frame = 0;
+    const maxFrames = 25;
+
+    const update = () => {
+      if (frame < delayFrames) { frame++; return; }
+      const f = frame - delayFrames;
+      if (f >= maxFrames) {
+        ring.clear();
+        this.app.stage.removeChild(ring);
+        this.app.ticker.remove(update);
+        return;
+      }
+      const t = f / maxFrames;
+      const radius = startR + (endR - startR) * t;
+      const alpha = 0.8 * (1 - t);
+      const lineWidth = Math.max(1, 4 * (1 - t * 0.75));
+
+      ring.clear();
+      ring.lineStyle(lineWidth, color, alpha);
+      ring.drawCircle(x, y, radius);
+
+      frame++;
+    };
+
+    this.app.ticker.add(update);
+  }
 }
 
 let _instance = null;

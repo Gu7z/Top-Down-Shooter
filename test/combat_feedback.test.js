@@ -77,3 +77,63 @@ test('damage 15: boundary of XL tier', () => {
   assert.strictEqual(s.fontSize, 28);
   assert.strictEqual(s.color, 0xFF00FF);
 });
+
+// --- Pool setup ---
+
+test('constructor adds 16 containers to stage', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  const containers = app.stage.children.filter(c => c.constructor === PIXI.Container);
+  assert.strictEqual(containers.length, 16);
+});
+
+test('all pool slots start invisible', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  const containers = app.stage.children.filter(c => c.constructor === PIXI.Container);
+  containers.forEach(c => assert.strictEqual(c.visible, false));
+});
+
+// --- spawnDamageNumber ---
+
+test('spawnDamageNumber makes a slot visible with correct text', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  spawn(100, 200, 10, false);
+  const visible = app.stage.children
+    .filter(c => c.constructor === PIXI.Container && c.visible);
+  assert.strictEqual(visible.length, 1);
+  const text = visible[0].children[0];
+  assert.strictEqual(text.text, '10');
+});
+
+test('spawnDamageNumber sets position on the container', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  spawn(120, 240, 5, false);
+  const active = app.stage.children.find(
+    c => c.constructor === PIXI.Container && c.visible
+  );
+  assert.strictEqual(active.position.x, 120);
+  assert.strictEqual(active.position.y, 240);
+});
+
+test('crit spawn sets CRIT prefix text', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  spawn(0, 0, 8, true);
+  const active = app.stage.children.find(
+    c => c.constructor === PIXI.Container && c.visible
+  );
+  assert.ok(active.children[0].text.startsWith('CRIT'));
+});
+
+test('spawning 17 numbers recycles oldest (max 16 visible)', () => {
+  const app = createAppMock();
+  initCombatFeedback(app);
+  for (let i = 0; i < 17; i++) spawn(i, 0, 5, false);
+  const visible = app.stage.children.filter(
+    c => c.constructor === PIXI.Container && c.visible
+  );
+  assert.ok(visible.length <= 16);
+});
