@@ -5,8 +5,42 @@ export const SKILL_TREE_STORAGE_KEY = "neonHunt.skillTree.v1";
 
 const treeOrder = new Map(SKILL_TREE.map((skill, index) => [skill.id, index]));
 
+const SKILL_TREE_TOTAL_COST = SKILL_TREE.reduce((sum, s) => sum + (s.cost || 0), 0);
+
+const CURRENT_PAYLOAD_VERSION = 2;
+
+// Migration chain — each entry runs in order if payload.version < toVersion.
+// To add a future migration: append a new { fromVersion, toVersion, apply } entry
+// and bump CURRENT_PAYLOAD_VERSION. A player at v1 on a v5 game will run all
+// migrations in sequence automatically — no special casing needed.
+const MIGRATIONS = [
+  {
+    fromVersion: 1,
+    toVersion: 2,
+    apply(payload) {
+      payload.credits = Math.max(0, payload.credits + Math.floor(SKILL_TREE_TOTAL_COST * 0.25));
+      return payload;
+    },
+  },
+  // Future migrations:
+  // { fromVersion: 2, toVersion: 3, apply(payload) { /* ... */ return payload; } },
+];
+
+function runMigrations(payload) {
+  let version = payload.version ?? 1;
+  for (const migration of MIGRATIONS) {
+    if (version < migration.toVersion) {
+      payload = migration.apply({ ...payload });
+      version = migration.toVersion;
+    }
+  }
+  payload.version = version;
+  return payload;
+}
+
 function createDefaultPayload(initialCredits) {
   return {
+    version: CURRENT_PAYLOAD_VERSION,
     credits: initialCredits,
     purchasedIds: ["core"],
     spentBySkillId: {},
@@ -34,6 +68,7 @@ function normalizePayload(payload, initialCredits) {
   }
 
   return {
+    version: Number.isInteger(payload.version) ? payload.version : 1,
     credits: Number.isFinite(payload.credits) ? Math.max(0, Math.floor(payload.credits)) : fallback.credits,
     purchasedIds: [...validated],
     spentBySkillId: payload.spentBySkillId || {},
@@ -45,7 +80,8 @@ function migrateLegacyPayload(raw, storage, initialCredits) {
   if (!raw || raw.charAt(0) !== '{') return null;
   try {
     const legacy = JSON.parse(raw);
-    const migrated = normalizePayload(legacy, initialCredits);
+    const normalized = normalizePayload(legacy, initialCredits);
+    const migrated = runMigrations(normalized);
     storage?.setItem?.(SKILL_TREE_STORAGE_KEY, encodePayload(migrated));
     return migrated;
   } catch {
@@ -59,7 +95,15 @@ function loadPayload(storage, initialCredits) {
 
   // Tenta formato seguro atual
   const decoded = decodePayload(raw);
-  if (decoded !== null) return normalizePayload(decoded, initialCredits);
+  if (decoded !== null) {
+    const normalized = normalizePayload(decoded, initialCredits);
+    const versionBefore = normalized.version;
+    const migrated = runMigrations(normalized);
+    if (migrated.version !== versionBefore) {
+      storage?.setItem?.(SKILL_TREE_STORAGE_KEY, encodePayload(migrated));
+    }
+    return migrated;
+  }
 
   // Tenta migrar save legado (plain JSON)
   const migrated = migrateLegacyPayload(raw, storage, initialCredits);
