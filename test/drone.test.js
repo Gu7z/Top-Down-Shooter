@@ -90,15 +90,47 @@ test('drones apply freeze fusion when droneAppliesFreeze is true', () => {
 
   const bullet = droneSys.bullets[0];
   assert.ok(bullet.controlEffects.freezeChance);
-  assert.equal(bullet.controlEffects.freezeChance, 0.45);
+  assert.equal(bullet.controlEffects.freezeChance, 0.25);
   assert.equal(bullet.controlEffects.freezeAffectsBosses, false);
+});
+
+test('drone fire rate upgrades do not change projectile speed', () => {
+  const droneSys = new DroneSystem({
+    app,
+    player,
+    skillEffects: { droneCount: 1, droneFireVelocityMultiplier: 1.5 },
+  });
+
+  assert.equal(droneSys.bulletSpeed, 4);
+  assert.equal(droneSys.fireInterval, 30);
+});
+
+test('drone freeze fusion inherits control duration multiplier', () => {
+  const droneSys = new DroneSystem({
+    app,
+    player,
+    skillEffects: { droneCount: 1, droneAppliesFreeze: true, controlDurationMultiplier: 1.2 },
+  });
+
+  const spawner = {
+    spawns: [
+      {
+        enemy: { position: { x: 100, y: 150 }, destroyed: false },
+      }
+    ]
+  };
+
+  droneSys.update(spawner);
+
+  const bullet = droneSys.bullets[0];
+  assert.equal(bullet.controlDurationMultiplier, 1.2);
 });
 
 test('drones use targeting correctly', () => {
   const droneSys = new DroneSystem({
     app,
     player,
-    skillEffects: { droneCount: 1, droneTargeting: true, magnetRadiusBonus: 0 }, // range 150
+    skillEffects: { droneCount: 1, droneTargeting: true },
   });
   
   // Two enemies
@@ -115,4 +147,25 @@ test('drones use targeting correctly', () => {
   // the bullet is generated from drone position. The drone orbited a bit,
   // but let's check it simply:
   assert.ok(droneSys.bullets.length > 0);
+});
+
+test('replacement tech upgrade gives drones an extra projectile in a spread', () => {
+  const droneSys = new DroneSystem({
+    app,
+    player,
+    skillEffects: { droneCount: 1, droneExtraProjectiles: 1, droneSpreadRadians: 0.18 },
+  });
+
+  const spawner = {
+    spawns: [
+      {
+        enemy: { position: { x: 100, y: 150 }, destroyed: false },
+      }
+    ]
+  };
+
+  droneSys.update(spawner);
+
+  assert.equal(droneSys.bullets.length, 2);
+  assert.notEqual(droneSys.bullets[0].velocity.x, droneSys.bullets[1].velocity.x);
 });

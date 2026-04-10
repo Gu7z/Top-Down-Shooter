@@ -6,10 +6,10 @@ import {
   getSkillById,
 } from "../../src/progression/skill_tree_data.js";
 
-test("skill tree contains core plus 42 upgrade nodes", () => {
-  assert.equal(SKILL_TREE.length, 43); // 1 core + 6 branches * 7 tiers
+test("skill tree contains core plus 60 upgrade nodes", () => {
+  assert.equal(SKILL_TREE.length, 61); // 1 core + 6 branches * 10 tiers
   assert.equal(SKILL_TREE.filter((skill) => skill.type === "core").length, 1);
-  assert.equal(SKILL_TREE.filter((skill) => skill.type === "base").length, 42);
+  assert.equal(SKILL_TREE.filter((skill) => skill.type === "base").length, 60);
 });
 
 test("all skill ids are unique and prereqs point at existing skills", () => {
@@ -41,5 +41,13 @@ test("getSkillById returns the exact skill", () => {
 
 test("freeze-related control skills clearly state they do not affect bosses", () => {
   assert.match(getSkillById("slow_field_1").description, /chefes/i);
+  assert.match(getSkillById("slow_field_2").description, /chefes/i);
   assert.match(getSkillById("marking_swarm").description, /chefes/i);
+  assert.match(getSkillById("marking_swarm").description, /25%|chance/i);
+});
+
+test("score-related descriptions scope bonuses to score gained from kills", () => {
+  assert.match(getSkillById("score_bonus_1").description, /abates/i);
+  assert.match(getSkillById("reactor_evasion").description, /abates/i);
+  assert.match(getSkillById("neon_oligarch").description, /abates/i);
 });

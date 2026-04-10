@@ -196,7 +196,7 @@ test('bulletHit stops after one hit when kill mutates enemies array', () => {
   assert.deepEqual(enemies, [secondEnemy]);
 });
 
-test('bulletHit applies visual effects and drone bounty bonus', () => {
+test('bulletHit applies visual effects and records drone kill credits on lethal hits', () => {
   const effectCalls = [];
   const droneBullet = {
     position: { x: 0, y: 0 },
@@ -211,11 +211,18 @@ test('bulletHit applies visual effects and drone bounty bonus', () => {
     value: 3,
     kill(enemies, index, hitPlayer, effects, damage) {
       this.forwardedDamage = damage;
+      enemies.splice(index, 1);
     },
   };
   const playerWithBounty = {
     points: 1,
-    skillEffects: { droneBountyBonus: true },
+    skillEffects: { droneKillCreditBonus: 1 },
+    runStats: {
+      droneKills: 0,
+      recordDroneKill() {
+        this.droneKills += 1;
+      },
+    },
   };
   const effects = {
     pulse(target, color, duration) { effectCalls.push(['pulse', color, duration]); },
@@ -223,9 +230,12 @@ test('bulletHit applies visual effects and drone bounty bonus', () => {
     shake(amount) { effectCalls.push(['shake', amount]); },
   };
 
-  bulletHit(droneBullet, [bountyEnemy], 5, playerWithBounty, effects);
+  const enemies = [bountyEnemy];
+  bulletHit(droneBullet, enemies, 5, playerWithBounty, effects);
 
-  assert.equal(playerWithBounty.points, 4);
+  assert.equal(playerWithBounty.points, 1);
+  assert.equal(playerWithBounty.runStats.droneKills, 1);
+  assert.equal(enemies.length, 0);
   assert.equal(bountyEnemy.forwardedDamage, 2);
   assert.deepEqual(effectCalls, [
     ['pulse', 0xff4d4d, 6],

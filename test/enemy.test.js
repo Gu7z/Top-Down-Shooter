@@ -96,7 +96,7 @@ test('applyControlEffects freezes enemy on successful roll', () => {
   assert.ok(freezeEnemy.freezeTimer > 0);
 });
 
-test('applyControlEffects applies weaken to enemy', () => {
+test('applyControlEffects ignores standalone weaken payloads without a control state', () => {
   const weakEnemy = new Enemy({
     app,
     enemyRadius: 10,
@@ -108,10 +108,11 @@ test('applyControlEffects applies weaken to enemy', () => {
   });
 
   weakEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
-  assert.equal(weakEnemy.damageMultiplier, 1.5);
+  assert.equal(weakEnemy.frozen, false);
+  assert.equal(weakEnemy.life, 5);
 });
 
-test('applyControlEffects refreshes weaken without stacking the same multiplier repeatedly', () => {
+test('applyControlEffects refreshes freeze duration without stacking extra state', () => {
   const weakEnemy = new Enemy({
     app,
     enemyRadius: 10,
@@ -122,19 +123,14 @@ test('applyControlEffects refreshes weaken without stacking the same multiplier 
     container,
   });
 
-  weakEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
-  const firstTimer = weakEnemy.controlTimers.find((entry) => entry.type === 'weaken')?.timer;
+  weakEnemy.applyControlEffects({ freezeChance: 1.0 });
+  const firstTimer = weakEnemy.freezeTimer;
 
-  weakEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
+  weakEnemy.freezeTimer = 1;
+  weakEnemy.applyControlEffects({ freezeChance: 1.0 });
 
-  assert.equal(weakEnemy.damageMultiplier, 1.5);
-  assert.equal(
-    weakEnemy.controlTimers.filter((entry) => entry.type === 'weaken').length,
-    1,
-  );
-  assert.ok(
-    weakEnemy.controlTimers.find((entry) => entry.type === 'weaken')?.timer >= firstTimer,
-  );
+  assert.equal(weakEnemy.frozen, true);
+  assert.ok(weakEnemy.freezeTimer >= firstTimer);
 });
 
 test('applyControlEffects applies knockback', () => {
@@ -198,7 +194,7 @@ test('boss ignores skill-tree freeze flag but still receives knockback', () => {
   assert.equal(bossEnemy.enemy.position.x, startX + 15);
 });
 
-test('kill applies damageMultiplier from weaken effect', () => {
+test('kill applies the control damage bonus only against frozen targets', () => {
   const weakened = new Enemy({
     app,
     enemyRadius: 10,
@@ -209,14 +205,11 @@ test('kill applies damageMultiplier from weaken effect', () => {
     container,
   });
 
-  // Apply 2x weaken
-  weakened.applyControlEffects({ enemyWeakenMultiplier: 2 });
-  assert.equal(weakened.damageMultiplier, 2);
+  weakened.frozen = true;
 
-  // Attacking with 1 damage should deal 2 effective damage
   const arr = [weakened];
-  weakened.kill(arr, 0, { points: 0 }, undefined, 1);
-  assert.equal(weakened.life, 2); // 4 - ceil(1*2) = 2
+  weakened.kill(arr, 0, { points: 0, skillEffects: { enemyWeakenMultiplier: 2 } }, undefined, 1);
+  assert.equal(weakened.life, 2);
 });
 
 test('kill amplifies damage only against bosses when boss run upgrade is active', () => {
@@ -265,10 +258,11 @@ test('kill returns effective damage and syncs life text immediately after a non-
   });
   const playerWithBossUpgrade = {
     points: 0,
+    skillEffects: { enemyWeakenMultiplier: 1.5 },
     runUpgradeEffects: { bossDamageMultiplier: 2 },
   };
 
-  bossEnemy.applyControlEffects({ enemyWeakenMultiplier: 1.5 });
+  bossEnemy.frozen = true;
   const dealtDamage = bossEnemy.kill([bossEnemy], 0, playerWithBossUpgrade, undefined, 2);
 
   assert.equal(dealtDamage, 6);
@@ -344,7 +338,7 @@ test('frozen enemy update keeps health text in sync before early return', () => 
   assert.equal(frozenEnemy.enemyLifeText.text, 3);
 });
 
-test('updateControlTimers decrements cooldown and removes expired weaken effects', () => {
+test('updateControlTimers decrements only the contact cooldown', () => {
   const controlledEnemy = new Enemy({
     app,
     enemyRadius: 10,
@@ -356,13 +350,9 @@ test('updateControlTimers decrements cooldown and removes expired weaken effects
   });
 
   controlledEnemy.contactCooldown = 2;
-  controlledEnemy.damageMultiplier = 2;
-  controlledEnemy.controlTimers = [{ type: 'weaken', timer: 1, value: 2 }];
   controlledEnemy.updateControlTimers();
 
   assert.equal(controlledEnemy.contactCooldown, 1);
-  assert.equal(controlledEnemy.damageMultiplier, 1);
-  assert.equal(controlledEnemy.controlTimers.length, 0);
 });
 
 test('removePlayerLife heavy enemy applies cooldown, knockback, and effects', () => {

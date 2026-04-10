@@ -141,6 +141,7 @@ export default class SkillTree {
     this.scrollY = 0;
     this.onContextMenu = this.onContextMenu.bind(this);
     this.onWheel = this.onWheel.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
 
     this.build();
     this.app.stage.addChild(this.container);
@@ -157,6 +158,7 @@ export default class SkillTree {
 
     this.app.renderer.view.addEventListener("contextmenu", this.onContextMenu);
     this.app.renderer.view.addEventListener("wheel", this.onWheel, { passive: false });
+    globalThis.window?.addEventListener?.("keydown", this.onKeyDown);
 
     this.buildHud();
     this.buildTabs();
@@ -186,9 +188,21 @@ export default class SkillTree {
     }
   }
 
+  goBack() {
+    this.destroy();
+    this.onBack?.();
+  }
+
+  onKeyDown(e) {
+    if (e.key !== "Escape") return;
+    e.preventDefault?.();
+    this.goBack();
+  }
+
   destroy() {
     this.app.renderer.view.removeEventListener("contextmenu", this.onContextMenu);
     this.app.renderer.view.removeEventListener("wheel", this.onWheel);
+    globalThis.window?.removeEventListener?.("keydown", this.onKeyDown);
     this.app.stage.removeChild(this.container);
     this.container.destroy({ children: true });
   }
@@ -228,10 +242,7 @@ export default class SkillTree {
       text: "VOLTAR",
       width: 140,
       height: 42,
-      onClick: () => {
-        this.destroy();
-        this.onBack?.();
-      },
+      onClick: () => this.goBack(),
     });
   }
 

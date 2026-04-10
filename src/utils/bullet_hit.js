@@ -56,10 +56,10 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
         }
       }
 
-      if (bullet.source === 'drone' && player.skillEffects?.droneBountyBonus) {
-        player.points += enemy.value; // Drone kills give 100% extra points
-      }
       const appliedDamage = enemy.kill(enemies, indexEnemy, player, effects, bullet.damage || 1);
+      if (bullet.source === 'drone' && !enemies.includes(enemy) && player.skillEffects?.droneKillCreditBonus > 0) {
+        player.runStats?.recordDroneKill?.();
+      }
       spawnDamageNumber(
         bullet.position.x,
         bullet.position.y,
@@ -108,8 +108,12 @@ const bulletHit = (bullet, enemies, bulletRadius, player, effects) => {
         }
       }
 
-      bullet.visible = false;
-      bullet.destroy();
+      if (bullet.pierceCount > 0) {
+        bullet.pierceCount--;
+      } else {
+        bullet.visible = false;
+        bullet.destroy();
+      }
     }
   }
 };

@@ -84,6 +84,9 @@ export default class Game {
         visual,
       });
     };
+    this.player.onDamageTaken = () => {
+      this._triggerRetaliationPulse();
+    };
 
     this.hud.openSettings = () => {
       if (settingsScreen) return;
@@ -306,8 +309,7 @@ export default class Game {
         
         // Bullet collision with player
         if (this.player.collidesWithCircle(bullet.bullet.position.x, bullet.bullet.position.y, bullet.radius)) {
-           const damageTaken = this.player.takeDamage(1, this.effects);
-           if (damageTaken) this._triggerRetaliationPulse();
+           this.player.takeDamage(1, this.effects);
            bullet.destroy();
            this.enemyBullets.splice(i, 1);
            continue;

@@ -34,16 +34,16 @@ export default class Player {
 
     // Dash state
     this.dashEnabled = this.skillEffects.dashEnabled;
-    this.dashSpeed = 12;
+    this.dashSpeed = 14;
     this.dashDuration = 8; // frames
-    this.dashCooldownBase = 90; // frames (~1.5s at 60fps)
+    this.dashCooldownBase = 120; // frames (~2.0s at 60fps)
     this.dashCooldownMultiplier = this.skillEffects.dashCooldownMultiplier;
     this.dashInvulnerabilityMs = this.skillEffects.dashInvulnerabilityMs;
     this.isDashing = false;
     this.dashTimer = 0;
     this.dashCooldownTimer = 0;
     this.dashDirection = { x: 0, y: 0 };
-    this.dashReloadPrimed = false;
+    this.aegisDashCooldown = 0;
 
     // Dash shield fusion
     this.dashShieldEnabled = this.skillEffects.dashShield;
@@ -54,6 +54,7 @@ export default class Player {
     // In-run upgrade state
     this.runUpgradeEffects = null;
     this.onEnemyKilledAt = null;
+    this.onDamageTaken = null;
 
     // Strafe control
     this.strafeControlBonus = this.skillEffects.strafeControlBonus;
@@ -133,6 +134,7 @@ export default class Player {
       }
       playSound('shield_hit');
       this.applyPostHitGuard();
+      this.onDamageTaken?.();
       return true;
     }
 
@@ -153,6 +155,7 @@ export default class Player {
 
     this.shieldRegenTimer = this.shieldRegenCooldown;
     this.applyPostHitGuard();
+    this.onDamageTaken?.();
     return true;
   }
 
@@ -205,20 +208,24 @@ export default class Player {
       );
     }
 
-    // Dash shield fusion: gain 1 temporary shield
-    if (this.dashShieldEnabled && this.shield < this.skillEffects.maxShield + 1) {
-      this.shield = Math.min(this.shield + 1, this.skillEffects.maxShield + 1);
+    // Dash shield fusion: restore 1 shield when empty, with 10s internal cooldown.
+    if (this.dashShieldEnabled && this.shield === 0 && this.aegisDashCooldown === 0 && this.skillEffects.maxShield > 0) {
+      this.shield = 1;
+      this.aegisDashCooldown = 600;
     }
 
-    // Dash reload fusion: prime next shot
+    // Dash reload fusion: the next shot is available immediately.
     if (this.dashReloadEnabled) {
-      this.dashReloadPrimed = true;
+      this.shooting.resetCooldown();
     }
   }
 
   updateDash() {
     if (this.dashCooldownTimer > 0) {
       this.dashCooldownTimer -= 1;
+    }
+    if (this.aegisDashCooldown > 0) {
+      this.aegisDashCooldown -= 1;
     }
 
     if (!this.isDashing) return;

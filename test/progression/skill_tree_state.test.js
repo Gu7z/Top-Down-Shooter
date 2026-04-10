@@ -36,7 +36,7 @@ test("purchase requires credits and prerequisites", () => {
   assert.equal(state.purchase("bullet_speed_1").ok, false);
   assert.equal(state.purchase("fire_rate_1").ok, true);
   assert.equal(state.has("fire_rate_1"), true);
-  assert.equal(state.getCredits(), 155);
+  assert.equal(state.getCredits(), 160);
 });
 
 test("state saves and loads from localStorage", () => {
@@ -47,7 +47,7 @@ test("state saves and loads from localStorage", () => {
 
   const loaded = createSkillTreeState({ storage });
   assert.equal(loaded.has("fire_rate_1"), true);
-  assert.equal(loaded.getCredits(), 55);
+  assert.equal(loaded.getCredits(), 60);
   const stored = storage.getItem(SKILL_TREE_STORAGE_KEY);
   assert.ok(stored.startsWith("v1."), "deve usar formato seguro");
   assert.ok(!stored.startsWith("{"), "não deve ser JSON puro");
@@ -67,13 +67,13 @@ test("purchaseCascade compra pré-requisitos em ordem e depois o alvo", () => {
   assert.ok(state.has("fire_rate_1"));
   assert.ok(state.has("bullet_speed_1"));
   assert.ok(state.has("bullet_damage_1"));
-  assert.equal(state.getCredits(), 1000 - 45 - 70 - 100);
+  assert.equal(state.getCredits(), 1000 - 40 - 60 - 85);
 });
 
 test("purchaseCascade não compra nada se créditos insuficientes", () => {
   const state = createSkillTreeState({
     storage: memoryStorage(),
-    initialCredits: 10, // insuficiente para fire_rate_1 (custa 45)
+    initialCredits: 10, // insuficiente para fire_rate_1 (custa 40)
   });
 
   const result = state.purchaseCascade("bullet_damage_1");
@@ -81,6 +81,20 @@ test("purchaseCascade não compra nada se créditos insuficientes", () => {
   assert.equal(result.ok, false);
   assert.equal(result.reason, "not_enough_credits");
   assert.ok(!state.has("fire_rate_1"));
+});
+
+test("purchaseCascade não compra pré-requisitos isolados se o alvo final não couber no orçamento", () => {
+  const state = createSkillTreeState({
+    storage: memoryStorage(),
+    initialCredits: 100, // compra fire_rate_1 e bullet_speed_1, mas não bullet_damage_1
+  });
+
+  const result = state.purchaseCascade("bullet_damage_1");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "not_enough_credits");
+  assert.deepEqual(state.getPurchasedIds(), ["core"]);
+  assert.equal(state.getCredits(), 100);
 });
 
 test("purchaseCascade em skill já comprada retorna already_purchased", () => {
@@ -107,7 +121,7 @@ test("purchaseCascade em skill disponível compra só ela", () => {
 
   assert.equal(result.ok, true);
   assert.deepEqual(result.purchasedIds, ["bullet_speed_1"]);
-  assert.equal(state.getCredits(), 1000 - 45 - 70);
+  assert.equal(state.getCredits(), 1000 - 40 - 60);
 });
 
 test("right-click refund removes dependents in cascade with full refund", () => {
@@ -129,7 +143,7 @@ test("right-click refund removes dependents in cascade with full refund", () => 
     "fire_rate_1",
   ]);
   assert.equal(state.has("fire_rate_1"), false);
-  assert.equal(state.getCredits(), creditsBeforeRefund + 45 + 70 + 100);
+  assert.equal(state.getCredits(), creditsBeforeRefund + 40 + 60 + 85);
 });
 
 test("progressive reveal exposes purchased, available, and direct child signals", () => {

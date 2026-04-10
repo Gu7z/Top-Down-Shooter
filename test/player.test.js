@@ -188,16 +188,18 @@ test('dash grants invulnerability when dashInvulnerabilityMs is set', () => {
   assert.ok(invulnDash.invulnerableTimer > 0);
 });
 
-test('dashReload fusion primes next shot', () => {
+test('dashReload fusion resets the shooting cooldown immediately', () => {
   const reloader = new Player({
     app: createAppMock(),
     username: 'reloader',
     keys: {},
     skillEffects: { dashEnabled: true, dashReload: true },
   });
+  let resetCalls = 0;
+  reloader.shooting.resetCooldown = () => { resetCalls += 1; };
 
   reloader.tryDash({ w: true });
-  assert.equal(reloader.dashReloadPrimed, true);
+  assert.equal(resetCalls, 1);
 });
 
 test('dashShield fusion grants shield on dash', () => {

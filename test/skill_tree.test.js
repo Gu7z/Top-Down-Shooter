@@ -16,6 +16,15 @@ function createSkillTreeAppMock() {
   app.renderer.view.removeEventListener = (event, fn) => {
     if (app.renderer.view.eventListeners[event] === fn) delete app.renderer.view.eventListeners[event];
   };
+  global.window = {
+    eventListeners: {},
+    addEventListener(event, fn) {
+      this.eventListeners[event] = fn;
+    },
+    removeEventListener(event, fn) {
+      if (this.eventListeners[event] === fn) delete this.eventListeners[event];
+    },
+  };
   return app;
 }
 
@@ -185,4 +194,26 @@ test('skill tree prevents context menu and back button destroys the screen', () 
   assert.equal(screen.container.destroyed, true);
   assert.equal(app.renderer.view.eventListeners.contextmenu, undefined);
   assert.equal(app.renderer.view.eventListeners.wheel, undefined);
+  assert.equal(global.window.eventListeners.keydown, undefined);
+});
+
+test('skill tree closes on Escape', () => {
+  const app = createSkillTreeAppMock();
+  let backCalls = 0;
+  const screen = new SkillTree({
+    app,
+    skillState: createStateStub(),
+    onBack: () => { backCalls += 1; },
+  });
+  let prevented = false;
+
+  global.window.eventListeners.keydown({
+    key: 'Escape',
+    preventDefault() { prevented = true; },
+  });
+
+  assert.equal(prevented, true);
+  assert.equal(backCalls, 1);
+  assert.equal(screen.container.destroyed, true);
+  assert.equal(global.window.eventListeners.keydown, undefined);
 });

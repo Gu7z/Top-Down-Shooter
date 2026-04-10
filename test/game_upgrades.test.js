@@ -335,7 +335,10 @@ test("game retaliation pulse damages nearby enemies, stuns survivors, and clears
   game.enemyBullets = [triggerBullet, pulseHitBullet, farBullet];
 
   game.player.collidesWithCircle = (x, y) => x === 5 && y === 5;
-  game.player.takeDamage = () => true;
+  game.player.takeDamage = () => {
+    game.player.onDamageTaken?.();
+    return true;
+  };
   const tickerCallbacksBeforePulse = [...app.ticker.callbacks];
 
   game.tick();

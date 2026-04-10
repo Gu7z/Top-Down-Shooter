@@ -19,8 +19,6 @@ export default class Enemy {
     // Control effect state
     this.frozen = false;
     this.freezeTimer = 0;
-    this.damageMultiplier = 1;
-    this.controlTimers = [];
     this.contactCooldown = 0;
     this.knockbackVelocity = { x: 0, y: 0 };
 
@@ -114,35 +112,10 @@ export default class Enemy {
 
     // Freeze
     if (!freezeBlockedByBoss && controlEffects.freezeChance && Math.random() < controlEffects.freezeChance) {
-      if (!this.frozen) {
-        this.frozen = true;
-        this.freezeTimer = duration;
-        this.enemyBody.tint = 0x88ccff;
-        this.enemyLifeText.style.fill = 0x002244;
-      }
-    }
-
-    // Enemy weaken
-    if (controlEffects.enemyWeakenMultiplier && controlEffects.enemyWeakenMultiplier > 1) {
-      const nextMultiplier = controlEffects.enemyWeakenMultiplier;
-      const activeWeaken = this.controlTimers.find((entry) => entry.type === "weaken");
-
-      // Re-applying weaken should refresh/replace the debuff, not stack exponentially.
-      if (activeWeaken) {
-        if (activeWeaken.value !== nextMultiplier) {
-          this.damageMultiplier /= activeWeaken.value;
-          this.damageMultiplier *= nextMultiplier;
-          activeWeaken.value = nextMultiplier;
-        }
-        activeWeaken.timer = duration;
-      } else {
-        this.damageMultiplier *= nextMultiplier;
-        this.controlTimers.push({
-          type: "weaken",
-          timer: duration,
-          value: nextMultiplier,
-        });
-      }
+      this.frozen = true;
+      this.freezeTimer = Math.max(this.freezeTimer, duration);
+      this.enemyBody.tint = 0x88ccff;
+      this.enemyLifeText.style.fill = 0x002244;
     }
 
     // Knockback
@@ -158,19 +131,6 @@ export default class Enemy {
 
   updateControlTimers() {
     if (this.contactCooldown > 0) this.contactCooldown -= 1;
-
-    if (this.controlTimers.length === 0) return;
-
-    this.controlTimers = this.controlTimers.filter((entry) => {
-      entry.timer -= 1;
-      if (entry.timer <= 0) {
-        if (entry.type === "weaken") {
-          this.damageMultiplier /= entry.value;
-        }
-        return false;
-      }
-      return true;
-    });
   }
 
   removePlayerLife(player, spanwer, effects) {
@@ -373,9 +333,12 @@ export default class Enemy {
 
   kill(enemies, indexEnemy, player, effects, damage = 1) {
     const bossDamageMultiplier = this.isBoss
-      ? (player.runUpgradeEffects?.bossDamageMultiplier || 1)
+      ? (player?.runUpgradeEffects?.bossDamageMultiplier || 1)
       : 1;
-    const effectiveDamage = Math.ceil(damage * this.damageMultiplier * bossDamageMultiplier);
+    const controlDamageMultiplier = this.frozen
+      ? (player?.skillEffects?.enemyWeakenMultiplier || 1)
+      : 1;
+    const effectiveDamage = Math.ceil(damage * controlDamageMultiplier * bossDamageMultiplier);
     const appliedDamage = Math.min(this.life, effectiveDamage);
 
     if (this.life > effectiveDamage) {
@@ -417,7 +380,7 @@ export default class Enemy {
 
   forceKill() {
     this.enemy.visible = false;
-    this.enemy.destroy();
+    this.enemy.destroy({ children: true });
   }
 
   update(player, spanwer, effects) {

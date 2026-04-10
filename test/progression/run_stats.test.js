@@ -47,6 +47,7 @@ test("credit calculation is explainable and affected by economy effects", () => 
     "Recompensa de chefes",
     "Sobrevivência",
     "Ondas concluídas",
+    "Abates por drones",
     "Sobrevivência (HP Baixo)",
     "Multiplicador financeiro",
   ]);
@@ -99,6 +100,27 @@ test("lowHpCreditBonus is awarded when player survived with low HP", () => {
   );
 
   assert.equal(withBonus.total - withoutBonus.total, 20);
+});
+
+test("wave and drone kill bonuses are folded into the credit summary", () => {
+  const credits = calculateCredits(
+    {
+      score: 0,
+      timeSurvivedSeconds: 0,
+      shotsFired: 0,
+      shotsHit: 0,
+      killsByType: {},
+      bossKills: 0,
+      droneKills: 3,
+      wavesCompleted: 2,
+      survivedLowHp: false,
+    },
+    { waveCreditBonus: 2, droneKillCreditBonus: 1 }
+  );
+
+  assert.equal(credits.total, 13);
+  assert.equal(credits.breakdown.find((row) => row.label === "Ondas concluídas")?.amount, 10);
+  assert.equal(credits.breakdown.find((row) => row.label === "Abates por drones")?.amount, 3);
 });
 
 test("missing shotsHit is treated as zero accuracy instead of NaN", () => {

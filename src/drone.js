@@ -1,12 +1,13 @@
 import Victor from "victor";
 import bulletHit from "./utils/bullet_hit.js";
+import { createDefaultSkillEffects } from "./progression/skill_effects.js";
 import { playSound } from "./synth.js";
 
 export default class DroneSystem {
   constructor({ app, player, skillEffects = {}, runStats = null, effects = null }) {
     this.app = app;
     this.player = player;
-    this.skillEffects = skillEffects;
+    this.skillEffects = { ...createDefaultSkillEffects(), ...skillEffects };
     this.runStats = runStats;
     this.effects = effects;
     
@@ -14,7 +15,7 @@ export default class DroneSystem {
     this.drones = [];
     this.bullets = [];
     
-    this.bulletSpeed = 4 * (this.skillEffects.droneFireVelocityMultiplier || 1);
+    this.bulletSpeed = 4;
     this.bulletRadius = 5;
     this.bulletDamage = Math.ceil(1 * (this.skillEffects.droneOverclockMultiplier || 1));
     
@@ -22,13 +23,16 @@ export default class DroneSystem {
     this.orbitSpeed = 0.03;
     this.orbitAngle = 0;
     
-    this.fireIntervalBase = 45; // base ~0.75s
+    this.fireIntervalBase = 90; // base ~1.5s
     const fireMultiplier = this.skillEffects.droneFireVelocityMultiplier || 1;
     this.fireInterval = Math.max(10, Math.floor(this.fireIntervalBase / fireMultiplier));
     
-    this.magnetRadius = 350 + (this.skillEffects.magnetRadiusBonus || 0);
+    this.targetRadius = 350;
     this.droneTargeting = this.skillEffects.droneTargeting;
     this.droneAppliesFreeze = this.skillEffects.droneAppliesFreeze;
+    this.controlDurationMultiplier = this.skillEffects.controlDurationMultiplier;
+    this.extraProjectiles = this.skillEffects.droneExtraProjectiles || 0;
+    this.spreadRadians = this.skillEffects.droneSpreadRadians || 0;
     
     this.container = new PIXI.Container();
     this.app.stage.addChild(this.container);
@@ -70,7 +74,7 @@ export default class DroneSystem {
       
       drone.fireTimer -= 1;
       let target = null;
-      let targetDist = this.magnetRadius;
+      let targetDist = this.targetRadius;
       
       const dx = drone.sprite.position.x;
       const dy = drone.sprite.position.y;
@@ -130,26 +134,35 @@ export default class DroneSystem {
   fire(drone, fireAngle) {
     const dx = drone.sprite.position.x;
     const dy = drone.sprite.position.y;
-    
-    const bullet = new PIXI.Graphics();
-    bullet.beginFill(0x8be9fd, 1);
-    bullet.drawCircle(0, 0, this.bulletRadius);
-    bullet.endFill();
-    
-    bullet.position.set(dx, dy);
-    bullet.velocity = new Victor(Math.cos(fireAngle), Math.sin(fireAngle)).multiplyScalar(this.bulletSpeed);
-    bullet.damage = this.bulletDamage;
-    bullet.source = 'drone';
-    bullet.isCrit = false;
-    
-    // Fusion: Drone Applies Freeze
-    if (this.droneAppliesFreeze) {
-      bullet.controlEffects = { freezeChance: 0.45, freezeAffectsBosses: false };
-      bullet.controlDurationMultiplier = 1;
+
+    const projectileAngles = [fireAngle];
+    for (let index = 1; index <= this.extraProjectiles; index++) {
+      const direction = index % 2 === 1 ? 1 : -1;
+      const ring = Math.ceil(index / 2);
+      projectileAngles.push(fireAngle + direction * ring * this.spreadRadians);
     }
-    
-    this.bullets.push(bullet);
-    this.container.addChild(bullet);
+
+    projectileAngles.forEach((projectileAngle) => {
+      const bullet = new PIXI.Graphics();
+      bullet.beginFill(0x8be9fd, 1);
+      bullet.drawCircle(0, 0, this.bulletRadius);
+      bullet.endFill();
+
+      bullet.position.set(dx, dy);
+      bullet.velocity = new Victor(Math.cos(projectileAngle), Math.sin(projectileAngle)).multiplyScalar(this.bulletSpeed);
+      bullet.damage = this.bulletDamage;
+      bullet.source = 'drone';
+      bullet.isCrit = false;
+      bullet.pierceCount = this.skillEffects.dronePiercing || 0;
+
+      if (this.droneAppliesFreeze) {
+        bullet.controlEffects = { freezeChance: 0.25, freezeAffectsBosses: false };
+        bullet.controlDurationMultiplier = this.controlDurationMultiplier;
+      }
+
+      this.bullets.push(bullet);
+      this.container.addChild(bullet);
+    });
     
     if (this.effects) {
       this.effects.explosion(dx, dy, 0x8be9fd, 4); // small muzzle flash animation

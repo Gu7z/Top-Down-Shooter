@@ -24,6 +24,7 @@ export default class Shooting {
     this.shooting = false;
     this.enabled = true;
     this.shootInterval = 0.3;
+    this.instantShotPrimed = false;
     this.shootingContainer = new PIXI.Container();
     this.app.stage.addChild(this.shootingContainer);
     this.interval = undefined;
@@ -49,6 +50,12 @@ export default class Shooting {
   setEnabled(enabled) {
     this.enabled = enabled;
     if (!enabled) this.shooting = false;
+  }
+
+  resetCooldown() {
+    this.instantShotPrimed = true;
+    this.interval?.clear?.();
+    this.shoot();
   }
 
   fire() {
@@ -97,7 +104,6 @@ export default class Shooting {
       bullet.isCrit = isCrit;
       bullet.controlEffects = {
         knockbackBonus: this.skillEffects.knockbackBonus,
-        enemyWeakenMultiplier: this.skillEffects.enemyWeakenMultiplier,
         freezeChance: this.skillEffects.freezeChance || 0,
         freezeAffectsBosses: false,
       };
@@ -126,6 +132,12 @@ export default class Shooting {
   update(shooting, enemySpawner, player) {
     if (!enemySpawner || !player) return;
     this.shooting = shooting;
+
+    if (this.instantShotPrimed && this.enabled && (this.keys[" "] || this.shooting)) {
+      this.instantShotPrimed = false;
+      this.fire();
+    }
+
     this.bullets.forEach((bullet) => {
       if (bullet.destroyed || !bullet) return;
 

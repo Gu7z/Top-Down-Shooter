@@ -26,13 +26,14 @@ test("default effects are safe no-upgrade values", () => {
     emergencyShield: false,
     creditMultiplier: 1,
     scoreMultiplier: 1,
-    streakCreditBonus: 0,
+    waveCreditBonus: 0,
     bossCreditBonus: 0,
     discountMultiplier: 1,
     droneCount: 0,
     droneFireVelocityMultiplier: 1,
     droneTargeting: false,
-    magnetRadiusBonus: 0,
+    droneExtraProjectiles: 0,
+    droneSpreadRadians: 0,
     droneOverclockMultiplier: 1,
     freezeChance: 0,
     knockbackBonus: 0,
@@ -42,7 +43,7 @@ test("default effects are safe no-upgrade values", () => {
     dashReload: false,
     dashShield: false,
     lowHpCreditBonus: 0,
-    droneBountyBonus: false,
+    droneKillCreditBonus: 0,
     droneAppliesFreeze: false,
   });
 });
@@ -55,8 +56,8 @@ test("deriveSkillEffects combines purchased skills", () => {
     "credit_gain_1",
   ]);
 
-  assert.equal(effects.fireVelocityMultiplier, 1.15);
-  assert.equal(effects.bulletSpeedBonus, 0.4);
+  assert.equal(effects.fireVelocityMultiplier, 1.10);
+  assert.equal(effects.bulletSpeedBonus, 0.25);
   assert.equal(effects.creditMultiplier, 1.1);
 });
 
@@ -69,8 +70,32 @@ test("deriveSkillEffects safely combines additive, boolean, and multiplier effec
     "marking_swarm",
   ]);
 
-  assert.equal(effects.maxShield, 2);
+  assert.equal(effects.maxShield, 1);
   assert.equal(effects.dashShield, true);
-  assert.equal(effects.freezeChance, 0.20);
+  assert.equal(effects.freezeChance, 0.15);
   assert.equal(effects.droneAppliesFreeze, true);
+});
+
+test("deriveSkillEffects exposes the replacement economy and tech upgrades", () => {
+  const effects = deriveSkillEffects([
+    "core",
+    "streak_reward_1",
+    "magnet_scan_1",
+    "bounty_drone",
+  ]);
+
+  assert.equal(effects.waveCreditBonus, 2);
+  assert.equal(effects.droneExtraProjectiles, 1);
+  assert.equal(effects.droneSpreadRadians, 0.18);
+  assert.equal(effects.droneKillCreditBonus, 1);
+});
+
+test("deriveSkillEffects makes stacked drone overclock tiers cross the next damage breakpoint", () => {
+  const effects = deriveSkillEffects([
+    "core",
+    "drone_overclock_1",
+    "drone_overclock_2",
+  ]);
+
+  assert.equal(effects.droneOverclockMultiplier, 2.25);
 });

@@ -20,6 +20,7 @@ export function createRunStats({ now = Date.now } = {}) {
     shotsHit: 0,
     killsByType: {},
     bossKills: 0,
+    droneKills: 0,
     wavesCompleted: 0,
   };
 
@@ -40,6 +41,10 @@ export function createRunStats({ now = Date.now } = {}) {
     stats.wavesCompleted = Math.max(stats.wavesCompleted, wave);
   }
 
+  function recordDroneKill(amount = 1) {
+    stats.droneKills += safeCount(amount);
+  }
+
   function snapshot({ score = 0, now: snapshotNow = now() } = {}) {
     const timeSurvivedSeconds = Math.max(0, Math.floor((snapshotNow - startTime) / 1000));
     return {
@@ -50,6 +55,7 @@ export function createRunStats({ now = Date.now } = {}) {
       accuracyPercent: accuracyPercent(stats),
       killsByType: { ...stats.killsByType },
       bossKills: stats.bossKills,
+      droneKills: stats.droneKills,
       wavesCompleted: stats.wavesCompleted,
     };
   }
@@ -59,6 +65,7 @@ export function createRunStats({ now = Date.now } = {}) {
     recordShotHit,
     recordKill,
     recordWaveCompleted,
+    recordDroneKill,
     snapshot,
   };
 }
@@ -70,23 +77,26 @@ export function calculateCredits(stats, effects = {}) {
   const bossKills = safeCount(stats.bossKills);
   const timeSurvivedSeconds = safeCount(stats.timeSurvivedSeconds);
   const wavesCompleted = safeCount(stats.wavesCompleted);
+  const droneKills = safeCount(stats.droneKills);
   const kills = totalKills(stats.killsByType);
   const accuracy = accuracyPercent({ shotsFired, shotsHit });
   const creditMultiplier = effects.creditMultiplier || 1;
   const bossCreditBonus = effects.bossCreditBonus || 0;
-  const streakCreditBonus = effects.streakCreditBonus || 0;
+  const waveCreditBonus = effects.waveCreditBonus || 0;
+  const droneKillCreditBonus = effects.droneKillCreditBonus || 0;
   const lowHpCreditBonus = stats.survivedLowHp ? (effects.lowHpCreditBonus || 0) : 0;
 
   const scoreCredits = Math.floor(score / 10);
-  const killCredits = kills * 1 + (kills >= 20 ? streakCreditBonus : 0);
+  const killCredits = kills;
   const accuracyCredits = shotsFired >= 10 && accuracy >= 75 ? 8 : 0;
   const bossCredits = bossKills * (15 + bossCreditBonus);
   const survivalCredits = Math.floor(timeSurvivedSeconds / 20) * 2;
-  const waveCredits = wavesCompleted * 3;
+  const waveCredits = wavesCompleted * (3 + waveCreditBonus);
+  const droneCredits = droneKills * droneKillCreditBonus;
   const lowHpCredits = lowHpCreditBonus;
   
   const preMultiplier =
-    scoreCredits + killCredits + accuracyCredits + bossCredits + survivalCredits + waveCredits + lowHpCredits;
+    scoreCredits + killCredits + accuracyCredits + bossCredits + survivalCredits + waveCredits + droneCredits + lowHpCredits;
   const total = Math.floor(preMultiplier * creditMultiplier);
 
   return {
@@ -98,6 +108,7 @@ export function calculateCredits(stats, effects = {}) {
       { label: "Recompensa de chefes", amount: bossCredits },
       { label: "Sobrevivência", amount: survivalCredits },
       { label: "Ondas concluídas", amount: waveCredits },
+      { label: "Abates por drones", amount: droneCredits },
       { label: "Sobrevivência (HP Baixo)", amount: lowHpCredits },
       { label: "Multiplicador financeiro", amount: total - preMultiplier },
     ],

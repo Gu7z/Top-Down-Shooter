@@ -108,7 +108,6 @@ test('bullets carry control effects and chain pulse radius', () => {
     keys: {},
     skillEffects: {
       knockbackBonus: 20,
-      enemyWeakenMultiplier: 1.5,
       freezeChance: 0.25,
       chainPulseRadius: 100,
       controlDurationMultiplier: 1.3,
@@ -119,7 +118,6 @@ test('bullets carry control effects and chain pulse radius', () => {
   const bullet = controlShooting.bullets[0];
 
   assert.equal(bullet.controlEffects.knockbackBonus, 20);
-  assert.equal(bullet.controlEffects.enemyWeakenMultiplier, 1.5);
   assert.equal(bullet.controlEffects.freezeChance, 0.25);
   assert.equal(bullet.controlEffects.freezeAffectsBosses, false);
   assert.equal(bullet.chainPulseRadius, 100);
@@ -179,6 +177,40 @@ test('shoot timer recursively reschedules and setter updates fire velocity', () 
   assert.equal(timers[0].cleared, true);
   assert.equal(timers.length, 2);
   assert.equal(timedShooting.fireVelocity, 2);
+});
+
+test('resetCooldown primes an immediate shot and reschedules the timer', () => {
+  const timerApp = createAppMock();
+  const timers = [];
+  timerApp.setInterval = (fn, seconds) => {
+    const timer = {
+      fn,
+      seconds,
+      cleared: false,
+      clear() {
+        this.cleared = true;
+      },
+    };
+    timers.push(timer);
+    return timer;
+  };
+
+  const timedShooting = new Shooting({
+    app: timerApp,
+    player,
+    playerSize: 20,
+    keys: { ' ': true },
+  });
+  let fireCalls = 0;
+  timedShooting.fire = () => { fireCalls += 1; };
+
+  timedShooting.resetCooldown();
+  timedShooting.update(true, { spawns: [] }, { player: {} });
+
+  assert.equal(timedShooting.instantShotPrimed, false);
+  assert.equal(timers[0].cleared, true);
+  assert.equal(timers.length, 2);
+  assert.equal(fireCalls, 1);
 });
 
 test('shootingContainer is on stage before any shot is fired', () => {

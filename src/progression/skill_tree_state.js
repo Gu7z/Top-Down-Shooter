@@ -143,16 +143,20 @@ export function createSkillTreeState({
     return purchased.has(id);
   }
 
-  function getDiscountMultiplier() {
-    return getPurchasedIds().reduce((multiplier, id) => {
+  function getDiscountMultiplierFor(purchasedIds) {
+    return [...purchasedIds].reduce((multiplier, id) => {
       const skill = getSkillById(id);
       return multiplier * (skill?.effects?.discountMultiplier || 1);
     }, 1);
   }
 
-  function getCost(skill) {
+  function getDiscountMultiplier() {
+    return getDiscountMultiplierFor(purchased);
+  }
+
+  function getCost(skill, purchasedIds = purchased) {
     if (skill.id === "core") return 0;
-    return Math.max(1, Math.ceil(skill.cost * getDiscountMultiplier()));
+    return Math.max(1, Math.ceil(skill.cost * getDiscountMultiplierFor(purchasedIds)));
   }
 
   function canPurchase(id) {
@@ -203,15 +207,28 @@ export function createSkillTreeState({
 
     if (chain.length === 0) return { ok: false, reason: "already_purchased" };
 
-    // Compra em ordem — para no primeiro que não der créditos
+    const simulatedPurchased = new Set(purchased);
+    let simulatedCredits = payload.credits;
+
+    for (const id of chain) {
+      const skillToBuy = getSkillById(id);
+      const cost = getCost(skillToBuy, simulatedPurchased);
+      if (simulatedCredits < cost) {
+        return { ok: false, reason: "not_enough_credits" };
+      }
+      simulatedCredits -= cost;
+      simulatedPurchased.add(id);
+    }
+
     const purchasedIds = [];
     for (const id of chain) {
       const result = purchase(id);
-      if (!result.ok) break;
+      if (!result.ok) {
+        return { ok: false, reason: result.reason || "purchase_failed" };
+      }
       purchasedIds.push(id);
     }
 
-    if (purchasedIds.length === 0) return { ok: false, reason: "not_enough_credits" };
     return { ok: true, purchasedIds };
   }
 

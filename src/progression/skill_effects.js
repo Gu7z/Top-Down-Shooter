@@ -21,13 +21,14 @@ export function createDefaultSkillEffects() {
     emergencyShield: false,
     creditMultiplier: 1,
     scoreMultiplier: 1,
-    streakCreditBonus: 0,
+    waveCreditBonus: 0,
     bossCreditBonus: 0,
     discountMultiplier: 1,
     droneCount: 0,
     droneFireVelocityMultiplier: 1,
     droneTargeting: false,
-    magnetRadiusBonus: 0,
+    droneExtraProjectiles: 0,
+    droneSpreadRadians: 0,
     droneOverclockMultiplier: 1,
     freezeChance: 0,
     knockbackBonus: 0,
@@ -37,8 +38,9 @@ export function createDefaultSkillEffects() {
     dashReload: false,
     dashShield: false,
     lowHpCreditBonus: 0,
-    droneBountyBonus: false,
+    droneKillCreditBonus: 0,
     droneAppliesFreeze: false,
+    dronePiercing: 0,
   };
 }
 
