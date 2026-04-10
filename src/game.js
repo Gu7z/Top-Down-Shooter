@@ -48,7 +48,7 @@ export default class Game {
       runStats: this.runStats,
       effects: this.effects,
     });
-    this.enemySpawner = new Spawner({ app, player: this.player });
+    this.enemySpawner = new Spawner({ app });
     this.enemyBullets = [];
     
     this.hud = new Hud({ app, player: this.player });

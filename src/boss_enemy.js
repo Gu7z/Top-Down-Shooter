@@ -107,7 +107,6 @@ export default class BossEnemy extends Enemy {
       y = Math.max(minY, Math.min(maxY, y));
     }
     this.enemy.position.set(x, y);
-    this.enemyLifeText.position.set(x, y);
   }
 
   _completeArenaEntry() {
@@ -665,7 +664,7 @@ export default class BossEnemy extends Enemy {
       this.freezeTimer -= 1;
       if (this.freezeTimer <= 0) {
         this.frozen = false;
-        this.enemy.tint = 0xffffff;
+        this.enemyBody.tint = 0xffffff;
         this.enemyLifeText.style.fill = 0xffffff;
       } else {
         return;

@@ -30,11 +30,26 @@ export default class Enemy {
     this.strafeDirection = Math.random() > 0.5 ? 1 : -1;
     this.shootCooldown = 0;
 
-    const textColor = [0xffffff, 0xffc0cb, 0xffdd00].includes(color) ? 0x000000 : 0xffffff;
-    this.enemy = new PIXI.Graphics();
-    this.enemy.beginFill(color, 1);
-    this.enemy.drawCircle(0, 0, enemyRadius);
-    this.enemy.endFill();
+    const r = (color >> 16) & 0xff;
+    const g = (color >> 8) & 0xff;
+    const b = color & 0xff;
+    const textColor = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? 0x000000 : 0xffffff;
+    this._glowOffset = Math.random() * Math.PI * 2;
+
+    this.enemy = new PIXI.Container();
+
+    this.enemyGlow = new PIXI.Graphics();
+    this.enemyGlow.beginFill(color, 0.08);
+    this.enemyGlow.drawCircle(0, 0, enemyRadius * 2.5);
+    this.enemyGlow.endFill();
+    this.enemyGlow.beginFill(color, isBoss ? 0.28 : 0.22);
+    this.enemyGlow.drawCircle(0, 0, enemyRadius * (isBoss ? 1.8 : 1.6));
+    this.enemyGlow.endFill();
+
+    this.enemyBody = new PIXI.Graphics();
+    this.enemyBody.beginFill(color, 1);
+    this.enemyBody.drawCircle(0, 0, enemyRadius);
+    this.enemyBody.endFill();
 
     this.enemyLifeText = new PIXI.Text(this.life, {
       fill: textColor,
@@ -44,10 +59,13 @@ export default class Enemy {
     this.enemyLifeText.position.set(0, 0);
     this.enemyLifeText.anchor.set(0.5);
 
+    this.enemy.addChild(this.enemyGlow);
+    this.enemy.addChild(this.enemyBody);
+    this.enemy.addChild(this.enemyLifeText);
+
     this.resetPosition();
 
     container.addChild(this.enemy);
-    container.addChild(this.enemyLifeText);
     if (!app.stage.children.includes(container)) {
       app.stage.addChild(container);
     }
@@ -56,7 +74,6 @@ export default class Enemy {
   resetPosition() {
     const randomPosition = this.randomPosition();
     this.enemy.position.set(randomPosition.x, randomPosition.y);
-    this.enemyLifeText.position.set(randomPosition.x, randomPosition.y);
   }
 
   randomPosition() {
@@ -100,7 +117,7 @@ export default class Enemy {
       if (!this.frozen) {
         this.frozen = true;
         this.freezeTimer = duration;
-        this.enemy.tint = 0x88ccff;
+        this.enemyBody.tint = 0x88ccff;
         this.enemyLifeText.style.fill = 0x002244;
       }
     }
@@ -135,10 +152,6 @@ export default class Enemy {
       this.enemy.position.set(
         this.enemy.position.x + dir.x * kb,
         this.enemy.position.y + dir.y * kb
-      );
-      this.enemyLifeText.position.set(
-        this.enemyLifeText.position.x + dir.x * kb,
-        this.enemyLifeText.position.y + dir.y * kb
       );
     }
   }
@@ -264,7 +277,6 @@ export default class Enemy {
     velocity.rotateDeg((Math.random() - 0.5) * 15);
 
     this.enemy.position.set(this.enemy.position.x + velocity.x, this.enemy.position.y + velocity.y);
-    this.enemyLifeText.position.set(this.enemy.position.x, this.enemy.position.y);
     this.enemyLifeText.text = this.life;
 
     // Shooting mechanics
@@ -356,8 +368,6 @@ export default class Enemy {
     const newY = this.enemy.position.y + velocity.y;
 
     this.enemy.position.set(newX, newY);
-    this.enemyLifeText.position.set(newX, newY);
-
     this.enemyLifeText.text = this.life;
   }
 
@@ -395,7 +405,6 @@ export default class Enemy {
     playSound('enemy_death');
 
     this.enemy.visible = false;
-    this.enemyLifeText.visible = false;
     enemies.splice(indexEnemy, 1);
 
     // Viral core: notify game to spawn toxic cloud at kill position
@@ -408,21 +417,20 @@ export default class Enemy {
 
   forceKill() {
     this.enemy.visible = false;
-    this.enemyLifeText.visible = false;
     this.enemy.destroy();
-    this.enemyLifeText.destroy();
   }
 
   update(player, spanwer, effects) {
     if (this.enemy.destroyed) return;
 
+    this.enemyGlow.alpha = 0.18 + Math.abs(Math.sin(Date.now() * 0.0025 + this._glowOffset)) * 0.12;
 
     if (this.frozen) {
       this.enemyLifeText.text = this.life;
       this.freezeTimer -= 1;
       if (this.freezeTimer <= 0) {
         this.frozen = false;
-        this.enemy.tint = 0xffffff;
+        this.enemyBody.tint = 0xffffff;
         this.enemyLifeText.style.fill = [0xffffff, 0xffc0cb, 0xffdd00].includes(this.color) ? 0x000000 : 0xffffff;
       } else {
         return;

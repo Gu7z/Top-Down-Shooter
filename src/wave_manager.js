@@ -39,9 +39,9 @@ const WAVES = {
 
 // Enemy base definitions maps to Enemy attributes
 const ENEMY_DEFS = {
-  "sentinela":  { color: 0x0302fc, enemyRadius: 18, life: 4,  speed: 0.50, value: 1, typeId: "sentinela",  behaviorType: "melee"  },
-  "cacador":    { color: 0x63009e, enemyRadius: 17, life: 3,  speed: 1.00, value: 1, typeId: "cacador",    behaviorType: "melee"  },
-  "corredor":   { color: 0xfe0002, enemyRadius: 15, life: 1,  speed: 1.90, value: 1, typeId: "corredor",   behaviorType: "melee"  },
+  "sentinela":  { color: 0x2255ff, enemyRadius: 18, life: 4,  speed: 0.50, value: 1, typeId: "sentinela",  behaviorType: "melee"  },
+  "cacador":    { color: 0xbb00ff, enemyRadius: 17, life: 3,  speed: 1.00, value: 1, typeId: "cacador",    behaviorType: "melee"  },
+  "corredor":   { color: 0xff2233, enemyRadius: 15, life: 1,  speed: 1.90, value: 1, typeId: "corredor",   behaviorType: "melee"  },
   "sprinter":   { color: 0xffffff, enemyRadius: 14, life: 1,  speed: 2.30, value: 2, typeId: "sprinter",   behaviorType: "melee"  },
   "atirador":   { color: 0xff8800, enemyRadius: 16, life: 3,  speed: 0.60, value: 3, typeId: "atirador",   behaviorType: "ranged" },
   "artilheiro": { color: 0xffdd00, enemyRadius: 20, life: 6,  speed: 0.30, value: 5, typeId: "artilheiro", behaviorType: "ranged" },
@@ -57,13 +57,13 @@ const ENEMY_DEFS = {
 };
 
 const BOSS_DEFS = {
-  "guardiao":   { color: 0xffc0cb, enemyRadius: 30, life: 45,  speed: 0.8, value: 20,  typeId: "boss_guardiao"   },
+  "guardiao":   { color: 0x00ff88, enemyRadius: 30, life: 45,  speed: 0.8, value: 20,  typeId: "boss_guardiao"   },
   "sniper":     { color: 0x7a6cff, enemyRadius: 35, life: 75,  speed: 0.62, value: 40,  typeId: "boss_sniper"    },
   "colosso":    { color: 0xff2222, enemyRadius: 40, life: 100, speed: 0.5, value: 80,  typeId: "boss_colosso"    },
-  "supremo":    { color: 0x880000, enemyRadius: 50, life: 140, speed: 0.5, value: 150, typeId: "boss_supremo"    },
+  "supremo":    { color: 0xff0000, enemyRadius: 50, life: 140, speed: 0.5, value: 150, typeId: "boss_supremo"    },
   // --- New bosses (waves 25 and 30) ---
   // Predador: fast aggressive hunter, burst + wide arc + spin
-  "predador":   { color: 0x00ff88, enemyRadius: 45, life: 200, speed: 1.1, value: 200, typeId: "boss_predador"   },
+  "predador":   { color: 0xffaa00, enemyRadius: 45, life: 200, speed: 1.1, value: 200, typeId: "boss_predador"   },
   // Apocalipse: final boss, all attack patterns combined at peak aggression
   "apocalipse": { color: 0xff0066, enemyRadius: 55, life: 350, speed: 0.8, value: 400, typeId: "boss_apocalipse" },
 };
